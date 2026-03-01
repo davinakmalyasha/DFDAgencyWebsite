@@ -17,7 +17,7 @@ export class OrderService {
                 skip,
                 take: l,
                 orderBy: { createdAt: 'desc' },
-                include: { Lead: true, Package: true }
+                include: { Lead: true, Package: true, Project: true }
             }),
             prisma.order.count()
         ]);
@@ -133,5 +133,45 @@ export class OrderService {
             where: { id },
             data: { deletedAt: new Date() }
         });
+    }
+
+    /**
+     * Promote a COMPLETED order to a Project (Portfolio entry)
+     */
+    static async promoteOrderToProject(orderId: string) {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { Lead: true, Package: true, Project: true }
+        });
+
+        if (!order) throw Object.assign(new Error('Order not found'), { statusCode: 404 });
+        if (order.status !== 'COMPLETED') throw Object.assign(new Error('Only COMPLETED orders can be promoted to projects'), { statusCode: 400 });
+        if (order.Project) throw Object.assign(new Error('This order has already been promoted to a project'), { statusCode: 409 });
+
+        const clientName = order.Lead.businessName || order.Lead.name;
+        const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const slug = `${baseSlug}-${Date.now()}`;
+
+        const briefData = order.briefData as Record<string, unknown> || {};
+        const description = typeof briefData.description === 'string'
+            ? briefData.description
+            : `Project for ${clientName} — ${order.Package.name} package.`;
+
+        const project = await prisma.project.create({
+            data: {
+                orderId: order.id,
+                title: `${clientName} — ${order.Package.name}`,
+                slug,
+                clientName,
+                category: 'SERVICES',
+                thumbnailUrl: '',
+                description,
+                techStack: [],
+                duration: 'TBD',
+            },
+            include: { Order: { include: { Lead: true, Package: true } } }
+        });
+
+        return project;
     }
 }

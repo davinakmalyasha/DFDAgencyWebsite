@@ -60,6 +60,7 @@ model Package {
 // 3. PROJECTS (The Portfolio Engine)
 model Project {
   id                 Int       @id @default(autoincrement())
+  orderId            String?   @unique // Link to the originating order
   title              String
   slug               String    @unique
   clientName         String
@@ -87,6 +88,7 @@ model Project {
   updatedAt          DateTime  @updatedAt
   deletedAt          DateTime? // Soft delete
 
+  Order              Order?    @relation(fields: [orderId], references: [id])
   Images             ProjectImage[]
 }
 
@@ -167,6 +169,7 @@ model Order {
   Lead             Lead        @relation(fields: [leadId], references: [id])
   Package          Package     @relation(fields: [packageId], references: [id])
   Payments         Payment[]
+  Project          Project?
 
   @@index([leadId])
   @@index([packageId])

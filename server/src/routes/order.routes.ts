@@ -18,6 +18,7 @@ router.get('/track/:orderId', OrderController.track);
 router.get('/', authenticateJWT, requireSuperadmin, OrderController.getAll);
 router.get('/:id', authenticateJWT, requireSuperadmin, OrderController.getById);
 router.patch('/:id/status', authenticateJWT, requireSuperadmin, OrderController.updateStatus);
+router.post('/:id/promote', authenticateJWT, requireSuperadmin, OrderController.promoteToProject);
 router.delete('/:id', authenticateJWT, requireSuperadmin, OrderController.delete);
 
 export default router;

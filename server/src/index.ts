@@ -18,6 +18,7 @@ import articleRoutes from './routes/article.routes';
 import promoRoutes from './routes/promo.routes';
 import userRoutes from './routes/user.routes';
 import aiRoutes from './routes/ai.routes';
+import uploadRoutes from './routes/upload.routes';
 import { csrfProtection } from './middlewares/csrf.middleware';
 import { CronService } from './services/cron.service';
 
@@ -94,6 +95,7 @@ app.use('/api/v1/articles', articleRoutes);
 app.use('/api/v1/promos', promoRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/upload', uploadRoutes);
 
 // Global Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

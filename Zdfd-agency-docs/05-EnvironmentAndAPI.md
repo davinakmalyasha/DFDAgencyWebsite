@@ -88,6 +88,7 @@ NEXT_ISR_TOKEN="super_secret_revalidate_token"
 - `GET /api/v1/orders` : List all orders (Admin)
 - `GET /api/v1/orders/:id` : Get order details (Admin)
 - `PATCH /api/v1/orders/:id/status` : Update order status (Admin)
+- `POST /api/v1/orders/:id/promote` : Promote completed order to Project (Admin)
 - `DELETE /api/v1/orders/:id` : Soft delete order (Admin)
 
 **8. Payments (`/payments`)**
@@ -107,3 +108,6 @@ NEXT_ISR_TOKEN="super_secret_revalidate_token"
 
 **11. AI Generator (`/ai`)**
 - `POST /api/v1/ai/generate-copy` : Generate SEO/marketing copy (Admin)
+
+**12. Media Upload (`/upload`)**
+- `POST /api/v1/upload` : Upload single image to Cloudinary (Admin - *Multipart/Form-Data*)

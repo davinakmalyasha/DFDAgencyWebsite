@@ -20,7 +20,7 @@ export class AIController {
             }
 
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro" });
 
             const prompt = `You are an expert marketing copywriter for DFD Agency, an AI-powered web agency in Indonesia. 
             Generate a creative SEO title, a high-converting meta description, and short marketing content for a ${type} with this context: ${context}.

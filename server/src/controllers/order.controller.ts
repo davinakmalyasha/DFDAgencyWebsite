@@ -117,4 +117,22 @@ export class OrderController {
             res.status(200).json({ success: true, message: 'Order deleted', data: null });
         } catch (error) { next(error); }
     }
+
+    /**
+     * Promote a COMPLETED order to a Portfolio Project (Admin)
+     */
+    static async promoteToProject(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const project = await OrderService.promoteOrderToProject(id);
+
+            await AuditService.log((req as any).user.id, 'PROMOTE_ORDER_TO_PROJECT', `Order: ${id} → Project: ${project.id}`, null, req.ip);
+
+            res.status(201).json({
+                success: true,
+                message: 'Order promoted to portfolio project successfully',
+                data: project
+            });
+        } catch (error) { next(error); }
+    }
 }

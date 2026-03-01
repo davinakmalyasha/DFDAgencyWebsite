@@ -27,6 +27,7 @@
 2. Build the Login page handling the HttpOnly cookie response.
 3. Build the CRUD UI tables and forms using Shadcn UI and React Hook Form (Ensure API calls trigger Next.js cache revalidation).
 4. Integrate the "AI Copywriting" button (calling Google Gemini API/OpenAI) inside the Project and Article creation forms.
+5. **Order-to-Project Pipeline**: Implement the "Promote to Portfolio" logic to transform COMPLETED orders into portfolio entries with pre-filled client data.
 
 ### Phase 5: Public Frontend & UI/UX (Next.js - Public)
 1. Build the 14-section Landing Page following the exact structure in Section 5.

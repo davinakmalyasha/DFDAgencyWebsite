@@ -87,6 +87,7 @@ model Order {
   Lead            Lead           @relation(fields: [leadId], references: [id])
   Package         Package        @relation(fields: [packageId], references: [id])
   Payments        Payment[]
+  Project         Project?
 
   @@map("order")
   @@index([leadId])
@@ -128,6 +129,7 @@ model Payment {
 
 model Project {
   id                Int                     @id @default(autoincrement())
+  orderId           String?                 @unique
   title             String
   slug              String                  @unique
   clientName        String
@@ -147,6 +149,7 @@ model Project {
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
   deletedAt         DateTime?
+  Order             Order?                  @relation(fields: [orderId], references: [id])
   Images            ProjectImage[]
 
   @@map("project")
