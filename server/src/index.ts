@@ -1,11 +1,46 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+// import * as Sentry from "@sentry/node"; // Enable after adding DSN
+// import { nodeProfilingIntegration } from "@sentry/profiling-node";
+
+import authRoutes from './routes/auth.routes';
+import settingRoutes from './routes/setting.routes';
+import packageRoutes from './routes/package.routes';
+import projectRoutes from './routes/project.routes';
+import leadRoutes from './routes/lead.routes';
+import orderRoutes from './routes/order.routes';
+import paymentRoutes from './routes/payment.routes';
+import articleRoutes from './routes/article.routes';
+import promoRoutes from './routes/promo.routes';
+import userRoutes from './routes/user.routes';
+import aiRoutes from './routes/ai.routes';
+import { csrfProtection } from './middlewares/csrf.middleware';
+import { CronService } from './services/cron.service';
 
 dotenv.config();
+
+// Initialize Automated Business Logic
+CronService.init();
+
+
+/**
+ * Sentry.io Error Tracking Initialization
+ * Part of Phase 6: Stability & Performance
+ */
+/*
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  integrations: [
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+});
+*/
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +70,7 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(csrfProtection);
 
 // Base Route
 app.get('/api/v1', (req, res) => {
@@ -43,6 +79,37 @@ app.get('/api/v1', (req, res) => {
         message: 'DFD Agency API running securely',
         data: null,
         error: null
+    });
+});
+
+// Auth Routes
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/settings', settingRoutes);
+app.use('/api/v1/packages', packageRoutes);
+app.use('/api/v1/projects', projectRoutes);
+app.use('/api/v1/leads', leadRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/articles', articleRoutes);
+app.use('/api/v1/promos', promoRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/ai', aiRoutes);
+
+// Global Error Handling Middleware
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error(err.stack); // Log the error stack for debugging
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+    res.status(statusCode).json({
+        success: false,
+        message: message,
+        data: null,
+        error: {
+            name: err.name,
+            message: err.message,
+            // Optionally, include stack in development
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        }
     });
 });
 

@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -8,7 +8,7 @@ async function main() {
 
     // 1. Create Superadmin if it doesn't exist
     const existingSuperadmin = await prisma.user.findFirst({
-        where: { role: Role.SUPERADMIN }
+        where: { role: UserRole.SUPERADMIN }
     });
 
     if (!existingSuperadmin) {
@@ -20,7 +20,7 @@ async function main() {
                 username: 'superadmin',
                 email: 'admin@dfdagency.com',
                 passwordHash: hashedPassword,
-                role: Role.SUPERADMIN,
+                role: UserRole.SUPERADMIN,
             }
         });
         console.log('✅ Superadmin created (admin@dfdagency.com / superadmin123)');
@@ -43,6 +43,42 @@ async function main() {
         console.log('✅ GlobalSettings initialized');
     } else {
         console.log('⏭️ GlobalSettings already exist.');
+    }
+
+    // 3. Create Packages if they don't exist
+    const packageCount = await prisma.package.count();
+    if (packageCount === 0) {
+        await prisma.package.create({
+            data: {
+                name: 'Landing Page',
+                slug: 'landing-page',
+                price: 1500000,
+                features: ['Responsive', 'SEO Baseline', '1 Selection Section'],
+                isActive: true,
+            }
+        });
+        await prisma.package.create({
+            data: {
+                name: 'Business Pro',
+                slug: 'business-pro',
+                price: 3500000,
+                features: ['Multi-page', 'Contact Form', 'Custom CMS'],
+                isActive: true,
+            }
+        });
+        await prisma.package.create({
+            data: {
+                name: 'E-Commerce AI',
+                slug: 'ecommerce-ai',
+                price: 7500000,
+                features: ['Payment Gateway', 'Inventory', 'AI Copywriter'],
+                isActive: true,
+            }
+        });
+
+        console.log('✅ Default Packages initialized');
+    } else {
+        console.log('⏭️ Packages already exist.');
     }
 }
 
