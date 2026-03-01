@@ -1,14 +1,14 @@
 ##  ENVIRONMENT VARIABLES (.env BLUEPRINT)
 **[ATTENTION AI AGENT]**: When setting up the project, use the following standardized environment variable keys. Ensure these are referenced correctly in both Express.js and Next.js.
 
-**Backend (Express.js) `.env`:**
+**Backend (Express.js) `.env`:
 ```env
 PORT=5000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 
 # Database (Prisma)
-DATABASE_URL="mysql://user:password@localhost:3306/dfd_agency"
+DATABASE_URL="mysql://user:password@localhost:3306/dfd_agency?connection_limit=5"
 
 # Security
 JWT_SECRET="super_secure_random_string"
@@ -16,18 +16,30 @@ JWT_EXPIRES_IN="7d"
 
 # Midtrans Payment Gateway
 MIDTRANS_SERVER_KEY="SB-Mid-server-..."
+MIDTRANS_CLIENT_KEY="SB-Mid-client-..."
 MIDTRANS_IS_PRODUCTION=false
 
 # Cloud Storage (Cloudinary)
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
 CLOUDINARY_URL="cloudinary://api_key:api_secret@cloud_name"
+```
 
-## Frontend (Next.js) .env.local:
-
+## Frontend (Next.js) `.env.local`:
+```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="SB-Mid-client-..."
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your_cloud_name"
+NEXT_ISR_TOKEN="super_secret_revalidate_token"
+```
 
 ## API ENDPOINT CONTRACT (RESTful STANDARDS)
 **[ATTENTION AI AGENT]**: When generating the Express.js routes, strictly follow these RESTful patterns and Base URL: `/api/v1`
+
+**CRITICAL RULES FOR APIs:**
+1. **GET Pagination Strategy**: ALL list endpoints (`GET /users`, `GET /projects`, etc.) MUST accept `?page=x&limit=y`. Raw unfiltered lists are forbidden.
+2. **Idempotency Strategy**: `POST /api/v1/orders` MUST require an `Idempotency-Key` in the request header (UUID v4) to prevent double charges from rapid button clicks.
 
 **1. Authentication (`/auth`)**
 - `POST /api/v1/auth/login` : Admin login (Returns HttpOnly Cookie)
@@ -71,7 +83,7 @@ NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="SB-Mid-client-..."
 - `DELETE /api/v1/leads/:id` : Soft delete lead (Admin)
 
 **7. Orders & Tracking (`/orders`)**
-- `POST /api/v1/orders` : Create new order/checkout (Public)
+- `POST /api/v1/orders` : Create new order/checkout (Public - *Requires Idempotency Header*)
 - `GET /api/v1/orders/track/:orderId` : Magic Link Tracking (Public - No Login)
 - `GET /api/v1/orders` : List all orders (Admin)
 - `GET /api/v1/orders/:id` : Get order details (Admin)

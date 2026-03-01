@@ -20,9 +20,17 @@ The main page must flow logically to maximize UMKM client conversion:
 
 **2. Global UI Features:**
 - **Floating WhatsApp Button:** Fixed at bottom-right, deeply linked with pre-filled messages.
-- **Animations:** Use `framer-motion` for subtle scroll reveals (`y: 20, opacity: 0` to `y: 0, opacity: 1`). Do not over-animate.
-- **Theme:** Dark/Light mode toggle (optional but recommended using `next-themes`).
+- **Image Optimization Strategy:** To prevent Vercel over-billing, the Next.js `<Image />` component MUST be configured with a custom `loader` function that points directly to Cloudinary's transformation API.
+- **Animations:** Framer Motion (High-End Eye Candy Strategy).  
+- **The Feel:** Aim for "Fluid & Weightless". The animations must feel like butter—smooth, intentional, and high-end.
+- **Easing:** Use custom cubic-bezier curves instead of default "spring". Specifically: `[0.22, 1, 0.36, 1]` (Quintic Out) for a smooth deceleration that feels premium.
+- **Micro-Interactions:** - **Staggered Reveals:** When a section enters the viewport, elements (like cards or text lines) must reveal one by one with a tiny delay (`staggerChildren: 0.1`).
+  - **Hover Effects:** Use very subtle scaling (`scale: 1.02`) and soft border-color shifts.
+  - **Smooth Scroll:** Implement a subtle parallax or smooth-scroll feel using Framer Motion's `useScroll` and `useTransform` for the Hero image.
+- **Performance:** Keep it lightweight by only animating `opacity`, `transform (x, y)`, and `scale`. Avoid animating heavy properties like `width`, `height`, or `filters` which cause layout thrashing.
 - **Markdown Pages:** The `/terms` (Syarat & Ketentuan) and `/blog/[slug]` pages MUST use `@tailwindcss/typography` (`prose` class) to render Markdown content beautifully.
+- **Data Freshness (ISR):** Expose an On-Demand Revalidation endpoint (e.g., `POST /api/revalidate`) so the Express backend can instantly clear Next.js cache when an Admin updates DB records.
+- **SEO Sync (Metadata API):** In Next.js, `generateMetadata()` functions MUST use the same `fetch` tags/revalidation logic as the page components. This ensures the ISR webhook clears both the body and the `<head>` metadata (SEO titles/descriptions) simultaneously.
 
 **3. Client Tracking Portal (Magic Link):**
 - Route: `/track/[orderId]` (Dynamic route).

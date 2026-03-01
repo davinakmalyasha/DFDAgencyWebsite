@@ -21,7 +21,7 @@ This project adopts a **Decoupled Architecture** (Separate Frontend and Backend)
 - **Styling:** Tailwind CSS.
 - **Design System & Aesthetics (CRITICAL):** Strictly Minimalist & Monochrome. The primary background MUST be pure White (`bg-white`), and all primary text, borders, and UI elements MUST be pure Black (`text-black`). Exclude all other colors, heavy gradients, or thick drop-shadows. Achieve a "Premium & Modern" look by relying heavily on generous negative space (whitespace), crisp typography, and sharp borders.
 - **UI Components:** Shadcn UI (for rapid, accessible component generation). Configure Shadcn to use the minimalist monochrome aesthetic (e.g., black buttons with white text, thin black borders for cards).
-- **Animations:** Framer Motion (for premium micro-interactions). Keep animations extremely lightweight and elegant—strictly use subtle fade-ins (`opacity: 0` to `1`) and gentle upward glides (`y: 10` to `0`). No bouncy, fast, or heavy animations. The vibe is "High-end Luxury SaaS".
+- **Animations:** Framer Motion (for premium micro-interactions). Keep animations extremely lightweight and The vibe is "High-end Luxury SaaS".
 - **Typography:** `@tailwindcss/typography` plugin (for rendering Markdown content perfectly with high-contrast black-on-white text).
 
 
@@ -34,7 +34,8 @@ This project adopts a **Decoupled Architecture** (Separate Frontend and Backend)
 
 **External Integrations & Infrastructure:**
 - **Media Storage:** Cloudinary or Supabase Storage (Strictly no local file storage).
-- **Payment Gateway:** Midtrans (QRIS, Virtual Account integration via Webhooks).
+- **Payment Gateway:** Midtrans (QRIS, Virtual Account integration).
+    - **Security:** Webhooks MUST verify the `signature_key` provided by Midtrans to prevent spoofing.
 - **Error Tracking:** Sentry.io (Real-time bug monitoring).
 - **Notifications:** Telegram Bot API / WhatsApp API Gateway (For team alerts and client updates).
 
@@ -47,6 +48,7 @@ This project adopts a **Decoupled Architecture** (Separate Frontend and Backend)
    - The login system is strictly for Internal Admins. Clients do not create accounts.
    - Use **JWT (JSON Web Tokens)** for session management.
    - **CRITICAL:** JWTs MUST be stored in **HttpOnly, Secure, SameSite=Strict Cookies**. Never store tokens in `localStorage` or `sessionStorage` to prevent XSS attacks.
+   - **CSRF Protection:** Since we use cookies for auth, the Express backend MUST implement strict CSRF protection (e.g., verifying `Origin` and `Referer` headers for state-changing requests or using CSRF tokens).
    - All passwords in the database must be hashed using `bcryptjs`.
 
 2. **Input Sanitization & Validation:**
@@ -55,6 +57,7 @@ This project adopts a **Decoupled Architecture** (Separate Frontend and Backend)
 
 3. **Server Protection (Middlewares):**
    - Implement `helmet` to secure HTTP headers.
+   - **CRITICAL Infrastructure:** Configure Express to trust reverse proxies (`app.set('trust proxy', 1)`) so rate limiters work correctly when deployed behind Cloudflare/Render/Nginx proxy walls.
    - Implement `express-rate-limit` to prevent brute-force attacks, DDoS, and form spamming.
    - Implement **Strict CORS Whitelisting** (The Express API must only accept requests from the official Next.js frontend domain).
 

@@ -1,8 +1,11 @@
 ## DATABASE ARCHITECTURE (PRISMA SCHEMA)
-**[ATTENTION AI AGENT]**: Below is the definitive Prisma ORM schema (`schema.prisma`). Use MySQL as the provider. Adhere strictly to these field names, types, and relations. 
+**[ATTENTION AI AGENT]**: Below is the definitive Prisma ORM schema (`schema.prisma`). Use MySQL as the provider. Adhere strictly to these field names, types, and relations.
 
 Critical constraints:
 - Implement Soft Deletes (`deletedAt DateTime?`) on major entities.
+- **CRITICAL**: To prevent data leakage, developers MUST use a **Service Layer pattern** or **Prisma Middleware/Extension** to automatically filter out records where `deletedAt` is not null in all `find` queries.
+- **CRITICAL UNIQUE COLLISION**: When performing a soft-delete on an entity with a `@unique` slug (Project, Package, Article), the Service Layer MUST append a timestamp to the existing slug (e.g., `slug-deleted-1709230000`). This frees up the original slug so a new active record can be created with the same name.
+- **SOFT DELETE CASCADE**: Since SQL `@relation(onDelete: Cascade)` only triggers on hard deletes, the Service Layer MUST use **Prisma Transactions** to programmatically update `deletedAt` for all child records (e.g., `ProjectImage` when a `Project` is deleted).
 - Use `UUID` or NanoID for `Order` and `Payment` IDs to secure the "Magic Link Tracking" feature (preventing URL guessing).
 
 ```prisma
@@ -24,6 +27,7 @@ model User {
   email        String     @unique
   passwordHash String     // Must be bcrypt hashed
   role         Role       @default(EDITOR)
+  tokenVersion Int        @default(0) // Used to instantly invalidate JWTs on logout/password change
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   
@@ -226,6 +230,11 @@ model Article {
   isPublished  Boolean   @default(false)
   views        Int       @default(0)
   tags         Json?     
+  
+  // SEO & Analytics Isolation
+  seoTitle           String?
+  seoDescription     String?
+  
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
