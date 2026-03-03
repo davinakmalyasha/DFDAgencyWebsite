@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import { OrderInput, UpdateOrderStatusInput } from '@dfd/shared';
 import { NotificationService } from './notification.service';
 import { LeadService } from './lead.service';
+import { PaymentService } from './payment.service';
 import { PaginationHelper } from '../utils/pagination.helper';
 
 export class OrderService {
@@ -34,7 +35,19 @@ export class OrderService {
                 where: { idempotencyKey },
                 include: { Lead: true, Package: true }
             });
-            if (existingOrder) return { ...existingOrder, paymentUrl: `https://app.sandbox.midtrans.com/snap/v2/vtweb/${existingOrder.id}`, isDuplicate: true };
+            if (existingOrder) {
+                // If it exists, we still want to provide a fresh or existing payment URL
+                // In a more complex app, we might check if the previous Snap token is expired
+                const snap = await PaymentService.createSnapTransaction(
+                    existingOrder.id,
+                    Number(existingOrder.totalAmount),
+                    {
+                        name: existingOrder.Lead.name,
+                        phone: existingOrder.Lead.whatsapp
+                    }
+                );
+                return { ...existingOrder, paymentUrl: snap.redirect_url, isDuplicate: true };
+            }
         }
 
         // 2. Find or create lead
@@ -89,14 +102,22 @@ export class OrderService {
             return newOrder;
         });
 
-        // 5. Notifications
-        await NotificationService.notifyNewOrder(order, lead);
+        // 5. Create Real Midtrans Transaction
+        const snap = await PaymentService.createSnapTransaction(
+            order.id,
+            Number(order.totalAmount),
+            {
+                name: lead!.name,
+                phone: lead!.whatsapp
+            }
+        );
 
-        const mockSnapUrl = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${order.id}`;
+        // 6. Notifications
+        await NotificationService.notifyNewOrder(order, lead);
 
         return {
             ...order,
-            paymentUrl: mockSnapUrl,
+            paymentUrl: snap.redirect_url,
             isDuplicate: false
         };
     }

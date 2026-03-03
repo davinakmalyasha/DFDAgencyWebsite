@@ -42,8 +42,6 @@ export default function PackagesPage() {
     }, []);
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm('Are you absolutely sure you want to delete this package?')) return;
-
         try {
             const res = await api.delete(`/packages/${id}`);
             if (res.data.success) {

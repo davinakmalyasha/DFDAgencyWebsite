@@ -73,7 +73,6 @@ export default function OrdersPage() {
     };
 
     const handlePromote = async (orderId: string) => {
-        if (!window.confirm('Promote this completed order to a Portfolio Project?')) return;
         try {
             const res = await api.post(`/orders/${orderId}/promote`);
             if (res.data.success) {

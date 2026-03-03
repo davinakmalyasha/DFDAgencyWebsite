@@ -6,3 +6,4 @@ export * from './validation/lead.schema';
 export * from './validation/order.schema';
 export * from './validation/setting.schema';
 export * from './validation/article.schema';
+export * from './validation/hosting.schema';

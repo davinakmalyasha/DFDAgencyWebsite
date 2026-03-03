@@ -134,7 +134,7 @@ model Project {
   slug              String                  @unique
   clientName        String
   category          ProjectCategory
-  thumbnailUrl      String
+  thumbnailUrl      String?
   description       String                  @db.Text
   techStack         Json
   duration          String
@@ -151,8 +151,34 @@ model Project {
   deletedAt         DateTime?
   Order             Order?                  @relation(fields: [orderId], references: [id])
   Images            ProjectImage[]
+  Hosting           Hosting?
 
   @@map("project")
+}
+
+model Hosting {
+  id                Int            @id @default(autoincrement())
+  domain            String         @unique
+  clientName        String
+  clientWhatsapp    String
+  clientEmail       String?
+  hostingProvider   String
+  hostingStartDate  DateTime
+  hostingEndDate    DateTime
+  domainEndDate     DateTime?
+  notifyBeforeDays  Int            @default(30)
+  status            HostingStatus  @default(ACTIVE)
+  notes             String?        @db.Text
+  projectId         Int?           @unique
+  lastNotifiedAt    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+  Project           Project?       @relation(fields: [projectId], references: [id])
+
+  @@map("hosting")
+  @@index([status])
+  @@index([hostingEndDate])
 }
 
 model ProjectImage {
@@ -234,4 +260,11 @@ enum ProjectMaintenanceStatus {
   ACTIVE
   INACTIVE
   CLIENT_MANAGED
+}
+
+enum HostingStatus {
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  CANCELLED
 }

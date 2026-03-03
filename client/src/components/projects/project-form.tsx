@@ -28,27 +28,25 @@ export function ProjectForm({
         defaultValues: initialData || {
             title: '',
             slug: '',
-            category: '',
-            description: '',
-            content: '',
             clientName: '',
-            link: '',
-            imageUrl: '',
-            technologies: [''], // One default tech field
+            category: 'SERVICES' as any,
+            thumbnailUrl: '',
+            description: '',
+            techStack: [''],
+            duration: '',
+            maintenanceStatus: 'CLIENT_MANAGED',
+            isFeatured: false,
         },
     });
 
-    const technologiesCount = form.watch('technologies').length;
+    const technologiesCount = (form.watch('techStack') || []).length;
 
     async function onSubmit(data: ProjectInput) {
         setIsLoading(true);
         const payload = {
             ...data,
-            technologies: data.technologies.filter(t => t.trim() !== ''),
-            // Ensure nullification for optional empty strings to Prisma bounds
-            link: data.link || null,
-            content: data.content || null,
-            clientName: data.clientName || null
+            techStack: data.techStack.filter(t => t.trim() !== ''),
+            thumbnailUrl: data.thumbnailUrl || null,
         };
 
         try {
@@ -88,13 +86,13 @@ export function ProjectForm({
 
                 <FormField
                     control={form.control}
-                    name="imageUrl"
+                    name="thumbnailUrl"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="font-bold uppercase tracking-wider text-xs">Cover Image (Cloudinary)</FormLabel>
+                            <label className="font-bold uppercase tracking-wider text-xs">Cover Image (Cloudinary)</label>
                             <FormControl>
                                 <ImageUploader
-                                    value={field.value}
+                                    value={field.value || ''}
                                     onChange={field.onChange}
                                 />
                             </FormControl>
@@ -138,9 +136,17 @@ export function ProjectForm({
                         name="category"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="font-bold uppercase tracking-wider text-xs">Category</FormLabel>
+                                <label className="font-bold uppercase tracking-wider text-xs">Category</label>
                                 <FormControl>
-                                    <Input placeholder="Mobile App, Website, Branding" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
+                                    <select
+                                        {...field}
+                                        className="w-full h-10 px-3 py-2 rounded-none border border-foreground bg-background focus-visible:outline-none text-sm"
+                                    >
+                                        <option value="FNB">F&B</option>
+                                        <option value="RETAIL">Retail</option>
+                                        <option value="SERVICES">Services</option>
+                                        <option value="CORPORATE">Corporate</option>
+                                    </select>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -151,9 +157,9 @@ export function ProjectForm({
                         name="clientName"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="font-bold uppercase tracking-wider text-xs">Client Name</FormLabel>
+                                <label className="font-bold uppercase tracking-wider text-xs">Client Name</label>
                                 <FormControl>
-                                    <Input placeholder="Optional" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
+                                    <Input placeholder="Client Name" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -175,30 +181,52 @@ export function ProjectForm({
                     )}
                 />
 
-                <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="font-bold uppercase tracking-wider text-xs">Detailed Case Study (Markdown)</FormLabel>
-                            <FormControl>
-                                <Textarea rows={6} placeholder="Full case study or context for the project..." className="rounded-none border-foreground focus-visible:ring-foreground font-mono text-xs" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="duration"
+                        render={({ field }) => (
+                            <FormItem>
+                                <label className="font-bold uppercase tracking-wider text-xs">Project Duration</label>
+                                <FormControl>
+                                    <Input placeholder="e.g. 3 Days" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="isFeatured"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between border border-foreground p-3">
+                                <div className="space-y-0.5">
+                                    <label className="font-bold uppercase tracking-wider text-xs">Featured Project</label>
+                                    <p className="text-[10px] text-muted-foreground uppercase">Show on home page</p>
+                                </div>
+                                <FormControl>
+                                    <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        className="h-4 w-4 rounded-none border-foreground"
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                </div>
 
                 <div className="space-y-2">
                     <label className="font-bold uppercase tracking-wider text-xs">Tech Stack</label>
-                    <p className="text-xs text-muted-foreground">Technologies used (e.g. Next.js, Node.js, Prisma)</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">Technologies used (e.g. Next.js, Node.js, Prisma)</p>
 
                     <div className="grid grid-cols-2 gap-2">
-                        {Array.from({ length: Math.max(1, technologiesCount) }).map((_, index) => (
+                        {form.watch('techStack').map((_, index) => (
                             <FormField
                                 key={index}
                                 control={form.control}
-                                name={`technologies.${index}`}
+                                name={`techStack.${index}`}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
@@ -214,10 +242,10 @@ export function ProjectForm({
                         type="button"
                         variant="outline"
                         onClick={() => {
-                            const current = form.getValues('technologies');
-                            form.setValue('technologies', [...current, '']);
+                            const current = form.getValues('techStack');
+                            form.setValue('techStack', [...current, '']);
                         }}
-                        className="w-full mt-2 rounded-none border-2 border-dashed border-foreground/30 hover:border-foreground transition-none font-bold uppercase text-xs"
+                        className="w-full mt-2 rounded-none border-2 border-dashed border-foreground/30 hover:border-foreground transition-none font-bold uppercase text-xs h-10"
                     >
                         + Add Technology
                     </Button>

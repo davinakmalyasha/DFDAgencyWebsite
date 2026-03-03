@@ -50,10 +50,10 @@ export class SettingController {
                     whatsappNumber,
                     emailContact,
                     officeAddress,
-                    instagramLink,
+                    instagramLink: instagramLink === '' ? null : instagramLink,
                     isMaintenanceMode,
-                    metaPixelId,
-                    googleAnalyticsId
+                    metaPixelId: metaPixelId === '' ? null : metaPixelId,
+                    googleAnalyticsId: googleAnalyticsId === '' ? null : googleAnalyticsId
                 }
             });
 

@@ -107,11 +107,14 @@ export default function ProjectsPage() {
                             projects.map((proj) => (
                                 <TableRow key={proj.id} className="border-b-2 border-foreground/10 hover:bg-muted/30 transition-none">
                                     <TableCell>
-                                        <div className="w-12 h-12 bg-muted/50 border-2 border-foreground overflow-hidden flex items-center justify-center">
-                                            {proj.imageUrl ? (
-                                                <img src={proj.imageUrl} alt={proj.title} className="w-full h-full object-cover" />
+                                        <div className="w-12 h-12 bg-muted/50 border-2 border-foreground overflow-hidden flex items-center justify-center text-center">
+                                            {proj.thumbnailUrl ? (
+                                                <img src={proj.thumbnailUrl} alt={proj.title} className="w-full h-full object-cover" />
                                             ) : (
-                                                <span className="text-[10px] font-bold">N/A</span>
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-[8px] font-black uppercase leading-tight">No</span>
+                                                    <span className="text-[8px] font-black uppercase leading-tight">Img</span>
+                                                </div>
                                             )}
                                         </div>
                                     </TableCell>
@@ -126,14 +129,14 @@ export default function ProjectsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                            {proj.technologies.slice(0, 3).map((tech, idx) => (
+                                            {(proj.techStack as string[] || []).slice(0, 3).map((tech, idx) => (
                                                 <span key={idx} className="px-1.5 py-0.5 text-[10px] bg-foreground text-background font-mono">
                                                     {tech}
                                                 </span>
                                             ))}
-                                            {proj.technologies.length > 3 && (
+                                            {(proj.techStack as string[] || []).length > 3 && (
                                                 <span className="px-1.5 py-0.5 text-[10px] border border-foreground font-mono">
-                                                    +{proj.technologies.length - 3}
+                                                    +{(proj.techStack as string[] || []).length - 3}
                                                 </span>
                                             )}
                                         </div>

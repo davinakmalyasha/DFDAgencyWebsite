@@ -19,12 +19,18 @@ import promoRoutes from './routes/promo.routes';
 import userRoutes from './routes/user.routes';
 import aiRoutes from './routes/ai.routes';
 import uploadRoutes from './routes/upload.routes';
+import hostingRoutes from './routes/hosting.routes';
+import auditRoutes from './routes/audit.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import whatsappRoutes from './routes/whatsapp.routes';
 import { csrfProtection } from './middlewares/csrf.middleware';
 import { CronService } from './services/cron.service';
+import { WhatsAppService } from './services/whatsapp.service';
 
 dotenv.config();
 
 // Initialize Automated Business Logic
+WhatsAppService.initialize();
 CronService.init();
 
 
@@ -56,16 +62,17 @@ app.use(cors({
     credentials: true
 }));
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    message: 'Too many requests from this IP, please try again later.'
-});
-
-// Apply the rate limiting middleware to all requests
-app.use(limiter);
+// Apply the rate limiting middleware to all requests ONLY if strictly production
+if (process.env.NODE_ENV === 'production') {
+    const limiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        limit: 150,
+        standardHeaders: 'draft-7',
+        legacyHeaders: false,
+        message: 'Too many requests from this IP, please try again later.'
+    });
+    app.use(limiter);
+}
 
 // Body Parsers & Cookie Parser
 app.use(express.json());
@@ -96,6 +103,10 @@ app.use('/api/v1/promos', promoRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/hosting', hostingRoutes);
+app.use('/api/v1/audit', auditRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/whatsapp', whatsappRoutes);
 
 // Global Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -5,7 +5,7 @@ export const projectSchema = z.object({
     slug: z.string().min(2, 'Slug is required'),
     clientName: z.string().min(2, 'Client name is required'),
     category: z.enum(['FNB', 'RETAIL', 'SERVICES', 'CORPORATE']),
-    thumbnailUrl: z.string().url('Invalid URL for thumbnail'),
+    thumbnailUrl: z.string().url('Invalid URL for thumbnail').nullable().optional(),
     description: z.string().min(10, 'Description is required'),
     techStack: z.array(z.string()).min(1, 'At least one tech stack item is required'),
     duration: z.string().min(1, 'Duration is required'),

@@ -13,11 +13,14 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
 const settingsSchema = z.object({
-    contactEmail: z.string().email(),
+    emailContact: z.string().email(),
     whatsappNumber: z.string().min(8),
-    instagramUrl: z.string().url().optional().or(z.literal('')),
-    linkedinUrl: z.string().url().optional().or(z.literal('')),
-    maintenanceMode: z.boolean().default(false),
+    officeAddress: z.string().min(5),
+    instagramLink: z.string().url().optional().or(z.literal('')),
+    linkedinLink: z.string().url().optional().or(z.literal('')),
+    isMaintenanceMode: z.boolean().default(false),
+    metaPixelId: z.string().optional().or(z.literal('')),
+    googleAnalyticsId: z.string().optional().or(z.literal('')),
 });
 
 type SettingsInput = z.infer<typeof settingsSchema>;
@@ -29,9 +32,14 @@ export default function SettingsPage() {
     const form = useForm<SettingsInput>({
         resolver: zodResolver(settingsSchema),
         defaultValues: {
-            contactEmail: '',
+            emailContact: '',
             whatsappNumber: '',
-            maintenanceMode: false,
+            officeAddress: '',
+            instagramLink: '',
+            linkedinLink: '',
+            isMaintenanceMode: false,
+            metaPixelId: '',
+            googleAnalyticsId: '',
         },
     });
 
@@ -40,7 +48,17 @@ export default function SettingsPage() {
             try {
                 const res = await api.get('/settings');
                 if (res.data.success && res.data.data) {
-                    form.reset(res.data.data);
+                    const settings = res.data.data;
+                    form.reset({
+                        emailContact: settings.emailContact || '',
+                        whatsappNumber: settings.whatsappNumber || '',
+                        officeAddress: settings.officeAddress || '',
+                        instagramLink: settings.instagramLink || '',
+                        linkedinLink: settings.linkedinLink || '',
+                        isMaintenanceMode: settings.isMaintenanceMode || false,
+                        metaPixelId: settings.metaPixelId || '',
+                        googleAnalyticsId: settings.googleAnalyticsId || '',
+                    });
                 }
             } catch (error) {
                 toast.error('Failed to load settings');
@@ -80,8 +98,8 @@ export default function SettingsPage() {
 
                         <div className="grid grid-cols-2 gap-6">
                             <FormField
-                                control={form.control}
-                                name="contactEmail"
+                                control={form.control as any}
+                                name="emailContact"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="font-bold uppercase tracking-wider text-xs">Primary Email</FormLabel>
@@ -93,7 +111,7 @@ export default function SettingsPage() {
                                 )}
                             />
                             <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="whatsappNumber"
                                 render={({ field }) => (
                                     <FormItem>
@@ -107,28 +125,71 @@ export default function SettingsPage() {
                             />
                         </div>
 
+                        <FormField
+                            control={form.control as any}
+                            name="officeAddress"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="font-bold uppercase tracking-wider text-xs">Office Address</FormLabel>
+                                    <FormControl>
+                                        <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         <div className="grid grid-cols-2 gap-6">
                             <FormField
-                                control={form.control}
-                                name="instagramUrl"
+                                control={form.control as any}
+                                name="instagramLink"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="font-bold uppercase tracking-wider text-xs">Instagram Link</FormLabel>
                                         <FormControl>
-                                            <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
+                                            <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
                             <FormField
-                                control={form.control}
-                                name="linkedinUrl"
+                                control={form.control as any}
+                                name="linkedinLink"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="font-bold uppercase tracking-wider text-xs">LinkedIn Link</FormLabel>
                                         <FormControl>
-                                            <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
+                                            <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <FormField
+                                control={form.control as any}
+                                name="metaPixelId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="font-bold uppercase tracking-wider text-xs">Meta Pixel ID</FormLabel>
+                                        <FormControl>
+                                            <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control as any}
+                                name="googleAnalyticsId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="font-bold uppercase tracking-wider text-xs">Google Analytics ID</FormLabel>
+                                        <FormControl>
+                                            <Input className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -137,8 +198,8 @@ export default function SettingsPage() {
                         </div>
 
                         <FormField
-                            control={form.control}
-                            name="maintenanceMode"
+                            control={form.control as any}
+                            name="isMaintenanceMode"
                             render={({ field }) => (
                                 <FormItem className="flex flex-row items-center justify-between rounded-none border-2 border-foreground bg-muted/20 p-4">
                                     <div className="space-y-0.5">

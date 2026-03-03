@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, Users, MessageSquare, Briefcase, FileText, Settings, KeySquare, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Briefcase, FileText, Settings, KeySquare, LogOut, Globe, ShieldAlert, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import api from "@/lib/axios";
@@ -11,9 +11,12 @@ const navigation = [
     { name: 'Orders', href: '/admin/orders', icon: Briefcase },
     { name: 'Leads', href: '/admin/leads', icon: Users },
     { name: 'Projects', href: '/admin/projects', icon: KeySquare },
+    { name: 'Hosting', href: '/admin/hosting', icon: Globe },
     { name: 'Packages', href: '/admin/packages', icon: MessageSquare },
     { name: 'Articles', href: '/admin/articles', icon: FileText },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'System Logs', href: '/admin/logs', icon: ShieldAlert },
+    { name: 'WA Session', href: '/admin/whatsapp', icon: Smartphone },
 ];
 
 export function AppSidebar() {
@@ -51,8 +54,8 @@ export function AppSidebar() {
                                 key={item.name}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2 text-sm font-bold border-2 border-transparent transition-none ${isActive
-                                        ? 'bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
-                                        : 'text-foreground hover:bg-foreground hover:text-background'
+                                    ? 'bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
+                                    : 'text-foreground hover:bg-foreground hover:text-background'
                                     }`}
                             >
                                 <item.icon className="w-5 h-5 shrink-0" />

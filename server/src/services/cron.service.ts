@@ -1,6 +1,8 @@
 import cron from 'node-cron';
 import { prisma } from '../lib/prisma';
 import { NotificationService } from './notification.service';
+import { HostingService } from './hosting.service';
+import { WhatsAppService } from './whatsapp.service';
 
 /**
  * CronService
@@ -11,31 +13,52 @@ export class CronService {
     static init() {
         console.log('--- Initializing Automation Cron Jobs ---');
 
-        // 1. Auto-Renewal Reminders (Daily at 08:00 AM)
+        // 1. Hosting Expiry Check + WhatsApp Auto-Reminders (Daily at 08:00 AM)
         cron.schedule('0 8 * * *', async () => {
-            console.log('[CRON]: Running Domain Expiry Check...');
-            const thirtyDaysFromNow = new Date();
-            thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+            console.log('[CRON]: Running Hosting Expiry Check...');
 
-            const tomorrow = new Date();
-            tomorrow.setDate(thirtyDaysFromNow.getDate() + 1);
+            // Auto-update statuses first
+            await HostingService.updateStatuses();
 
-            const expiringProjects = await prisma.project.findMany({
-                where: {
-                    domainExpiryDate: {
-                        gte: thirtyDaysFromNow,
-                        lt: tomorrow
-                    },
-                    deletedAt: null
+            // Get entries that need notification
+            const expiring = await HostingService.getExpiring();
+            const now = new Date();
+
+            for (const entry of expiring) {
+                const daysLeft = Math.ceil(
+                    (entry.hostingEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+                );
+
+                // Skip if already notified today
+                if (entry.lastNotifiedAt) {
+                    const lastNotified = new Date(entry.lastNotifiedAt);
+                    const hoursSinceNotified = (now.getTime() - lastNotified.getTime()) / (1000 * 60 * 60);
+                    if (hoursSinceNotified < 24) continue;
                 }
-            });
 
-            for (const project of expiringProjects) {
+                const message = `🔔 *HOSTING EXPIRY REMINDER*\n\n` +
+                    `🌐 Domain: ${entry.domain}\n` +
+                    `👤 Client: ${entry.clientName}\n` +
+                    `📅 Expires: ${entry.hostingEndDate.toLocaleDateString('id-ID')}\n` +
+                    `⏳ Days Left: ${daysLeft}\n` +
+                    `🏢 Provider: ${entry.hostingProvider}\n\n` +
+                    `Please contact the client to renew their hosting.`;
+
+                // Try WhatsApp auto-send to client
+                const sent = await WhatsAppService.sendMessage(entry.clientWhatsapp, message);
+
+                // Also notify admin via Telegram
                 await NotificationService.notifyNewLead({
-                    name: `Auto-Reminder: ${project.title}`,
-                    whatsapp: 'Admin Action Required',
-                    businessName: project.clientName,
-                    message: `Domain/Project ${project.title} expires in 30 days (${project.domainExpiryDate}). 🚀 Dispatching renewal reminder.`
+                    name: `Hosting Expiry: ${entry.domain}`,
+                    whatsapp: entry.clientWhatsapp,
+                    businessName: entry.clientName,
+                    message: `Hosting for ${entry.domain} expires in ${daysLeft} days. WA sent: ${sent ? 'YES' : 'NO'}`
+                });
+
+                // Update lastNotifiedAt
+                await prisma.hosting.update({
+                    where: { id: entry.id },
+                    data: { lastNotifiedAt: now }
                 });
             }
         });

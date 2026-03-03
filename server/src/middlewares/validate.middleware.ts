@@ -10,9 +10,10 @@ export const validateRequest = (schema: z.ZodSchema) => {
             next();
         } catch (error: any) {
             if (error instanceof z.ZodError) {
+                const combinedMessage = error.issues.map(i => i.message).join(', ');
                 return res.status(400).json({
                     success: false,
-                    message: 'Validation Error',
+                    message: combinedMessage,
                     data: null,
                     error: error.issues
                 });
