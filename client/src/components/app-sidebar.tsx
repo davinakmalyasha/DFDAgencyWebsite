@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, Users, MessageSquare, Briefcase, FileText, Settings, KeySquare, LogOut, Globe, ShieldAlert, Smartphone } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Briefcase, FileText, Settings, KeySquare, LogOut, Globe, ShieldAlert, Smartphone, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import api from "@/lib/axios";
@@ -14,6 +14,7 @@ const navigation = [
     { name: 'Hosting', href: '/admin/hosting', icon: Globe },
     { name: 'Packages', href: '/admin/packages', icon: MessageSquare },
     { name: 'Articles', href: '/admin/articles', icon: FileText },
+    { name: 'Promos', href: '/admin/promos', icon: Megaphone },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'System Logs', href: '/admin/logs', icon: ShieldAlert },
     { name: 'WA Session', href: '/admin/whatsapp', icon: Smartphone },

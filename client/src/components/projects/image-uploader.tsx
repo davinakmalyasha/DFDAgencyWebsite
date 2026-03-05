@@ -43,8 +43,8 @@ export function ImageUploader({ value, onChange, onError }: ImageUploaderProps) 
                 toast.success('Image Uploaded to Cloudinary');
                 onChange(res.data.data.url);
             }
-        } catch (error: any) {
-            const msg = error.response?.data?.message || error.message;
+        } catch (error) {
+            const msg = (error as {response?: {data?: {message?: string}}}).response?.data?.message || (error as Error).message;
             toast.error('Upload failed', { description: msg });
             if (onError) onError(msg);
         } finally {

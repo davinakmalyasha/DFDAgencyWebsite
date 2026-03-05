@@ -4,11 +4,25 @@
  * Currently supports a simple console logger, designed to be easily 
  * replaced with Telegram Bot API or WhatsApp Business API.
  */
+
+interface NotifiableLead {
+    name: string;
+    whatsapp: string;
+    businessName: string | null;
+    message: string | null;
+}
+
+interface NotifiableOrder {
+    id: string;
+    totalAmount: number | bigint | { toString(): string };
+    status: string;
+}
+
 export class NotificationService {
     /**
      * Notify Admin of a new Lead
      */
-    static async notifyNewLead(lead: any) {
+    static async notifyNewLead(lead: NotifiableLead) {
         const message = `🚀 *NEW LEAD RECEIVED*\n\n` +
             `👤 Name: ${lead.name}\n` +
             `📱 WA: ${lead.whatsapp}\n` +
@@ -21,7 +35,7 @@ export class NotificationService {
     /**
      * Notify Admin of a new Order
      */
-    static async notifyNewOrder(order: any, lead: any) {
+    static async notifyNewOrder(order: NotifiableOrder, lead: NotifiableLead) {
         const message = `💰 *NEW ORDER RECEIVED*\n\n` +
             `🆔 Order ID: ${order.id}\n` +
             `👤 Client: ${lead.name}\n` +

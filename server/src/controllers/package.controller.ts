@@ -9,10 +9,11 @@ export class PackageController {
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
             const includeInactive = req.query.includeInactive === 'true';
+            const hasDiscount = req.query.hasDiscount === 'true';
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
 
-            const result = await PackageService.getAllPackages(page, limit, includeInactive);
+            const result = await PackageService.getAllPackages(page, limit, includeInactive, hasDiscount);
 
             res.status(200).json({
                 success: true,

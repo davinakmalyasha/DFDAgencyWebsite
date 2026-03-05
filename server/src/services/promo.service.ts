@@ -18,6 +18,9 @@ export class PromoService {
                         endDate: { gte: now }
                     }
                 ]
+            },
+            include: {
+                Package: true // Include the linked package details
             }
         });
     }
@@ -32,7 +35,10 @@ export class PromoService {
             prisma.promo.findMany({
                 skip,
                 take: l,
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    Package: true
+                }
             }),
             prisma.promo.count()
         ]);

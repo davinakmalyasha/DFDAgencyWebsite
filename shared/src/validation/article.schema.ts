@@ -14,6 +14,7 @@ export const articleSchema = z.object({
 export const promoSchema = z.object({
     text: z.string().min(5, 'Promo text is required'),
     linkUrl: z.string().url('Invalid URL').nullable().optional(),
+    packageId: z.number().int().positive('Invalid Package ID').nullable().optional(),
     isActive: z.boolean().default(false),
     startDate: z.string().datetime().nullable().optional(),
     endDate: z.string().datetime().nullable().optional(),

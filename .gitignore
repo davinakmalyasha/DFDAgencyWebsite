@@ -39,6 +39,23 @@ prisma/dev.db
 prisma/dev.db-journal
 
 # Project specific
-public/uploads/ (if any local fallback)
+public/uploads/
 logs/
 *.log
+
+# WhatsApp session data (CRITICAL - contains auth tokens)
+.wwebjs_auth/
+server/.wwebjs_auth/
+
+# Development test/debug scripts
+server/src/test-*
+server/src/debug-*
+server/src/final-check*
+server/src/verify-*
+server/src/definitive-*
+
+# One-time migration scripts
+client/fix-any.js
+
+# Lock files
+*.htmllockfile*

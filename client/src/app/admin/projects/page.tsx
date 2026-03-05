@@ -30,8 +30,8 @@ export default function ProjectsPage() {
             if (res.data.success) {
                 setProjects(res.data.data);
             }
-        } catch (error: any) {
-            toast.error('Failed to load portfolio projects', { description: error.message });
+        } catch (error) {
+            toast.error('Failed to load portfolio projects', { description: (error as Error).message });
         } finally {
             setLoading(false);
         }
@@ -143,9 +143,9 @@ export default function ProjectsPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            {proj.link && (
+                                            {(proj as any).link && (
                                                 <Button variant="outline" size="icon" asChild className="rounded-none border-2 border-foreground hover:bg-foreground hover:text-background transition-none h-8 w-8">
-                                                    <a href={proj.link} target="_blank" rel="noreferrer">
+                                                    <a href={(proj as any).link} target="_blank" rel="noreferrer">
                                                         <ExternalLink className="h-4 w-4" />
                                                     </a>
                                                 </Button>

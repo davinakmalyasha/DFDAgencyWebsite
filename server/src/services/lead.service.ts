@@ -26,18 +26,12 @@ export class LeadService {
      * Create new lead (Public Inquiry)
      */
     static async createLead(data: LeadInput) {
-        console.log('[DEBUG]: Creating Lead in DB...', data);
         const lead = await prisma.lead.create({
             data
         });
 
-
-        console.log('[DEBUG]: Lead Created in DB:', lead.id);
-
         try {
-            console.log('[DEBUG]: Notifying Agency...');
             await NotificationService.notifyNewLead(lead);
-            console.log('[DEBUG]: Agency Notified.');
         } catch (error) {
             console.error('[ERROR]: Notification failed but lead was saved:', error);
             // Don't fail the request if just notification fails

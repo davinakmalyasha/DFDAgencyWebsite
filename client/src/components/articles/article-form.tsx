@@ -13,7 +13,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { ImageUploader } from '@/components/projects/image-uploader';
-import { AIWriterModal } from '@/components/ai-writer-modal';
 
 export function ArticleForm({
     initialData,
@@ -25,7 +24,7 @@ export function ArticleForm({
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<ArticleInput>({
-        resolver: zodResolver(ArticleSchema),
+        resolver: zodResolver(ArticleSchema) as any,
         defaultValues: initialData || {
             title: '',
             slug: '',
@@ -55,9 +54,9 @@ export function ArticleForm({
                 toast.success('Article Published');
             }
             onSuccess();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(initialData?.id ? 'Update Failed' : 'Creation Failed', {
-                description: error.response?.data?.message || 'Check your inputs'
+                description: (error as {response?: {data?: {message?: string}}}).response?.data?.message || 'Check your inputs'
             });
         } finally {
             setIsLoading(false);
@@ -66,22 +65,9 @@ export function ArticleForm({
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
 
-                <AIWriterModal
-                    type="Article"
-                    onSuccess={(data) => {
-                        if (data.title) form.setValue('title', data.title);
-                        if (data.description) form.setValue('description', data.description);
-                        if (data.content) form.setValue('content', data.content);
-                        if (data.title && !form.getValues('slug')) {
-                            form.setValue('slug', data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
-                        }
-                    }}
-                />
-
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="imageUrl"
                     render={({ field }) => (
                         <FormItem>
@@ -97,8 +83,7 @@ export function ArticleForm({
                     )}
                 />
 
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="title"
                     render={({ field }) => (
                         <FormItem>
@@ -112,8 +97,7 @@ export function ArticleForm({
                 />
 
                 <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="slug"
                         render={({ field }) => (
                             <FormItem>
@@ -125,8 +109,7 @@ export function ArticleForm({
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="authorName"
                         render={({ field }) => (
                             <FormItem>
@@ -140,8 +123,7 @@ export function ArticleForm({
                     />
                 </div>
 
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="description"
                     render={({ field }) => (
                         <FormItem>
@@ -154,8 +136,7 @@ export function ArticleForm({
                     )}
                 />
 
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="content"
                     render={({ field }) => (
                         <FormItem>
@@ -168,8 +149,7 @@ export function ArticleForm({
                     )}
                 />
 
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="isPublished"
                     render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-none border-2 border-foreground bg-muted/20 p-4">

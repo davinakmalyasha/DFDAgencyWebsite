@@ -29,8 +29,8 @@ export default function LeadsPage() {
             if (res.data.success) {
                 setLeads(res.data.data);
             }
-        } catch (error: any) {
-            toast.error('Failed to load leads', { description: error.message });
+        } catch (error) {
+            toast.error('Failed to load leads', { description: (error as Error).message });
         } finally {
             setLoading(false);
         }
@@ -47,8 +47,8 @@ export default function LeadsPage() {
                 toast.success('Lead structure synced.');
                 fetchLeads();
             }
-        } catch (error: any) {
-            toast.error('Failed to update status', { description: error.message });
+        } catch (error) {
+            toast.error('Failed to update status', { description: (error as Error).message });
         }
     };
 

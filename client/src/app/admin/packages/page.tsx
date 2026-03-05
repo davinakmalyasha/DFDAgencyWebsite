@@ -30,8 +30,8 @@ export default function PackagesPage() {
             if (res.data.success) {
                 setPackages(res.data.data);
             }
-        } catch (error: any) {
-            toast.error('Failed to load packages', { description: error.message });
+        } catch (error) {
+            toast.error('Failed to load packages', { description: (error as Error).message });
         } finally {
             setLoading(false);
         }

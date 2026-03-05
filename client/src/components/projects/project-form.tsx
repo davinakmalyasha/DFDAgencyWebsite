@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { ImageUploader } from './image-uploader';
-import { AIWriterModal } from '@/components/ai-writer-modal';
 
 export function ProjectForm({
     initialData,
@@ -24,12 +23,12 @@ export function ProjectForm({
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<ProjectInput>({
-        resolver: zodResolver(ProjectSchema),
+        resolver: zodResolver(ProjectSchema) as any,
         defaultValues: initialData || {
             title: '',
             slug: '',
             clientName: '',
-            category: 'SERVICES' as any,
+            category: 'SERVICES' as never,
             thumbnailUrl: '',
             description: '',
             techStack: [''],
@@ -58,9 +57,9 @@ export function ProjectForm({
                 toast.success('New Project Added to Portfolio');
             }
             onSuccess();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(initialData?.id ? 'Update Failed' : 'Creation Failed', {
-                description: error.response?.data?.message || error.message
+                description: (error as { response?: { data?: { message?: string } } }).response?.data?.message || (error as Error).message
             });
         } finally {
             setIsLoading(false);
@@ -69,23 +68,9 @@ export function ProjectForm({
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
 
-                <AIWriterModal
-                    type="Project"
-                    onSuccess={(data) => {
-                        if (data.title) form.setValue('title', data.title);
-                        if (data.description) form.setValue('description', data.description);
-                        if (data.content) form.setValue('content', data.content);
-                        // Infer slug from title if missing
-                        if (data.title && !form.getValues('slug')) {
-                            form.setValue('slug', data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
-                        }
-                    }}
-                />
-
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="thumbnailUrl"
                     render={({ field }) => (
                         <FormItem>
@@ -102,8 +87,7 @@ export function ProjectForm({
                 />
 
                 <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="title"
                         render={({ field }) => (
                             <FormItem>
@@ -115,8 +99,7 @@ export function ProjectForm({
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="slug"
                         render={({ field }) => (
                             <FormItem>
@@ -131,8 +114,7 @@ export function ProjectForm({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="category"
                         render={({ field }) => (
                             <FormItem>
@@ -152,8 +134,7 @@ export function ProjectForm({
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="clientName"
                         render={({ field }) => (
                             <FormItem>
@@ -167,8 +148,7 @@ export function ProjectForm({
                     />
                 </div>
 
-                <FormField
-                    control={form.control}
+                <FormField control={form.control as any}
                     name="description"
                     render={({ field }) => (
                         <FormItem>
@@ -182,8 +162,7 @@ export function ProjectForm({
                 />
 
                 <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="duration"
                         render={({ field }) => (
                             <FormItem>
@@ -195,8 +174,7 @@ export function ProjectForm({
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
+                    <FormField control={form.control as any}
                         name="isFeatured"
                         render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between border border-foreground p-3">
@@ -225,7 +203,7 @@ export function ProjectForm({
                         {form.watch('techStack').map((_, index) => (
                             <FormField
                                 key={index}
-                                control={form.control}
+                                control={form.control as any}
                                 name={`techStack.${index}`}
                                 render={({ field }) => (
                                     <FormItem>
@@ -251,19 +229,7 @@ export function ProjectForm({
                     </Button>
                 </div>
 
-                <FormField
-                    control={form.control}
-                    name="link"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="font-bold uppercase tracking-wider text-xs">External Link (Optional)</FormLabel>
-                            <FormControl>
-                                <Input placeholder="https://..." type="url" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                {/* External link field removed — not in ProjectSchema */}
 
                 <Button
                     type="submit"

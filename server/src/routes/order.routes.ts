@@ -17,6 +17,8 @@ router.get('/track/:orderId', OrderController.track);
  */
 router.get('/', authenticateJWT, requireSuperadmin, OrderController.getAll);
 router.get('/:id', authenticateJWT, requireSuperadmin, OrderController.getById);
+router.get('/:id/invoice', authenticateJWT, requireSuperadmin, OrderController.downloadInvoice);
+router.get('/:id/pay', authenticateJWT, requireSuperadmin, OrderController.getPaymentUrl);
 router.patch('/:id/status', authenticateJWT, requireSuperadmin, OrderController.updateStatus);
 router.post('/:id/promote', authenticateJWT, requireSuperadmin, OrderController.promoteToProject);
 router.delete('/:id', authenticateJWT, requireSuperadmin, OrderController.delete);

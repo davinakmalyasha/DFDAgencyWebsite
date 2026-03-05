@@ -1,4 +1,6 @@
-import { MidtransClient } from 'midtrans-client';
+// @ts-ignore
+const Midtrans = require('midtrans-client');
+import { PaymentStatus } from '@prisma/client';
 import dotenv from 'dotenv';
 import { prisma } from '../lib/prisma';
 
@@ -49,16 +51,14 @@ export class PaymentService {
     /**
      * Handle Midtrans Webhook Notification
      */
-    static async handleNotification(notification: any) {
+    static async handleNotification(notification: Record<string, string>) {
         const statusResponse = await this.snap.transaction.notification(notification);
 
         const orderId = statusResponse.order_id;
         const transactionStatus = statusResponse.transaction_status;
         const fraudStatus = statusResponse.fraud_status;
 
-        console.log(`[Midtrans Webhook] Order ID: ${orderId}, Status: ${transactionStatus}`);
-
-        const updateData: any = {};
+        const updateData: { paymentStatus?: PaymentStatus; paidAt?: Date } = {};
         let orderStatus: 'PROCESSING' | 'CANCELLED' | 'PENDING_PAYMENT' | undefined;
 
         if (transactionStatus === 'capture') {
@@ -96,7 +96,22 @@ export class PaymentService {
 
             // If it becomes PROCESSING, we can trigger additional logic like sending a WA confirmation
             if (orderStatus === 'PROCESSING') {
-                console.log(`[Lifecycle] Order ${orderId} is now PAID and PROCESSING.`);
+
+                // Fetch the lead's contact info
+                const paidOrder = await prisma.order.findUnique({
+                    where: { id: orderId },
+                    include: { Lead: true, Package: true }
+                });
+
+                if (paidOrder) {
+                    try {
+                        const { WhatsAppService } = require('./whatsapp.service');
+                        const message = `🎉 *Payment Received!*\n\nHi ${paidOrder.Lead.name},\nWe have successfully received your payment of Rp ${Number(paidOrder.totalAmount).toLocaleString('id-ID')} for the *${paidOrder.Package.name}* package.\n\nYour order is now being processed by our team. You can download your official receipt from the client dashboard.\n\nThank you for choosing DFD Agency!`;
+                        await WhatsAppService.sendMessage(paidOrder.Lead.whatsapp, message);
+                    } catch (waErr) {
+                        console.error('[Payment] Failed to send automated WA confirmation:', waErr);
+                    }
+                }
             }
         }
 

@@ -5,8 +5,9 @@ import api from '@/lib/axios';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Rocket } from 'lucide-react';
+import { Rocket, CreditCard, FileText } from 'lucide-react';
 
 interface Lead {
     id: number;
@@ -41,6 +42,8 @@ const ORDER_STATUSES = ['PENDING_PAYMENT', 'PROCESSING', 'REVISION', 'COMPLETED'
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
 
     const fetchOrders = async () => {
         try {
@@ -82,6 +85,33 @@ export default function OrdersPage() {
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Promotion failed';
             toast.error('Promote failed', { description: message });
+        }
+    };
+
+    const handlePayClick = (order: Order) => {
+        setSelectedOrderForPayment(order);
+        setPaymentModalOpen(true);
+    };
+
+    const handleDownloadInvoice = async (orderId: string) => {
+        try {
+            toast.loading('Generating invoice...', { id: 'invoice-toast' });
+
+            // Note: need responseType blob to trigger a file download from standard axios
+            const res = await api.get(`/orders/${orderId}/invoice`, { responseType: 'blob' });
+
+            // Create a blob link to download
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `INV-${orderId.substring(0, 8).toUpperCase()}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+
+            toast.success('Invoice downloaded', { id: 'invoice-toast' });
+        } catch (err: unknown) {
+            toast.error('Invoice generation failed', { id: 'invoice-toast', description: 'Could not fetch the invoice PDF.' });
         }
     };
 
@@ -159,6 +189,27 @@ export default function OrdersPage() {
                                         </Select>
                                     </TableCell>
                                     <TableCell className="text-right">
+                                        {order.status === 'PENDING_PAYMENT' && (
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handlePayClick(order)}
+                                                className="rounded-none border-2 border-foreground bg-blue-600 text-white font-bold text-xs uppercase hover:bg-blue-700 transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mr-2"
+                                            >
+                                                <CreditCard className="w-3 h-3 mr-1" />
+                                                Pay
+                                            </Button>
+                                        )}
+                                        {['PROCESSING', 'COMPLETED'].includes(order.status) && (
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleDownloadInvoice(order.id)}
+                                                variant="outline"
+                                                className="rounded-none border-2 border-foreground text-foreground font-bold text-xs uppercase hover:bg-muted transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mr-2"
+                                            >
+                                                <FileText className="w-3 h-3 mr-1" />
+                                                Receipt
+                                            </Button>
+                                        )}
                                         {order.status === 'COMPLETED' && !order.Project && (
                                             <Button
                                                 size="sm"
@@ -170,7 +221,7 @@ export default function OrdersPage() {
                                             </Button>
                                         )}
                                         {order.Project && (
-                                            <span className="text-[10px] font-bold uppercase text-green-700 border-2 border-green-700 px-2 py-1 bg-green-50">
+                                            <span className="text-[10px] font-bold uppercase text-green-700 border-2 border-green-700 px-2 py-1 bg-green-50 inline-block mt-2">
                                                 ✓ Portfolio #{order.Project.id}
                                             </span>
                                         )}
@@ -181,6 +232,47 @@ export default function OrdersPage() {
                     </TableBody>
                 </Table>
             </div>
+            <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+                <DialogContent className="border-4 border-foreground rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-background">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Manual Payment Confirmation</DialogTitle>
+                        <DialogDescription className="font-medium text-foreground">
+                            Instruct the client to transfer the total amount to the following bank account.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="bg-muted/30 border-2 border-foreground p-4 text-center">
+                            <p className="font-bold text-sm text-foreground uppercase tracking-widest mb-1">Bank BCA</p>
+                            <p className="font-black text-3xl tracking-widest text-[#0066AE]">1234 5678 90</p>
+                            <p className="font-bold text-sm text-muted-foreground mt-1 uppercase">A.N. DFD Agency</p>
+                        </div>
+                        <div className="flex justify-between items-center border-2 border-foreground p-3 bg-muted/10">
+                            <span className="font-bold uppercase text-xs">Total Amount:</span>
+                            <span className="font-black text-lg">
+                                Rp {selectedOrderForPayment ? Number(selectedOrderForPayment.totalAmount).toLocaleString('id-ID') : '0'}
+                            </span>
+                        </div>
+                        <div className="pt-2">
+                            <Button
+                                onClick={() => {
+                                    if (!selectedOrderForPayment?.Lead?.whatsapp) return;
+                                    const text = `Halo Kak ${selectedOrderForPayment.Lead.name},\n\nTerima kasih telah memesan paket *${selectedOrderForPayment.Package?.name}* di DFD Agency.\n\nBerikut adalah rincian tagihan Anda:\n*Order ID:* ${selectedOrderForPayment.id}\n*Total:* Rp ${Number(selectedOrderForPayment.totalAmount).toLocaleString('id-ID')}\n\nMohon lakukan transfer ke rekening berikut:\n*BCA:* 1234 5678 90 (A.N. DFD Agency)\n\nSilakan balas pesan ini dengan *Bukti Transfer* jika sudah melakukan pembayaran agar project bisa segera kami proses.\n\nTerima kasih! 🙏`;
+                                    let waNum = selectedOrderForPayment.Lead.whatsapp.replace(/\D/g, '');
+                                    if (waNum.startsWith('0')) waNum = '62' + waNum.substring(1);
+                                    const waLink = `https://wa.me/${waNum}?text=${encodeURIComponent(text)}`;
+                                    window.open(waLink, '_blank');
+                                }}
+                                className="w-full rounded-none border-2 border-foreground bg-green-600 text-white font-bold uppercase tracking-widest hover:bg-green-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-none text-md h-12"
+                            >
+                                WhatsApp Client (Proof of Payment)
+                            </Button>
+                        </div>
+                        <p className="text-xs font-bold text-muted-foreground text-center mt-2 uppercase tracking-wide">
+                            Once the client sends the payment proof, manually change the status to "PROCESSING".
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

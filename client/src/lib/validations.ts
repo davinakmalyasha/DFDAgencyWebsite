@@ -53,3 +53,14 @@ export const ArticleSchema = z.object({
 });
 
 export type ArticleInput = z.infer<typeof ArticleSchema>;
+
+export const promoSchema = z.object({
+    text: z.string().min(5, 'Promo text is required'),
+    linkUrl: z.string().url('Invalid URL').nullable().optional().or(z.literal('')),
+    packageId: z.number().int().positive('Invalid Package ID').nullable().optional(),
+    isActive: z.boolean().default(false),
+    startDate: z.string().datetime().nullable().optional().or(z.literal('')),
+    endDate: z.string().datetime().nullable().optional().or(z.literal('')),
+});
+
+export type PromoInput = z.infer<typeof promoSchema>;

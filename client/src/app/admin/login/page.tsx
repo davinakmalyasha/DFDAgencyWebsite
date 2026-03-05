@@ -39,9 +39,9 @@ export default function AdminLoginPage() {
                 router.push('/admin/dashboard');
                 router.refresh();
             }
-        } catch (error: any) {
+        } catch (error) {
             toast.error('Authentication Failed', {
-                description: error.response?.data?.message || 'Invalid credentials',
+                description: (error as {response?: {data?: {message?: string}}}).response?.data?.message || 'Invalid credentials',
             });
         } finally {
             setIsLoading(false);

@@ -8,7 +8,7 @@ export const validateRequest = (schema: z.ZodSchema) => {
             // Validate the request body
             schema.parse(req.body);
             next();
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (error instanceof z.ZodError) {
                 const combinedMessage = error.issues.map(i => i.message).join(', ');
                 return res.status(400).json({

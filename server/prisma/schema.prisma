@@ -108,6 +108,7 @@ model Package {
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
   Orders        Order[]
+  Promos        Promo[]
 
   @@map("package")
 }
@@ -198,13 +199,17 @@ model Promo {
   id        Int       @id @default(autoincrement())
   text      String
   linkUrl   String?
+  packageId Int?
   isActive  Boolean   @default(false)
   startDate DateTime?
   endDate   DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  Package   Package?  @relation(fields: [packageId], references: [id])
+
   @@map("promo")
+  @@index([packageId])
 }
 
 model User {

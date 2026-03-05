@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
 import api from '@/lib/axios';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -9,11 +10,23 @@ import { toast } from 'sonner';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { ArticleForm } from '@/components/articles/article-form';
 
+type Article = {
+    id: number;
+    title: string;
+    slug: string;
+    content: string;
+    isPublished: boolean;
+    authorName?: string;
+    publishedAt?: string;
+    imageUrl?: string;
+    createdAt: string;
+};
+
 export default function ArticlesPage() {
-    const [articles, setArticles] = useState<any[]>([]);
+    const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [selectedArticle, setSelectedArticle] = useState<any | undefined>(undefined);
+    const [selectedArticle, setSelectedArticle] = useState<Article | undefined>(undefined);
 
     const fetchArticles = async () => {
         try {
@@ -22,7 +35,7 @@ export default function ArticlesPage() {
             if (res.data.success) {
                 setArticles(res.data.data);
             }
-        } catch (error: any) {
+        } catch (error) {
             toast.error('Failed to load articles');
         } finally {
             setLoading(false);
@@ -113,7 +126,7 @@ export default function ArticlesPage() {
                                     </TableCell>
                                     <TableCell className="font-mono text-xs">
                                         {item.isPublished
-                                            ? new Date(item.publishedAt).toLocaleDateString()
+                                            ? new Date(item.publishedAt || '').toLocaleDateString()
                                             : <span className="text-red-600 font-bold uppercase border border-red-600 px-1">DRAFT</span>
                                         }
                                     </TableCell>

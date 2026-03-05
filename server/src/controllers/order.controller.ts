@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
 import { AuditService } from '../services/audit.service';
+import { InvoiceService } from '../services/invoice.service';
+import { PaymentService } from '../services/payment.service';
 import { prisma } from '../lib/prisma';
 
 export class OrderController {
@@ -48,6 +50,62 @@ export class OrderController {
                 success: true,
                 message: 'Order track retrieved.',
                 data: order
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Download Invoice for a Paid Order (Protected)
+     */
+    static async downloadInvoice(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+
+            // Generate or fetch the invoice
+            const filePath = await InvoiceService.generateInvoice(id);
+
+            // Serve the file as a download
+            res.download(filePath, (err) => {
+                if (err) {
+                    console.error('Error serving invoice:', err);
+                    // Avoid sending multiple responses if headers are already sent
+                    if (!res.headersSent) {
+                        res.status(500).json({ success: false, message: 'Failed to download invoice' });
+                    }
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Get Payment URL for an existing PENDING_PAYMENT order (Protected)
+     */
+    static async getPaymentUrl(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const order = await OrderService.getOrderById(id);
+            if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+            if (order.status !== 'PENDING_PAYMENT') {
+                return res.status(400).json({ success: false, message: 'Order is not pending payment' });
+            }
+
+            const snap = await PaymentService.createSnapTransaction(
+                order.id,
+                Number(order.totalAmount),
+                {
+                    name: order.Lead.name,
+                    phone: order.Lead.whatsapp
+                }
+            );
+
+            res.status(200).json({
+                success: true,
+                message: 'Payment URL generated',
+                data: { paymentUrl: snap.redirect_url, token: snap.token }
             });
         } catch (error) {
             next(error);

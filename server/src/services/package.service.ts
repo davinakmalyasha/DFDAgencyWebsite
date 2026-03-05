@@ -6,9 +6,12 @@ export class PackageService {
     /**
      * Get all packages (respecting soft-delete via prisma extension)
      */
-    static async getAllPackages(page: number = 1, limit: number = 10, includeInactive = false) {
+    static async getAllPackages(page: number = 1, limit: number = 10, includeInactive = false, hasDiscount = false) {
         const { skip, limit: l, page: p } = PaginationHelper.getSkipLimit(page, limit);
-        const where = includeInactive ? {} : { isActive: true };
+
+        let where: any = {};
+        if (!includeInactive) where.isActive = true;
+        if (hasDiscount) where.discountPrice = { not: null };
 
         const [data, total] = await Promise.all([
             prisma.package.findMany({

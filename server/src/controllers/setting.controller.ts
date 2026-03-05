@@ -14,12 +14,13 @@ export class SettingController {
                 data: settings,
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to retrieve settings';
             return res.status(500).json({
                 success: false,
                 message: 'Failed to retrieve settings',
                 data: null,
-                error: error.message
+                error: message
             });
         }
     }
@@ -66,12 +67,13 @@ export class SettingController {
                 data: updatedSettings,
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to update settings';
             return res.status(500).json({
                 success: false,
                 message: 'Failed to update settings',
                 data: null,
-                error: error.message
+                error: message
             });
         }
     }

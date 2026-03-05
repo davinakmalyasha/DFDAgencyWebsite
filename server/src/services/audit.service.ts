@@ -4,7 +4,7 @@ export class AuditService {
     /**
      * Log an administrative action
      */
-    static async log(userId: number | string, action: string, target: string, details?: any, ipAddress?: string) {
+    static async log(userId: number | string, action: string, target: string, details?: Record<string, unknown> | null, ipAddress?: string) {
         try {
             const parsedUserId = typeof userId === 'string' ? parseInt(userId, 10) : userId;
 

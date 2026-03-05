@@ -20,19 +20,25 @@ export class AIController {
             }
 
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro" });
+            const model = genAI.getGenerativeModel({
+                model: "gemini-2.0-flash",
+                generationConfig: { responseMimeType: "application/json" }
+            });
 
             const prompt = `You are an expert marketing copywriter for DFD Agency, an AI-powered web agency in Indonesia. 
             Generate a creative SEO title, a high-converting meta description, and short marketing content for a ${type} with this context: ${context}.
-            Respond ONLY in JSON format with keys: title, description, content.`;
+            Respond ONLY in JSON format with exactly three keys: "title", "description", and "content". All text must be in Indonesian.`;
 
             const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
+            const text = result.response.text();
 
-            // Extract JSON from response (handling potential markdown code blocks)
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            const data = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error('Failed to parse Gemini JSON:', text);
+                return res.status(500).json({ success: false, message: 'AI returned invalid format' });
+            }
 
             res.status(200).json({
                 success: true,

@@ -28,10 +28,11 @@ export class AuthController {
                 },
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Login failed';
             return res.status(401).json({
                 success: false,
-                message: error.message || 'Login failed',
+                message,
                 data: null,
                 error: 'Unauthorized'
             });
@@ -50,12 +51,13 @@ export class AuthController {
                 data: null,
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Logout failed';
             return res.status(500).json({
                 success: false,
                 message: 'Logout failed',
                 data: null,
-                error: error.message
+                error: message
             });
         }
     }
@@ -71,12 +73,13 @@ export class AuthController {
                 data: { user },
                 error: null
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Not authenticated';
             return res.status(401).json({
                 success: false,
                 message: 'Not authenticated',
                 data: null,
-                error: error.message
+                error: message
             });
         }
     }

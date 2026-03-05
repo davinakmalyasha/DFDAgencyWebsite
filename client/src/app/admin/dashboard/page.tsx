@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import Link from 'next/link';
 import { Briefcase, FileText, KeySquare, Users, TrendingUp, Filter, Server } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -49,10 +50,10 @@ export default function DashboardPage() {
     if (!data) return null;
 
     const summaryCards = [
-        { label: 'Total Leads', value: data.summary.totalLeads, icon: Users },
-        { label: 'Active Projects', value: data.summary.activeProjects, icon: KeySquare },
-        { label: 'Total Orders', value: data.summary.totalOrders, icon: Briefcase },
-        { label: 'Published Articles', value: data.summary.totalArticles, icon: FileText },
+        { label: 'Total Leads', value: data.summary.totalLeads, icon: Users, href: '/admin/leads' },
+        { label: 'Active Projects', value: data.summary.activeProjects, icon: KeySquare, href: '/admin/projects' },
+        { label: 'Total Orders', value: data.summary.totalOrders, icon: Briefcase, href: '/admin/orders' },
+        { label: 'Published Articles', value: data.summary.totalArticles, icon: FileText, href: '/admin/articles' },
     ];
 
     const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6b7280']; // For Hosting Pie
@@ -72,16 +73,17 @@ export default function DashboardPage() {
                 {summaryCards.map((stat, i) => {
                     const Icon = stat.icon;
                     return (
-                        <div
+                        <Link
                             key={i}
-                            className="bg-background border-2 border-foreground p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex flex-col justify-between"
+                            href={stat.href}
+                            className="bg-background border-2 border-foreground p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-muted/30 transition-all flex flex-col justify-between cursor-pointer"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">{stat.label}</h3>
                                 <Icon className="w-5 h-5 text-foreground" />
                             </div>
                             <div className="text-4xl font-black">{stat.value}</div>
-                        </div>
+                        </Link>
                     );
                 })}
             </div>
@@ -157,35 +159,57 @@ export default function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pt-2">
 
                 {/* Hosting Pipeline */}
-                <Card className="rounded-none border-2 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <Card className="md:col-span-2 lg:col-span-3 rounded-none border-2 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                     <CardHeader className="border-b-2 border-foreground bg-muted/20">
                         <CardTitle className="font-black uppercase tracking-tight flex items-center gap-2"><Server className="w-5 h-5" /> Hosting Status</CardTitle>
                         <CardDescription className="font-bold text-xs uppercase text-muted-foreground">Active vs Expiring Monitors</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6 pb-2">
-                        <div className="h-[250px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={data.charts.hostingPipeline.filter(s => s.count > 0)}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={90}
-                                        paddingAngle={5}
-                                        dataKey="count"
-                                        stroke="none"
-                                    >
-                                        {data.charts.hostingPipeline.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <RechartsTooltip
-                                        contentStyle={{ border: '2px solid #000', borderRadius: 0, boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', fontWeight: 900 }}
-                                    />
-                                    <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 800 }} />
-                                </PieChart>
-                            </ResponsiveContainer>
+                        <div className="flex items-center justify-between h-[250px] w-full">
+                            {/* Pie Chart (Left) */}
+                            <div className="w-1/2 h-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={data.charts.hostingPipeline.filter(s => s.count > 0)}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={50}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="count"
+                                            nameKey="status"
+                                            stroke="none"
+                                        >
+                                            {data.charts.hostingPipeline.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip
+                                            formatter={(value, name) => [value, String(name).replace(/_/g, ' ')]}
+                                            contentStyle={{ border: '2px solid #000', borderRadius: 0, boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', fontWeight: 900 }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Explicit Data List (Right) */}
+                            <div className="w-1/2 flex flex-col justify-center gap-3 pl-4 border-l-2 border-dashed border-foreground/20">
+                                {data.charts.hostingPipeline.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-none" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                                {item.status.replace(/_/g, ' ')}
+                                            </span>
+                                        </div>
+                                        <span className="font-black text-lg">{item.count}</span>
+                                    </div>
+                                ))}
+                                {data.charts.hostingPipeline.length === 0 && (
+                                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">NO DATA</span>
+                                )}
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

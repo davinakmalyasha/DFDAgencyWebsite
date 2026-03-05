@@ -11,7 +11,7 @@ export interface PaginationResult<T> {
 }
 
 export class PaginationHelper {
-    static getSkipLimit(page: any, limit: any) {
+    static getSkipLimit(page: string | number, limit: string | number) {
         const p = Math.max(1, parseInt(page as string) || 1);
         const l = Math.min(100, Math.max(1, parseInt(limit as string) || 10));
         const skip = (p - 1) * l;

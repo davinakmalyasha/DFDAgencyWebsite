@@ -54,9 +54,9 @@ export function PackageForm({
                 toast.success('Package Created Successfully');
             }
             onSuccess();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(initialData?.id ? 'Update Failed' : 'Creation Failed', {
-                description: error.response?.data?.message || error.message
+                description: (error as {response?: {data?: {message?: string}}}).response?.data?.message || (error as Error).message
             });
         } finally {
             setIsLoading(false);

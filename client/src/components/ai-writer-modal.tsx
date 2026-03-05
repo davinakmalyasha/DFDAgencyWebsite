@@ -52,9 +52,9 @@ export function AIWriterModal({ type, onSuccess }: AIWriterModalProps) {
             } else {
                 toast.error('Failed to parse AI response');
             }
-        } catch (error: any) {
+        } catch (error) {
             toast.error('AI Generation Failed', {
-                description: error.response?.data?.message || error.message
+                description: (error as {response?: {data?: {message?: string}}}).response?.data?.message || (error as Error).message
             });
         } finally {
             setIsGenerating(false);

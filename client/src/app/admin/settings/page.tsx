@@ -30,7 +30,7 @@ export default function SettingsPage() {
     const [isSaving, setIsSaving] = useState(false);
 
     const form = useForm<SettingsInput>({
-        resolver: zodResolver(settingsSchema),
+        resolver: zodResolver(settingsSchema) as any,
         defaultValues: {
             emailContact: '',
             whatsappNumber: '',
@@ -76,8 +76,8 @@ export default function SettingsPage() {
             if (res.data.success) {
                 toast.success('Settings configuration updated and synchronized');
             }
-        } catch (error: any) {
-            toast.error('Update failed', { description: error.message });
+        } catch (error) {
+            toast.error('Update failed', { description: (error as Error).message });
         } finally {
             setIsSaving(false);
         }
@@ -94,11 +94,10 @@ export default function SettingsPage() {
 
             <div className="border-2 border-foreground bg-background shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
 
                         <div className="grid grid-cols-2 gap-6">
-                            <FormField
-                                control={form.control as any}
+                            <FormField control={form.control as any}
                                 name="emailContact"
                                 render={({ field }) => (
                                     <FormItem>
@@ -110,8 +109,7 @@ export default function SettingsPage() {
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control as any}
+                            <FormField control={form.control as any}
                                 name="whatsappNumber"
                                 render={({ field }) => (
                                     <FormItem>
@@ -125,8 +123,7 @@ export default function SettingsPage() {
                             />
                         </div>
 
-                        <FormField
-                            control={form.control as any}
+                        <FormField control={form.control as any}
                             name="officeAddress"
                             render={({ field }) => (
                                 <FormItem>
@@ -140,8 +137,7 @@ export default function SettingsPage() {
                         />
 
                         <div className="grid grid-cols-2 gap-6">
-                            <FormField
-                                control={form.control as any}
+                            <FormField control={form.control as any}
                                 name="instagramLink"
                                 render={({ field }) => (
                                     <FormItem>
@@ -153,8 +149,7 @@ export default function SettingsPage() {
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control as any}
+                            <FormField control={form.control as any}
                                 name="linkedinLink"
                                 render={({ field }) => (
                                     <FormItem>
@@ -169,8 +164,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
-                            <FormField
-                                control={form.control as any}
+                            <FormField control={form.control as any}
                                 name="metaPixelId"
                                 render={({ field }) => (
                                     <FormItem>
@@ -182,8 +176,7 @@ export default function SettingsPage() {
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control as any}
+                            <FormField control={form.control as any}
                                 name="googleAnalyticsId"
                                 render={({ field }) => (
                                     <FormItem>
@@ -197,8 +190,7 @@ export default function SettingsPage() {
                             />
                         </div>
 
-                        <FormField
-                            control={form.control as any}
+                        <FormField control={form.control as any}
                             name="isMaintenanceMode"
                             render={({ field }) => (
                                 <FormItem className="flex flex-row items-center justify-between rounded-none border-2 border-foreground bg-muted/20 p-4">

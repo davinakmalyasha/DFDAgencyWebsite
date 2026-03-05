@@ -18,6 +18,15 @@ const config: Config = {
             },
             transitionTimingFunction: {
                 'quintic-out': 'cubic-bezier(0.22, 1, 0.36, 1)',
+            },
+            keyframes: {
+                marquee: {
+                    '0%': { transform: 'translateX(0%)' },
+                    '100%': { transform: 'translateX(-50%)' },
+                }
+            },
+            animation: {
+                marquee: 'marquee 25s linear infinite',
             }
         },
     },
