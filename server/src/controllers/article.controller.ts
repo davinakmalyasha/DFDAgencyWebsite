@@ -78,7 +78,7 @@ export class ArticleController {
      */
     static async create(req: Request, res: Response, next: NextFunction) {
         try {
-            const authorId = (req as any).user.id;
+            const authorId = (req as any).user.userId;
             const article = await ArticleService.createArticle(req.body, authorId);
 
             // Audit Log
@@ -100,10 +100,11 @@ export class ArticleController {
     static async update(req: Request, res: Response, next: NextFunction) {
         try {
             const id = parseInt(req.params.id as string);
+            const authorId = (req as any).user.userId;
             const article = await ArticleService.updateArticle(id, req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_ARTICLE', `Article ID: ${id}`, req.body, req.ip);
+            await AuditService.log(authorId, 'UPDATE_ARTICLE', `Article ID: ${id}`, req.body, req.ip);
 
             res.status(200).json({
                 success: true,

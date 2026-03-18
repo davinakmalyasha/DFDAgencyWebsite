@@ -72,6 +72,16 @@ export function CustomCursor() {
         return () => {
             window.removeEventListener("mousemove", manageMouseMove);
             window.removeEventListener("mouseover", handleMouseOver);
+            
+            // Clean up cursor hiding styles
+            if (typeof document !== "undefined") {
+                document.body.style.cursor = "auto";
+                const style = document.querySelector('style[data-custom-cursor="true"]');
+                if (style) {
+                    style.remove();
+                }
+                styleInjectedRef.current = false;
+            }
         };
     }, [cursorSize, mouseX, mouseY]);
 

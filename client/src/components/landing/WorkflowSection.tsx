@@ -1,58 +1,75 @@
 "use client";
 
-import { ClipboardList, Sparkles, TerminalSquare, Rocket } from "lucide-react";
+import { ShieldCheck, Compass, Cpu, Globe } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
 export function WorkflowSection() {
     const steps = [
         {
             phase: "PHASE 01",
-            title: "Order & Onboard",
-            description: "Kick off your project instantly. We integrate with your existing tools, establish communication channels, and define the core success metrics for your product.",
-            icon: <ClipboardList className="w-5 h-5 text-white" />,
+            title: "Secure Foundation",
+            description: "Initiate the vision. Secure your development slot and lock in the high-performance engineering resources required for your architectural success.",
+            icon: <ShieldCheck className="w-5 h-5 text-white" />,
             placeholder: (
-                <div className="w-full h-32 md:h-48 flex items-center justify-center opacity-20">
-                    <svg className="w-24 h-24 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+                <div className="w-full h-32 md:h-48 flex items-center justify-center opacity-10">
+                    <div className="relative w-40 h-40 flex items-center justify-center">
+                        <div className="absolute inset-0 border-[8px] border-zinc-950 rounded-full opacity-20"></div>
+                        <div className="w-24 h-24 border-4 border-zinc-950 rounded-xl relative flex items-center justify-center bg-zinc-50">
+                            <div className="w-2 h-12 bg-zinc-950 rounded-full"></div>
+                        </div>
+                        <div className="absolute top-1/2 left-0 w-full h-px bg-zinc-950 -translate-y-1/2 opacity-20"></div>
+                        <div className="absolute top-0 left-1/2 w-px h-full bg-zinc-950 -translate-x-1/2 opacity-20"></div>
+                    </div>
                 </div>
             )
         },
         {
             phase: "PHASE 02",
-            title: "AI Brief Generation",
-            description: "Our proprietary AI engine parses your requirements to generate a comprehensive technical architecture and UI/UX strategy in minutes, not weeks.",
-            icon: <Sparkles className="w-5 h-5 text-white" />,
+            title: "Strategic Blueprinting",
+            description: "Architecture before code. We sync on your business goals and map out a technical blueprint that guarantees flawless results and peak performance.",
+            icon: <Compass className="w-5 h-5 text-white" />,
             placeholder: (
-                <div className="w-full h-32 md:h-48 flex flex-col items-center justify-center gap-4 opacity-20">
-                    <div className="w-48 h-2 bg-zinc-950 rounded-full"></div>
-                    <div className="w-32 h-2 bg-zinc-950 rounded-full"></div>
-                    <div className="w-40 h-2 bg-zinc-950 rounded-full"></div>
+                <div className="w-full h-32 md:h-48 relative overflow-hidden opacity-10 border border-zinc-200 rounded-xl bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:32px_32px]">
+                    <div className="absolute top-1/4 left-1/4 w-32 h-20 border-2 border-zinc-950 border-dashed rounded-sm"></div>
+                    <div className="absolute top-1/2 left-1/2 w-48 h-32 border-2 border-zinc-950 rounded-sm -translate-x-1/2 -translate-y-1/2"></div>
                 </div>
             )
         },
         {
             phase: "PHASE 03",
-            title: "Rapid Coding",
-            description: "Development begins with high-velocity sprints. We use modern tech stacks and automated testing to ensure a stable, scalable foundation from the first commit.",
-            icon: <TerminalSquare className="w-5 h-5 text-white" />,
+            title: "Orchestrated Engineering",
+            description: "High-Performance Logic meets AI-Agent precision. We rapidly build your site using our elite dev-stack, ensuring perfect speed and impregnable security.",
+            icon: <Cpu className="w-5 h-5 text-white" />,
             placeholder: (
-                <div className="w-full h-32 md:h-48 flex items-end justify-center gap-2 opacity-20">
-                    <div className="w-16 h-16 bg-zinc-950 rounded-t-sm"></div>
-                    <div className="w-24 h-32 bg-zinc-950 rounded-t-sm"></div>
-                    <div className="w-20 h-24 bg-zinc-950 rounded-t-sm"></div>
+                <div className="w-full h-32 md:h-48 flex flex-col justify-center gap-4 px-8 opacity-10">
+                    <div className="flex gap-4 items-center">
+                        <div className="w-3 h-3 rounded-full bg-zinc-950"></div>
+                        <div className="h-2 w-full bg-zinc-950 rounded-full"></div>
+                    </div>
+                    <div className="flex gap-4 items-center ml-12">
+                        <div className="h-2 w-2/3 bg-zinc-200 rounded-full"></div>
+                        <div className="w-12 h-4 border-2 border-zinc-950 rounded-sm"></div>
+                    </div>
+                    <div className="flex gap-4 items-center ml-4">
+                        <div className="w-3 h-3 border-2 border-zinc-950 rounded-full"></div>
+                        <div className="h-2 w-3/4 bg-zinc-950 rounded-full"></div>
+                    </div>
                 </div>
             )
         },
         {
             phase: "PHASE 04",
-            title: "Launch & Scale",
-            description: "Go live with confidence. We handle the deployment, monitoring, and infrastructure scaling to support your growth from 100 to 1,000,000 users.",
-            icon: <Rocket className="w-5 h-5 text-white" />,
+            title: "Ecosystem Ascension",
+            description: "Live & Beyond. We deploy your site to the global edge and provide you with your Tracking Dashboard to manage your business growth on autopilot.",
+            icon: <Globe className="w-5 h-5 text-white" />,
             placeholder: (
                 <div className="w-full h-48 md:h-64 bg-zinc-950 rounded-2xl flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <p className="absolute bottom-4 left-6 text-xs font-bold tracking-widest uppercase opacity-50">PRODUCTION READY</p>
-                    <div className="w-32 h-32 rounded-full border-4 border-zinc-800 opacity-20"></div>
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,#fff_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+                    <div className="w-40 h-40 rounded-full border border-white/20 flex items-center justify-center relative">
+                        <div className="absolute w-2 h-2 bg-white rounded-full top-0 left-1/2 -translate-x-1/2 pulse shadow-[0_0_10px_#fff]"></div>
+                        <div className="absolute w-2 h-2 bg-white rounded-full bottom-8 left-4 pulse shadow-[0_0_10px_#fff]"></div>
+                        <div className="w-24 h-24 rounded-full border-4 border-white/40 animate-pulse"></div>
+                    </div>
                 </div>
             )
         },
@@ -92,11 +109,11 @@ export function WorkflowSection() {
                         HOW WE WORK
                     </span>
                     <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-zinc-950 mb-8 leading-[1.1] max-w-4xl">
-                        A modern process for<br />modern products.
+                        Engineered for Speed.<br />Built for Excellence.
                     </h2>
                     <p className="text-zinc-500 text-lg leading-relaxed max-w-2xl">
-                        We&apos;ve optimized our delivery pipeline to maximize speed without
-                        compromising on technical excellence. Here is your roadmap from idea to scale.
+                        We&apos;ve removed the friction. Our orchestrated delivery pipeline is 
+                        engineered for peak velocity and total transparency.
                     </p>
                 </motion.div>
 

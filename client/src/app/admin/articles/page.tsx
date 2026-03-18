@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { ArticleForm } from '@/components/articles/article-form';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 type Article = {
     id: number;
@@ -27,6 +28,7 @@ export default function ArticlesPage() {
     const [loading, setLoading] = useState(true);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<Article | undefined>(undefined);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
 
     const fetchArticles = async () => {
         try {
@@ -50,6 +52,7 @@ export default function ArticlesPage() {
         if (!window.confirm('Are you absolutely sure you want to delete this article?')) return;
 
         try {
+            setDeletingId(id);
             const res = await api.delete(`/articles/${id}`);
             if (res.data.success) {
                 toast.success('Article deleted safely.');
@@ -60,6 +63,8 @@ export default function ArticlesPage() {
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Unknown error';
             toast.error('Delete failed', { description: message });
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -96,9 +101,7 @@ export default function ArticlesPage() {
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 font-bold text-muted-foreground">FETCHING ARTICLES...</TableCell>
-                            </TableRow>
+                            <TableSkeleton columns={5} rows={5} />
                         ) : articles.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 font-bold text-muted-foreground">NO ARTICLES PUBLISHED</TableCell>
@@ -126,7 +129,7 @@ export default function ArticlesPage() {
                                     </TableCell>
                                     <TableCell className="font-mono text-xs">
                                         {item.isPublished
-                                            ? new Date(item.publishedAt || '').toLocaleDateString()
+                                            ? new Date(item.publishedAt || item.createdAt).toLocaleDateString()
                                             : <span className="text-red-600 font-bold uppercase border border-red-600 px-1">DRAFT</span>
                                         }
                                     </TableCell>
@@ -135,8 +138,18 @@ export default function ArticlesPage() {
                                             <Button variant="outline" size="icon" onClick={() => { setSelectedArticle(item); setIsSheetOpen(true); }} className="rounded-none border-2 border-foreground hover:bg-foreground hover:text-background transition-none h-8 w-8">
                                                 <Edit2 className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)} className="rounded-none border-2 border-foreground hover:bg-red-600 hover:text-white transition-none h-8 w-8">
-                                                <Trash2 className="h-4 w-4" />
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                onClick={() => handleDelete(item.id)} 
+                                                disabled={deletingId === item.id}
+                                                className="rounded-none border-2 border-foreground hover:bg-red-600 hover:text-white transition-none h-8 w-8 disabled:opacity-50"
+                                            >
+                                                {deletingId === item.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="h-4 w-4" />
+                                                )}
                                             </Button>
                                         </div>
                                     </TableCell>

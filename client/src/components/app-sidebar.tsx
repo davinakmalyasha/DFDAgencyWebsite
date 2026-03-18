@@ -20,7 +20,7 @@ const navigation = [
     { name: 'WA Session', href: '/admin/whatsapp', icon: Smartphone },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ className }: { className?: string }) {
     const pathname = usePathname();
     const router = useRouter();
 
@@ -36,7 +36,7 @@ export function AppSidebar() {
     };
 
     return (
-        <aside className="w-64 border-r-2 border-foreground bg-background h-screen flex flex-col fixed inset-y-0 left-0 z-50">
+        <aside className={`w-64 border-r-2 border-foreground bg-background h-screen flex flex-col fixed inset-y-0 left-0 z-50 hidden lg:flex ${className}`}>
             {/* Header */}
             <div className="h-16 flex items-center px-4 border-b-2 border-foreground bg-muted/30 shrink-0">
                 <h2 className="text-xl font-black tracking-tight uppercase">DFD Admin</h2>

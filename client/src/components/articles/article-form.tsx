@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { ImageUploader } from '@/components/projects/image-uploader';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 export function ArticleForm({
     initialData,
@@ -22,9 +23,11 @@ export function ArticleForm({
     onSuccess: () => void;
 }) {
     const [isLoading, setIsLoading] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false);
 
     const form = useForm<ArticleInput>({
         resolver: zodResolver(ArticleSchema) as any,
+        mode: 'onTouched',
         defaultValues: initialData || {
             title: '',
             slug: '',
@@ -35,6 +38,34 @@ export function ArticleForm({
             isPublished: false,
         },
     });
+
+    const handleAiGenerate = async () => {
+        const title = form.getValues('title');
+        if (!title || title.length < 3) {
+            toast.error('Masukan judul artikel minimal 3 karakter untuk konteks AI.');
+            return;
+        }
+
+        try {
+            setIsAiLoading(true);
+            const res = await api.post('/ai/generate-copy', {
+                type: 'Blog Article',
+                context: title
+            });
+
+            if (res.data.success) {
+                const { title: aiTitle, description, content } = res.data.data;
+                if (aiTitle) form.setValue('title', aiTitle);
+                if (description) form.setValue('description', description);
+                if (content) form.setValue('content', content);
+                toast.success('Magic Content generated! ✨');
+            }
+        } catch (error: any) {
+            toast.error('AI Generation failed', { description: error.response?.data?.message || 'Check your Gemini API Key' });
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
 
     async function onSubmit(data: ArticleInput) {
         setIsLoading(true);
@@ -87,7 +118,24 @@ export function ArticleForm({
                     name="title"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="font-bold uppercase tracking-wider text-xs">Article Title</FormLabel>
+                            <div className="flex items-center justify-between">
+                                <FormLabel className="font-bold uppercase tracking-wider text-xs">Article Title</FormLabel>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleAiGenerate}
+                                    disabled={isAiLoading}
+                                    className="h-6 px-2 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-none border border-blue-600/20"
+                                >
+                                    {isAiLoading ? (
+                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="mr-1 h-3 w-3" />
+                                    )}
+                                    Magic Content
+                                </Button>
+                            </div>
                             <FormControl>
                                 <Input placeholder="Attention-grabbing headline..." className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
                             </FormControl>

@@ -1,9 +1,12 @@
+console.log('[DEBUG] Server script starting...');
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import path from 'path';
 // import * as Sentry from "@sentry/node"; // Enable after adding DSN
 // import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
@@ -29,8 +32,8 @@ import { WhatsAppService } from './services/whatsapp.service';
 
 dotenv.config();
 
-// Initialize Automated Business Logic
-WhatsAppService.initialize();
+// Initialize Automated Business Logic (Non-blocking)
+WhatsAppService.initialize().catch(err => console.error('[WhatsApp] Global Init Error:', err));
 CronService.init();
 
 
@@ -62,6 +65,17 @@ app.use(cors({
     credentials: true
 }));
 
+// Request Logger for Debugging
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}`);
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Status: ${res.statusCode} (${duration}ms)`);
+    });
+    next();
+});
+
 // Apply the rate limiting middleware to all requests ONLY if strictly production
 if (process.env.NODE_ENV === 'production') {
     const limiter = rateLimit({
@@ -78,6 +92,22 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Persistent Logger
+const logFile = path.join(process.cwd(), 'request_debug.log');
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
+    const logEntry = `[${new Date().toISOString()}] START ${req.method} ${req.url}\n`;
+    fs.appendFileSync(logFile, logEntry);
+    
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        const endEntry = `[${new Date().toISOString()}] END ${req.method} ${req.url} - Status: ${res.statusCode} (${duration}ms)\n`;
+        fs.appendFileSync(logFile, endEntry);
+    });
+    next();
+});
+
 app.use(csrfProtection);
 
 // Base Route

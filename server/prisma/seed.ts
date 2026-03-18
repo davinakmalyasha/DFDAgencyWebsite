@@ -34,7 +34,7 @@ async function main() {
     if (!existingSettings) {
         await prisma.globalSetting.create({
             data: {
-                whatsappNumber: '6281234567890',
+                whatsappNumber: '62895324350359',
                 emailContact: 'hello@dfdagency.com',
                 officeAddress: 'Jakarta, Indonesia',
                 isMaintenanceMode: false,

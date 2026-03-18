@@ -22,14 +22,24 @@ export default async function Home() {
   let projectsData = [];
 
   try {
-    const [packages, projects] = await Promise.all([
+    const [packagesResult, projectsResult] = await Promise.allSettled([
       PublicService.getPackages(),
       PublicService.getProjects(),
     ]);
-    packagesData = packages?.data || [];
-    projectsData = projects?.data || [];
+
+    if (packagesResult.status === "fulfilled") {
+      packagesData = packagesResult.value?.data || [];
+    } else {
+      console.error("Partial Failure: Failed to fetch packages data:", packagesResult.reason);
+    }
+
+    if (projectsResult.status === "fulfilled") {
+      projectsData = projectsResult.value?.data || [];
+    } else {
+      console.error("Partial Failure: Failed to fetch projects data:", projectsResult.reason);
+    }
   } catch (error) {
-    console.error("Failed to fetch public data:", error);
+    console.error("Unexpected global error during data fetching:", error);
   }
 
   return (
@@ -56,7 +66,7 @@ export default async function Home() {
         <TeamSection />
       </div>
       <div id="testimonials">
-        <Testimonials />
+        <Testimonials projects={projectsData} />
       </div>
       <div id="faq">
         <FaqAccordion />

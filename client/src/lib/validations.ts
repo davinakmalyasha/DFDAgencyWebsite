@@ -13,7 +13,7 @@ export const loginSchema = z.object({
 export const PackageSchema = z.object({
     name: z.string().min(1, "Name is required"),
     slug: z.string().min(1, "Slug is required"),
-    price: z.number().positive("Price must be positive"),
+    price: z.number().nonnegative("Price must be 0 or greater"),
     originalPrice: z.number().nullable().optional(),
     description: z.string().nullable().optional(),
     features: z.array(z.string()).min(1, "At least one feature is required"),
@@ -27,7 +27,7 @@ export const ProjectSchema = z.object({
     title: z.string().min(1, "Title is required"),
     slug: z.string().min(1, "Slug is required"),
     clientName: z.string().min(1, "Client name is required"),
-    category: z.enum(['FNB', 'RETAIL', 'SERVICES', 'CORPORATE']),
+    category: z.enum(['PLATFORM', 'E_COMMERCE', 'LANDING', 'SAAS', 'CUSTOM', 'SERVICES']),
     thumbnailUrl: z.string().url("Must be a valid URL").optional().nullable().or(z.literal('')),
     description: z.string().min(10, "Description is required"),
     techStack: z.array(z.string()).min(1, "At least one tech stack item is required"),

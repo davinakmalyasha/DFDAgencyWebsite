@@ -19,6 +19,7 @@ model Article {
   tags           Json?
   seoTitle       String?
   seoDescription String?
+  publishedAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
@@ -84,15 +85,57 @@ model Order {
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime?
   idempotencyKey  String?        @unique
+  handoffUrl      String?
   Lead            Lead           @relation(fields: [leadId], references: [id])
   Package         Package        @relation(fields: [packageId], references: [id])
   Payments        Payment[]
   Project         Project?
 
+  Notes           OrderNote[]
+  Resources       OrderResource[]
+
   @@map("order")
   @@index([leadId])
   @@index([packageId])
   @@index([status])
+}
+
+model OrderNote {
+  id        Int      @id @default(autoincrement())
+  orderId   String
+  content   String   @db.Text
+  isPublic  Boolean  @default(false)
+  isClient  Boolean  @default(false)
+  authorId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isEdited  Boolean  @default(false)
+  isDeleted Boolean  @default(false)
+  parentId  Int?
+  
+  Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Author    User?    @relation(fields: [authorId], references: [id])
+  Parent    OrderNote? @relation("NoteReplies", fields: [parentId], references: [id])
+  replies   OrderNote[] @relation("NoteReplies")
+
+  @@map("ordernote")
+  @@index([orderId])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+model OrderResource {
+  id        Int      @id @default(autoincrement())
+  orderId   String
+  title     String
+  url       String
+  icon      String?  // e.g., 'figma', 'gdrive', 'github'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("orderresource")
+  @@index([orderId])
 }
 
 model Package {
@@ -223,6 +266,7 @@ model User {
   updatedAt    DateTime   @updatedAt
   Articles     Article[]
   AuditLogs    AuditLog[]
+  OrderNotes   OrderNote[]
 
   @@map("user")
 }
@@ -235,9 +279,14 @@ enum PaymentStatus {
 }
 
 enum ProjectCategory {
+  PLATFORM
+  E_COMMERCE
+  LANDING
+  SAAS
+  CUSTOM
+  SERVICES
   FNB
   RETAIL
-  SERVICES
   CORPORATE
 }
 

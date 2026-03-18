@@ -9,7 +9,6 @@ export default function AdminLayout({
     return (
         <>
             <AdminShell>{children}</AdminShell>
-            <Toaster position="top-right" />
         </>
     );
 }

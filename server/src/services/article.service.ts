@@ -56,12 +56,20 @@ export class ArticleService {
     /**
      * Create article
      */
-    static async createArticle(data: ArticleInput, authorId: number) {
+    static async createArticle(data: any, authorId: number) {
         return prisma.article.create({
             data: {
-                ...data,
-                authorId,
-                tags: data.tags as any
+                title: data.title,
+                slug: data.slug,
+                content: data.content,
+                thumbnailUrl: data.imageUrl || null,
+                seoDescription: data.description || null,
+                isPublished: data.isPublished || false,
+                publishedAt: data.isPublished ? new Date() : null,
+                tags: data.tags ? (data.tags as any) : undefined,
+                User: {
+                    connect: { id: authorId }
+                }
             }
         });
     }
@@ -69,11 +77,17 @@ export class ArticleService {
     /**
      * Update article
      */
-    static async updateArticle(id: number, data: Partial<ArticleInput>) {
+    static async updateArticle(id: number, data: any) {
         return prisma.article.update({
             where: { id },
             data: {
-                ...data,
+                title: data.title,
+                slug: data.slug,
+                content: data.content,
+                thumbnailUrl: data.imageUrl !== undefined ? data.imageUrl : undefined,
+                seoDescription: data.description !== undefined ? data.description : undefined,
+                isPublished: data.isPublished !== undefined ? data.isPublished : undefined,
+                publishedAt: (data.isPublished === true) ? new Date() : undefined,
                 tags: data.tags ? (data.tags as any) : undefined
             }
         });

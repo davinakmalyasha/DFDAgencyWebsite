@@ -15,12 +15,13 @@ export class OrderService {
 
         const [data, total] = await Promise.all([
             prisma.order.findMany({
+                where: { deletedAt: null },
                 skip,
                 take: l,
                 orderBy: { createdAt: 'desc' },
-                include: { Lead: true, Package: true, Project: true }
+                include: { Lead: true, Package: true, Project: true, _count: { select: { Notes: true } } }
             }),
-            prisma.order.count()
+            prisma.order.count({ where: { deletedAt: null } })
         ]);
 
         return PaginationHelper.formatResult(data, total, p, l);
@@ -38,15 +39,19 @@ export class OrderService {
             if (existingOrder) {
                 // If it exists, we still want to provide a fresh or existing payment URL
                 // In a more complex app, we might check if the previous Snap token is expired
-                const snap = await PaymentService.createSnapTransaction(
-                    existingOrder.id,
-                    Number(existingOrder.totalAmount),
-                    {
-                        name: existingOrder.Lead.name,
-                        phone: existingOrder.Lead.whatsapp
-                    }
-                );
-                return { ...existingOrder, paymentUrl: snap.redirect_url, isDuplicate: true };
+                let paymentUrl = null;
+                if (Number(existingOrder.totalAmount) > 0) {
+                    const snap = await PaymentService.createSnapTransaction(
+                        existingOrder.id,
+                        Number(existingOrder.totalAmount),
+                        {
+                            name: existingOrder.Lead.name,
+                            phone: existingOrder.Lead.whatsapp
+                        }
+                    );
+                    paymentUrl = snap.redirect_url;
+                }
+                return { ...existingOrder, paymentUrl, isDuplicate: true };
             }
         }
 
@@ -60,6 +65,15 @@ export class OrderService {
                 name: data.name,
                 whatsapp: data.whatsapp,
                 businessName: data.businessName || null
+            });
+        } else {
+            // Synchronize name and businessName for existing leads to avoid "davin" bug
+            lead = await prisma.lead.update({
+                where: { id: lead.id },
+                data: {
+                    name: data.name,
+                    businessName: data.businessName || lead.businessName
+                }
             });
         }
 
@@ -102,22 +116,26 @@ export class OrderService {
             return newOrder;
         });
 
-        // 5. Create Real Midtrans Transaction
-        const snap = await PaymentService.createSnapTransaction(
-            order.id,
-            Number(order.totalAmount),
-            {
-                name: lead!.name,
-                phone: lead!.whatsapp
-            }
-        );
+        // 5. Create Real Midtrans Transaction OR ByPass for Custom Package ($0)
+        let paymentUrl = null;
+        if (Number(order.totalAmount) > 0) {
+            const snap = await PaymentService.createSnapTransaction(
+                order.id,
+                Number(order.totalAmount),
+                {
+                    name: lead!.name,
+                    phone: lead!.whatsapp
+                }
+            );
+            paymentUrl = snap.redirect_url;
+        }
 
         // 6. Notifications
         await NotificationService.notifyNewOrder(order, lead);
 
         return {
             ...order,
-            paymentUrl: snap.redirect_url,
+            paymentUrl,
             isDuplicate: false
         };
     }
@@ -131,7 +149,19 @@ export class OrderService {
             include: {
                 Lead: true,
                 Package: true,
-                Payments: true
+                Payments: true,
+                Project: {
+                    select: {
+                        id: true,
+                        testimonialQuote: true
+                    }
+                },
+                Notes: {
+                    where: { isPublic: true },
+                    orderBy: { createdAt: 'desc' },
+                    include: { Author: { select: { username: true } } }
+                },
+                Resources: true
             }
         });
     }
@@ -142,7 +172,10 @@ export class OrderService {
     static async updateOrderStatus(id: string, data: UpdateOrderStatusInput) {
         return prisma.order.update({
             where: { id },
-            data: { status: data.status }
+            data: { 
+                status: data.status,
+                handoffUrl: data.handoffUrl
+            }
         });
     }
 
@@ -194,5 +227,30 @@ export class OrderService {
         });
 
         return project;
+    }
+
+    /**
+     * Submit a Testimonial (Client via Magic Link)
+     */
+    static async submitTestimonial(orderId: string, quote: string, overrideName?: string) {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { Project: true, Lead: true }
+        });
+
+        if (!order) throw Object.assign(new Error('Order not found'), { statusCode: 404 });
+        if (order.status !== 'COMPLETED') throw Object.assign(new Error('Project is not yet completed.'), { statusCode: 403 });
+        if (!order.Project) throw Object.assign(new Error('Project is still being finalized for portfolio.'), { statusCode: 403 });
+        if (order.Project.testimonialQuote) throw Object.assign(new Error('Testimonial already submitted for this project.'), { statusCode: 409 });
+
+        const authorName = overrideName?.trim() || order.Lead.businessName || order.Lead.name;
+
+        return prisma.project.update({
+            where: { id: order.Project.id },
+            data: {
+                testimonialQuote: quote,
+                testimonialAuthor: authorName
+            }
+        });
     }
 }

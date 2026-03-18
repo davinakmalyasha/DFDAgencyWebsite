@@ -1,13 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-// Configure Cloudinary
+// Configure Cloudinary with trimmed values to prevent "invalid cloud name" errors from .env whitespace
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || '').trim().replace(/^"(.*)"$/, '$1'),
+    api_key: (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^"(.*)"$/, '$1'),
+    api_secret: (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^"(.*)"$/, '$1'),
 });
 
 export class CloudinaryService {
@@ -16,6 +13,11 @@ export class CloudinaryService {
      * This ensures no files are saved to the local disk.
      */
     static async uploadImage(fileBuffer: Buffer, folder: string = 'dfd-agency'): Promise<string> {
+        // Validation check for unconfigured developer placeholders
+        if (process.env.CLOUDINARY_API_KEY === 'your_api_key' || !process.env.CLOUDINARY_API_KEY) {
+            throw new Error('Cloudinary is not configured. Please provide a real API Key in the server .env file.');
+        }
+
         return new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 { folder },

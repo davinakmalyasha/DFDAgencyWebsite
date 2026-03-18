@@ -29,6 +29,7 @@ export class UploadController {
                     (req as any).user.id,
                     'UPLOAD_IMAGE',
                     `Uploaded to folder: ${folder}`,
+                    null,
                     req.ip
                 );
             }
@@ -37,7 +38,7 @@ export class UploadController {
             res.status(200).json({
                 success: true,
                 message: 'Image uploaded successfully',
-                data: imageUrl
+                data: { url: imageUrl }
             });
         } catch (error) {
             next(error);

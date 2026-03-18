@@ -35,7 +35,7 @@ export class OrderController {
      */
     static async track(req: Request, res: Response, next: NextFunction) {
         try {
-            const id = req.params.id as string;
+            const id = req.params.orderId as string;
             const order = await OrderService.getOrderById(id);
 
             if (!order) {
@@ -46,10 +46,184 @@ export class OrderController {
                 });
             }
 
+            // Securely fetch ONLY public notes for the tracking page
+            const publicNotes = await prisma.orderNote.findMany({
+                where: { orderId: id, isPublic: true },
+                include: { Author: { select: { username: true } } },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // Fetch attached resources
+            const resources = await prisma.orderResource.findMany({
+                where: { orderId: id },
+                orderBy: { createdAt: 'desc' }
+            });
+
             res.status(200).json({
                 success: true,
                 message: 'Order track retrieved.',
-                data: order
+                data: {
+                    ...order,
+                    Notes: publicNotes,
+                    Resources: resources
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Submit a Client Note (Public Magic Link)
+     */
+    static async submitClientNote(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.orderId as string;
+            const { content, parentId } = req.body;
+            
+            if (!content || typeof content !== 'string' || content.trim().length === 0) {
+                return res.status(400).json({ success: false, message: 'Note content cannot be empty.' });
+            }
+
+            // Verify order exists
+            const order = await prisma.order.findUnique({ 
+                where: { id },
+                include: { Lead: { select: { name: true, businessName: true, whatsapp: true } } }
+            });
+            if (!order) {
+                return res.status(404).json({ success: false, message: 'Order not found.' });
+            }
+
+            const note = await prisma.orderNote.create({
+                data: {
+                    orderId: id,
+                    content: content.trim(),
+                    isPublic: true,  // Must be visible on the public timeline
+                    isClient: true,   // Flags this as originated from the client
+                    parentId: parentId ? parseInt(parentId as string) : null
+                },
+                include: {
+                    Author: { select: { username: true } },
+                    Parent: { select: { id: true, content: true } }
+                }
+            });
+
+            // PHASE 11: Notify admin of client update (Telegram)
+            const { NotificationService } = require('../services/notification.service');
+            const clientDisplayName = order.Lead?.businessName || order.Lead?.name || 'Unknown Client';
+            
+            NotificationService.notifyClientUpdate(
+                id,
+                clientDisplayName,
+                content.trim(),
+                !!parentId
+            ).catch(console.error);
+
+            res.status(201).json({
+                success: true,
+                message: 'Update posted successfully.',
+                data: note
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Update a Client Note
+     */
+    static async updateClientNote(req: Request, res: Response, next: NextFunction) {
+        try {
+            const orderId = req.params.orderId as string;
+            const noteId = req.params.noteId as string;
+            const { content } = req.body;
+
+            const note = await prisma.orderNote.findFirst({
+                where: { 
+                    id: parseInt(noteId),
+                    orderId,
+                    isClient: true // Only allow editing client notes
+                }
+            });
+
+            if (!note) {
+                return res.status(404).json({ success: false, message: 'Note not found or you do not have permission to edit it.' });
+            }
+
+            const updatedNote = await prisma.orderNote.update({
+                where: { id: note.id },
+                data: { 
+                    content: content?.trim(),
+                    isEdited: true
+                },
+                include: {
+                    Author: { select: { username: true } },
+                    Parent: { select: { id: true, content: true } }
+                }
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Note updated.',
+                data: updatedNote
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Delete a Client Note (Soft Delete)
+     */
+    static async deleteClientNote(req: Request, res: Response, next: NextFunction) {
+        try {
+            const orderId = req.params.orderId as string;
+            const noteId = req.params.noteId as string;
+
+            const note = await prisma.orderNote.findFirst({
+                where: { 
+                    id: parseInt(noteId),
+                    orderId,
+                    isClient: true
+                }
+            });
+
+            if (!note) {
+                return res.status(404).json({ success: false, message: 'Note not found or permission denied.' });
+            }
+
+            await prisma.orderNote.update({
+                where: { id: note.id },
+                data: { isDeleted: true }
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Note deleted.'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Submit a Testimonial (Public Magic Link)
+     */
+    static async submitTestimonial(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const { quote, overrideName } = req.body;
+            
+            if (!quote || typeof quote !== 'string' || quote.trim().length < 10) {
+                return res.status(400).json({ success: false, message: 'Please provide a valid quote.' });
+            }
+
+            const project = await OrderService.submitTestimonial(id, quote.trim(), overrideName);
+
+            res.status(200).json({
+                success: true,
+                message: 'Testimonial submitted successfully. Thank you!',
+                data: project
             });
         } catch (error) {
             next(error);
@@ -151,8 +325,8 @@ export class OrderController {
     static async updateStatus(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;
-            const { status } = req.body;
-            const order = await OrderService.updateOrderStatus(id, { status });
+            const { status, handoffUrl } = req.body;
+            const order = await OrderService.updateOrderStatus(id, { status, handoffUrl });
 
             // Audit Log
             await AuditService.log((req as any).user.id, 'UPDATE_ORDER_STATUS', `Order ID: ${id}`, req.body, req.ip);

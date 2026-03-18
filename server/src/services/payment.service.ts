@@ -12,11 +12,20 @@ interface SnapTransactionResponse {
 }
 
 export class PaymentService {
-    private static snap = new (require('midtrans-client').Snap)({
-        isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
-        serverKey: process.env.MIDTRANS_SERVER_KEY || '',
-        clientKey: process.env.MIDTRANS_CLIENT_KEY || ''
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- midtrans-client has no type declarations
+    private static _snap: any = null;
+
+    private static getSnap() {
+        if (!this._snap) {
+            const MidtransSnap = require('midtrans-client').Snap;
+            this._snap = new MidtransSnap({
+                isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+                serverKey: process.env.MIDTRANS_SERVER_KEY || '',
+                clientKey: process.env.MIDTRANS_CLIENT_KEY || ''
+            });
+        }
+        return this._snap;
+    }
 
     /**
      * Create a Snap Transaction
@@ -24,26 +33,30 @@ export class PaymentService {
      * @param amount Total amount to pay
      * @param customerDetails Customer info from Lead
      */
-    static async createSnapTransaction(orderId: string, amount: number, customerDetails: { name: string, email?: string, phone: string }) {
+    static async createSnapTransaction(orderId: string, amountUSD: number, customerDetails: { name: string, email?: string, phone: string }) {
+        // Exchange Rate constant (simulated, ideally managed in DB)
+        const RATE = 15500;
+        const amountIDR = amountUSD * RATE;
+
         const parameter = {
             transaction_details: {
                 order_id: orderId,
-                gross_amount: Math.round(amount)
+                gross_amount: Math.round(amountIDR)
             },
             customer_details: {
                 first_name: customerDetails.name,
                 email: customerDetails.email || undefined,
                 phone: customerDetails.phone
             },
-            // Limit to specific local methods if desired, but default is usually fine
-            // usage_limit: 1
         };
 
         try {
-            const transaction = await this.snap.createTransaction(parameter) as SnapTransactionResponse;
+            const snap = this.getSnap();
+            const transaction = await snap.createTransaction(parameter) as SnapTransactionResponse;
             return transaction;
-        } catch (error) {
-            console.error('[Midtrans] Error creating transaction:', error);
+        } catch (error: unknown) {
+            const errMsg = error instanceof Error ? error.message : String(error);
+            console.error('[Midtrans] Transaction error:', errMsg);
             throw new Error('Failed to initialize payment gateway');
         }
     }
@@ -52,7 +65,7 @@ export class PaymentService {
      * Handle Midtrans Webhook Notification
      */
     static async handleNotification(notification: Record<string, string>) {
-        const statusResponse = await this.snap.transaction.notification(notification);
+        const statusResponse = await this.getSnap().transaction.notification(notification);
 
         const orderId = statusResponse.order_id;
         const transactionStatus = statusResponse.transaction_status;

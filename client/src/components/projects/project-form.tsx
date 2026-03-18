@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { ImageUploader } from './image-uploader';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 export function ProjectForm({
     initialData,
@@ -21,9 +22,11 @@ export function ProjectForm({
     onSuccess: () => void;
 }) {
     const [isLoading, setIsLoading] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false);
 
     const form = useForm<ProjectInput>({
         resolver: zodResolver(ProjectSchema) as any,
+        mode: 'onTouched',
         defaultValues: initialData || {
             title: '',
             slug: '',
@@ -37,6 +40,33 @@ export function ProjectForm({
             isFeatured: false,
         },
     });
+
+    const handleAiGenerate = async () => {
+        const title = form.getValues('title');
+        if (!title || title.length < 3) {
+            toast.error('Masukan nama project minimal 3 karakter untuk konteks AI.');
+            return;
+        }
+
+        try {
+            setIsAiLoading(true);
+            const res = await api.post('/ai/generate-copy', {
+                type: 'Portfolio Project',
+                context: title
+            });
+
+            if (res.data.success) {
+                const { title: aiTitle, description } = res.data.data;
+                if (aiTitle) form.setValue('title', aiTitle);
+                if (description) form.setValue('description', description);
+                toast.success('Magic Copy applied! ✨');
+            }
+        } catch (error: any) {
+            toast.error('AI Generation failed', { description: error.response?.data?.message || 'Check your Gemini API Key' });
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
 
     const technologiesCount = (form.watch('techStack') || []).length;
 
@@ -66,9 +96,19 @@ export function ProjectForm({
         }
     }
 
+    const onInvalid = (errors: any) => {
+        console.error('Form Validation Errors:', errors);
+        const firstError = Object.values(errors)[0] as any;
+        if (firstError) {
+            toast.error('Validation Error', { 
+                description: firstError.message || 'Please check all required fields.' 
+            });
+        }
+    };
+
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit as any, onInvalid)} className="space-y-6">
 
                 <FormField control={form.control as any}
                     name="thumbnailUrl"
@@ -91,7 +131,24 @@ export function ProjectForm({
                         name="title"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="font-bold uppercase tracking-wider text-xs">Project Title</FormLabel>
+                                <div className="flex items-center justify-between">
+                                    <FormLabel className="font-bold uppercase tracking-wider text-xs">Project Title</FormLabel>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleAiGenerate}
+                                        disabled={isAiLoading}
+                                        className="h-6 px-2 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-none border border-blue-600/20"
+                                    >
+                                        {isAiLoading ? (
+                                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                        ) : (
+                                            <Sparkles className="mr-1 h-3 w-3" />
+                                        )}
+                                        Magic Copy
+                                    </Button>
+                                </div>
                                 <FormControl>
                                     <Input placeholder="E.g. FinTech App" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} />
                                 </FormControl>
@@ -124,10 +181,12 @@ export function ProjectForm({
                                         {...field}
                                         className="w-full h-10 px-3 py-2 rounded-none border border-foreground bg-background focus-visible:outline-none text-sm"
                                     >
-                                        <option value="FNB">F&B</option>
-                                        <option value="RETAIL">Retail</option>
-                                        <option value="SERVICES">Services</option>
-                                        <option value="CORPORATE">Corporate</option>
+                                        <option value="PLATFORM">Platform</option>
+                                        <option value="E_COMMERCE">E-Commerce</option>
+                                        <option value="LANDING">Landing Page</option>
+                                        <option value="SAAS">SaaS</option>
+                                        <option value="CUSTOM">Custom Solution</option>
+                                        <option value="SERVICES">Services (Legacy)</option>
                                     </select>
                                 </FormControl>
                                 <FormMessage />
@@ -190,6 +249,36 @@ export function ProjectForm({
                                         className="h-4 w-4 rounded-none border-foreground"
                                     />
                                 </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
+                <div className="space-y-4 border-2 border-zinc-100 p-4 bg-zinc-50/50">
+                    <label className="font-bold uppercase tracking-widest text-[10px] text-zinc-400">Social Proof / Testimonial</label>
+                    
+                    <FormField control={form.control as any}
+                        name="testimonialQuote"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="font-bold uppercase tracking-wider text-xs">Testimonial Quote</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="What did the client say about this project?" className="rounded-none border-foreground focus-visible:ring-foreground resize-none min-h-[100px]" {...field} value={field.value || ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField control={form.control as any}
+                        name="testimonialAuthor"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="font-bold uppercase tracking-wider text-xs">Testimonial Author Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. CEO of Nexus" className="rounded-none border-foreground focus-visible:ring-foreground" {...field} value={field.value || ''} />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />

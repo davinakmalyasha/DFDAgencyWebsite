@@ -122,6 +122,7 @@ class WAClient {
 
         try {
             const formattedNumber = this.formatIndonesianNumber(to);
+            // @ts-ignore - Library types might be out of sync with response object
             const response = await this.client.sendMessage(formattedNumber, message);
             return !!response.id.id;
         } catch (error) {

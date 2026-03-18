@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export function FinalCta() {
     return (
@@ -43,15 +44,21 @@ export function FinalCta() {
                     and content creation. Quality is not sacrificed; it&apos;s engineered.
                 </motion.p>
 
-                <motion.button
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                    className="px-10 py-5 bg-white text-zinc-950 rounded-full font-bold text-lg hover:bg-zinc-200 hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                <a 
+                    href="https://wa.me/62895324350359?text=Hey%20im%20interested"
+                    target="_blank"
+                    rel="noopener noreferrer"
                 >
-                    Start Your Project
-                </motion.button>
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+                        className="px-10 py-5 bg-white text-zinc-950 rounded-full font-bold text-lg hover:bg-zinc-200 hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                    >
+                        Contact Us
+                    </motion.button>
+                </a>
 
             </div>
         </section>

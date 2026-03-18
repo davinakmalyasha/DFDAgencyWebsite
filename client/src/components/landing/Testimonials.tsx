@@ -1,46 +1,29 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
 
-export function Testimonials() {
-    const testimonials = [
-        {
-            quote: "DFD Agency transformed our digital presence with unparalleled sophistication. Their eye for structural balance is simply unmatched in the industry.",
-            author: "ALEX RIVERA",
-            role: "CEO OF LUMA",
-            image: "https://i.pravatar.cc/100?img=33"
-        },
-        {
-            quote: "A premium partnership that redefined our brand's luxury positioning. The aesthetic clarity they brought to our portfolio was transformative.",
-            author: "JULIAN VANE",
-            role: "FOUNDER OF NOIR",
-            image: "https://i.pravatar.cc/100?img=59"
-        },
-        {
-            quote: "Excellence is an understatement. DFD Agency delivers a level of craft rarely seen in the digital space. Truly a bespoke experience from start to finish.",
-            author: "ELENA ROSSI",
-            role: "PARTNER AT ROSSI & CO",
-            image: "https://i.pravatar.cc/100?img=44"
-        },
-        {
-            quote: "The attention to detail and architectural precision is world-class. They don't just build websites; they craft digital monuments.",
-            author: "SARAH CHEN",
-            role: "CREATIVE DIRECTOR, ARCHI",
-            image: "https://i.pravatar.cc/100?img=20"
-        },
-        {
-            quote: "Minimalism is hard to master. DFD Agency makes it look effortless. Their design philosophy aligns perfectly with our high-end requirements.",
-            author: "MARCUS THORNE",
-            role: "MARKETING HEAD, OBELISK",
-            image: "https://i.pravatar.cc/100?img=11"
-        },
-        {
-            quote: "They understood our vision before we could even articulate it. The final result was a minimalist masterpiece that speaks volumes through its silence.",
-            author: "DAVID KIMM",
-            role: "LEAD ARCHITECT, STUDIO K",
-            image: "https://i.pravatar.cc/100?img=68"
-        }
-    ];
+interface ProjectDesc {
+    id: number;
+    title: string;
+    slug: string;
+    clientName: string;
+    thumbnailUrl: string;
+    testimonialQuote: string | null;
+    testimonialAuthor: string | null;
+}
+
+export function Testimonials({ projects }: { projects: ProjectDesc[] }) {
+    // Filter projects that have a testimonial and taking the 6 most recent ones
+    const testimonials = projects
+        .filter(p => p.testimonialQuote && p.testimonialQuote.length > 5)
+        .slice(0, 6);
+
+    // If no testimonials, we show a "Coming Soon" or "Social Proof Pending" state 
+    // instead of hiding the section entirely to manage user expectations.
+    const isEmpty = testimonials.length === 0;
 
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
@@ -93,43 +76,90 @@ export function Testimonials() {
                     </div>
                 </motion.div>
 
-                {/* Testimonials Grid */}
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                >
-                    {testimonials.map((t, i) => (
-                        <motion.div variants={itemVariants} key={i} className="flex flex-col justify-between p-10 border border-zinc-200/60 bg-white hover:border-zinc-300 hover:shadow-xl transition-all duration-500 min-h-[320px]">
-
-                            <div className="relative mb-8">
-                                {/* Decorative large quote mark */}
-                                <span className="absolute -top-6 -left-4 text-8xl font-serif text-zinc-100 select-none z-0">
-                                    &ldquo;
-                                </span>
-                                <p className="text-zinc-600 text-lg leading-relaxed relative z-10">
-                                    <span className="font-semibold text-zinc-950">{t.quote.charAt(0)}</span>
-                                    {t.quote.slice(1)}
-                                </p>
+                {/* Testimonials Grid / Empty State */}
+                {isEmpty ? (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        className="p-12 border-2 border-dashed border-zinc-100 flex flex-col items-center justify-center text-center bg-zinc-50/30"
+                    >
+                        <div className="space-y-4">
+                            <div className="flex justify-center gap-1">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <div key={i} className="w-4 h-4 bg-zinc-100 rounded-full animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                                ))}
                             </div>
-
-                            <div className="flex items-center gap-4 mt-auto pt-8 border-t border-zinc-100">
-                                <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-200 shrink-0 filter grayscale">
-                                    <img src={t.image} alt={t.author} className="w-full h-full object-cover" />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-black tracking-tight text-zinc-950 uppercase">{t.author}</h4>
-                                    <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-400">{t.role}</p>
-                                </div>
-                            </div>
-
-                        </motion.div>
-                    ))}
-                </motion.div>
+                            <h3 className="text-xl font-bold tracking-tight text-zinc-950 uppercase">Syncing Public Feedback</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-400 max-w-[280px] mx-auto leading-relaxed">
+                                Our client success stories are currently undergoing validation. 
+                                Verified excellence results will appear here shortly.
+                            </p>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    >
+                        {testimonials.map((t) => (
+                            <TestimonialCard key={t.id} t={t} variants={itemVariants} />
+                        ))}
+                    </motion.div>
+                )}
 
             </div>
         </section>
+    );
+}
+
+function TestimonialCard({ t, variants }: { t: ProjectDesc; variants: Variants }) {
+    return (
+        <motion.div variants={variants} className="flex flex-col justify-between p-10 border border-zinc-200/60 bg-white hover:border-zinc-300 hover:shadow-xl transition-all duration-500 min-h-[320px] relative group overflow-hidden">
+            {/* Hidden Client Logo Background (Subtle Texture) */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-zinc-50 rounded-bl-full -z-0 opacity-50 transition-transform group-hover:scale-110"></div>
+
+            <div className="relative mb-8 z-10 flex-grow">
+                {/* Decorative large quote mark */}
+                <span className="absolute -top-6 -left-4 text-8xl font-serif text-zinc-100 select-none z-0">
+                    &ldquo;
+                </span>
+                <p className="text-zinc-600 text-lg leading-relaxed relative z-10 whitespace-pre-wrap line-clamp-6">
+                    <span className="font-semibold text-zinc-950">{t.testimonialQuote?.charAt(0)}</span>
+                    {t.testimonialQuote?.slice(1)}
+                </p>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 mt-auto pt-8 border-t border-zinc-100 z-10">
+                <div>
+                    <h4 className="text-sm font-black tracking-tight text-zinc-950 uppercase line-clamp-1">{t.testimonialAuthor || t.clientName}</h4>
+                    <Link href={`/portfolio/${t.slug}`} className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 hover:text-zinc-950 transition-colors inline-flex items-center mt-1">
+                        View Project &rarr;
+                    </Link>
+                </div>
+                
+                <div className="w-12 h-12 shrink-0 filter grayscale group-hover:grayscale-0 transition-all rounded-[4px] overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
+                    <TestimonialImage src={t.thumbnailUrl} alt={t.title} />
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+function TestimonialImage({ src, alt }: { src: string | null; alt: string }) {
+    const [isError, setIsError] = useState(false);
+
+    return (
+        <Image 
+            src={isError || !src ? "/logo.png" : src} 
+            alt={alt} 
+            width={48} 
+            height={48} 
+            className="w-full h-full object-cover"
+            onError={() => setIsError(true)}
+            unoptimized={isError}
+        />
     );
 }

@@ -6,34 +6,34 @@ import { motion, Variants } from "framer-motion";
 export function ComparisonTable() {
     const comparisons = [
         {
-            feature: "Delivery Time",
-            freelancers: "Variable / Unreliable",
-            traditional: "Slow (Months)",
-            dfd: "Fast (2-4 Weeks)",
+            feature: "Development Speed",
+            freelancers: "Unpredictable / Often Lags",
+            traditional: "Slow (3-6 Months)",
+            dfd: "Rapid (Days-to-Market)",
         },
         {
-            feature: "Technology",
-            freelancers: "Basic / Limited",
-            traditional: "Standard Enterprise",
-            dfd: "Cutting-edge & Scalable",
+            feature: "Engineering Quality",
+            freelancers: "Inconsistent / Buggy",
+            traditional: "Manual / Heavy Bloat",
+            dfd: "Architectural Excellence",
         },
         {
-            feature: "Cost",
-            freelancers: "Low / Hidden Fees",
-            traditional: "Premium / High",
-            dfd: "Value-based Pricing",
+            feature: "Pricing Logic",
+            freelancers: "Cheap / Hidden Costs",
+            traditional: "Inflated Agency Hours",
+            dfd: "Value Engineering",
         },
         {
-            feature: "Design Quality",
-            freelancers: "Inconsistent",
-            traditional: "High Standard",
-            dfd: "Premium & Custom",
+            feature: "Platform Security",
+            freelancers: "Basic / Vulnerable",
+            traditional: "Standard / Plugin-Heavy",
+            dfd: "Hardened & Decoupled",
         },
         {
-            feature: "SEO",
-            freelancers: "Basic Manual",
-            traditional: "Optional Add-on",
-            dfd: "Integrated & Optimized",
+            feature: "Scalability",
+            freelancers: "Limited / DIY feeling",
+            traditional: "Manual Re-engineering",
+            dfd: "Enterprise-Ready (Global)",
         },
     ];
 
@@ -43,7 +43,7 @@ export function ComparisonTable() {
     };
 
     return (
-        <section className="py-24 bg-zinc-50 border-b border-zinc-200/50">
+        <section id="process" className="py-24 bg-zinc-50 border-b border-zinc-200/50">
             <div className="mx-auto w-[90%] max-w-[1024px]">
                 {/* Header */}
                 <motion.div
@@ -54,11 +54,11 @@ export function ComparisonTable() {
                     className="mb-16"
                 >
                     <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-950 mb-4">
-                        Why Choose DFD Agency?
+                        The Engineering Edge
                     </h2>
                     <p className="text-zinc-500 max-w-2xl text-lg leading-relaxed">
-                        A transparent comparison of how our delivery model provides superior value
-                        compared to traditional solutions.
+                        A transparent contrast of how our orchestrated delivery pipeline provides 
+                        elite-tier performance without the traditional agency bloat.
                     </p>
                 </motion.div>
 

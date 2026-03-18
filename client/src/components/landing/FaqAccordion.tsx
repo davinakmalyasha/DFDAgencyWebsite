@@ -7,24 +7,24 @@ import { motion, AnimatePresence } from "framer-motion";
 export function FaqAccordion() {
     const faqs = [
         {
-            question: "What is the typical project timeline?",
-            answer: "Our standard projects typically range from 4 to 8 weeks depending on complexity. We provide a detailed milestone schedule during our kickoff meeting to ensure transparency and alignment."
+            question: "Why are your prices lower than traditional agencies?",
+            answer: "We use AI-Agent orchestration. By automating the heavy technical lifting (like boilerplate code and security audits), we cut out hundreds of hours of manual labor. You pay for the elite result, not the slow process."
         },
         {
-            question: "Do you provide website hosting?",
-            answer: "Yes, we offer enterprise-grade hosting solutions with 99.9% uptime guarantees, continuous monitoring, and automated backups as part of our retainer packages."
+            question: "Why a custom-coded website instead of WordPress or Shopify?",
+            answer: "Drag-and-drop builders are bloated, slow, and highly vulnerable. Our sites are hand-engineered using Next.js (the tech used by Netflix and TikTok). This guarantees perfect Google Lighthouse speed, impregnable security, and infinite scalability."
         },
         {
-            question: "What is your design process?",
-            answer: "We employ a 'Content-First, Design-Second' methodology. This involves deep structural wireframing, high-fidelity UI/UX prototyping using Figma, and continuous feedback loops before a single line of code is written."
+            question: "What exactly is included in the 'Managed' subscription?",
+            answer: "We handle 100% of the technical infrastructure. This includes your custom Domain (.com), Enterprise-grade Web Hosting via global edge networks, SSL Certificates, and all database maintenance. You just focus on your business."
         },
         {
-            question: "How do we handle revisions?",
-            answer: "Each project milestone includes two dedicated rounds of revisions. We prioritize consolidated feedback to maintain our high-velocity development sprints."
+            question: "Do I own my website?",
+            answer: "Yes. Under the Managed plan, you have full admin access while we handle the technical hosting. Under the Buyout plan, we hand over the raw source code and all digital assets to you completely."
         },
         {
-            question: "What post-launch support is included?",
-            answer: "We provide 30 days of hyper-care support post-launch for bug fixes and performance monitoring. Extended maintenance contracts are available for ongoing iterative improvements."
+            question: "I don't know much about code. Is it hard to manage?",
+            answer: "Not at all. Your personalized Client Dashboard makes tracking progress easy, and we provide you with a clean, intuitive interface to easily manage your site's content without writing a single line of code."
         }
     ];
 

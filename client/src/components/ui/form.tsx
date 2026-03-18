@@ -11,6 +11,7 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form"
+import { motion, AnimatePresence } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -149,19 +150,22 @@ const FormMessage = React.forwardRef<
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message ?? "") : children
 
-  if (!body) {
-    return null
-  }
-
   return (
-    <p
-      ref={ref}
-      id={formMessageId}
-      className={cn("text-[0.8rem] font-medium text-destructive", className)}
-      {...props}
-    >
-      {body}
-    </p>
+    <AnimatePresence>
+      {body && (
+        <motion.p
+          ref={ref}
+          id={formMessageId}
+          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+          animate={{ opacity: 1, height: "auto", marginTop: 4 }}
+          exit={{ opacity: 0, height: 0, marginTop: 0 }}
+          className={cn("text-[0.8rem] font-medium text-destructive", className)}
+          {...(props as any)}
+        >
+          {body}
+        </motion.p>
+      )}
+    </AnimatePresence>
   )
 })
 FormMessage.displayName = "FormMessage"

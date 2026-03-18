@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from 'sonner';
-import { Plus, Edit2, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Trash2, ExternalLink, Loader2 } from 'lucide-react';
 import { ProjectForm } from '@/components/projects/project-form';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 interface Project extends ProjectInput {
     id: number;
@@ -22,6 +23,7 @@ export default function ProjectsPage() {
     // Sheet State
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState<Project | undefined>(undefined);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
 
     const fetchProjects = async () => {
         try {
@@ -45,6 +47,7 @@ export default function ProjectsPage() {
         if (!window.confirm('Are you absolutely sure you want to delete this project?')) return;
 
         try {
+            setDeletingId(id);
             const res = await api.delete(`/projects/${id}`);
             if (res.data.success) {
                 toast.success('Project deleted successfully.');
@@ -55,6 +58,8 @@ export default function ProjectsPage() {
         } catch (err: unknown) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Unknown error';
             toast.error('Delete failed', { description: message });
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -96,9 +101,7 @@ export default function ProjectsPage() {
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 font-bold text-muted-foreground">LOADING DATA...</TableCell>
-                            </TableRow>
+                            <TableSkeleton columns={5} rows={5} />
                         ) : projects.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 font-bold text-muted-foreground">NO PROJECTS FOUND IN PORTFOLIO</TableCell>
@@ -153,8 +156,18 @@ export default function ProjectsPage() {
                                             <Button variant="outline" size="icon" onClick={() => handleOpenForm(proj)} className="rounded-none border-2 border-foreground hover:bg-foreground hover:text-background transition-none h-8 w-8">
                                                 <Edit2 className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="outline" size="icon" onClick={() => handleDelete(proj.id)} className="rounded-none border-2 border-foreground hover:bg-red-600 hover:text-white transition-none h-8 w-8">
-                                                <Trash2 className="h-4 w-4" />
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                onClick={() => handleDelete(proj.id)} 
+                                                disabled={deletingId === proj.id}
+                                                className="rounded-none border-2 border-foreground hover:bg-red-600 hover:text-white transition-none h-8 w-8 disabled:opacity-50"
+                                            >
+                                                {deletingId === proj.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="h-4 w-4" />
+                                                )}
                                             </Button>
                                         </div>
                                     </TableCell>

@@ -1,27 +1,27 @@
 "use client";
 
-import { Zap, CheckCircle, BarChart3 } from "lucide-react";
+import { BrainCircuit, PenTool, Banknote, CheckCircle } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
 export function FeaturesSection() {
     const features = [
         {
-            icon: <Zap className="w-5 h-5 text-zinc-950" />,
-            title: "AI-Powered Speed",
-            description: "Leverage proprietary LLM workflows to reduce turnaround time by 70%. We ship products in days, not months.",
-            highlights: ["RAPID PROTOTYPING", "INSTANT ITERATIONS"],
+            icon: <BrainCircuit className="w-5 h-5 text-zinc-950" />,
+            title: "Expert + AI Hybrid",
+            description: "Human engineering soul paired with AI-agent precision. We automate the foundational code to focus purely on high-level architecture.",
+            highlights: ["AI ORCHESTRATION", "HUMAN SOUL"],
         },
         {
-            icon: <CheckCircle className="w-5 h-5 text-zinc-950" />,
-            title: "Uncompromising Quality",
-            description: "Sophisticated design systems combined with rigorous AI-assisted QA ensure every pixel and line of code is flawless.",
-            highlights: ["PIXEL-PERFECT UI", "PERFORMANCE FIRST"],
+            icon: <PenTool className="w-5 h-5 text-zinc-950" />,
+            title: "Architectural Excellence",
+            description: "Every asset is hand-engineered for peak stability and design fidelity. We don't just 'make' websites; we craft robust digital foundations.",
+            highlights: ["DESIGN FIDELITY", "ROBUST CODEBASE"],
         },
         {
-            icon: <BarChart3 className="w-5 h-5 text-zinc-950" />,
-            title: "Data-Driven Growth",
-            description: "Every decision is backed by predictive analytics and market intelligence to ensure your project achieves maximum impact.",
-            highlights: ["PREDICTIVE ROI", "BEHAVIORAL DATA"],
+            icon: <Banknote className="w-5 h-5 text-zinc-950" />,
+            title: "Value Engineering",
+            description: "Premium results at a non-agency price. By reducing manual build hours through AI, we pass the engineering savings directly to you.",
+            highlights: ["ELITE QUALITY", "SMARTER PRICING"],
         },
     ];
 
@@ -45,7 +45,7 @@ export function FeaturesSection() {
     };
 
     return (
-        <section className="py-24 bg-zinc-50 border-b border-zinc-200/50">
+        <section id="services" className="py-24 bg-zinc-50 border-b border-zinc-200/50">
             <div className="mx-auto w-[90%] max-w-[1440px]">
                 {/* Header */}
                 <motion.div
@@ -60,11 +60,11 @@ export function FeaturesSection() {
                             The DFD Advantage
                         </motion.h4>
                         <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-950 leading-[1.1]">
-                            High-Performance Solutions for Modern Enterprises
+                            High-Performance Digital Architecture
                         </motion.h2>
                     </div>
                     <motion.p variants={itemVariants} className="text-zinc-500 max-w-sm text-sm leading-relaxed">
-                        Our monochrome methodology strips away the noise, focusing on the core architectural brilliance of your digital presence.
+                        Fusing expert logic with AI precision to build robust digital foundations. Our automated engineering pipeline delivers elite-tier quality at a smarter, value-driven price point.
                     </motion.p>
                 </motion.div>
 

@@ -5,9 +5,11 @@ import api from '@/lib/axios';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Rocket, CreditCard, FileText } from 'lucide-react';
+import { Rocket, CreditCard, FileText, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { ReceiptTemplateModal } from '@/components/admin/ReceiptTemplateModal';
 
 interface Lead {
     id: number;
@@ -35,6 +37,8 @@ interface Order {
     Lead: Lead;
     Package: Package;
     Project: LinkedProject | null;
+    briefData?: { description?: string };
+    _count?: { Notes: number };
 }
 
 const ORDER_STATUSES = ['PENDING_PAYMENT', 'PROCESSING', 'REVISION', 'COMPLETED', 'CANCELLED'] as const;
@@ -44,6 +48,13 @@ export default function OrdersPage() {
     const [loading, setLoading] = useState(true);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
+    const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+    const [selectedOrderForReceipt, setSelectedOrderForReceipt] = useState<Order | null>(null);
+
+    // Delete confirmation state
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+    const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
     const fetchOrders = async () => {
         try {
@@ -75,6 +86,45 @@ export default function OrdersPage() {
         }
     };
 
+    const handleDelete = async (orderId: string) => {
+        try {
+            await api.delete(`/orders/${orderId}`);
+            toast.success('Order deleted');
+            setDeleteDialogOpen(false);
+            setDeleteTarget(null);
+            fetchOrders();
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Delete failed';
+            toast.error('Delete failed', { description: message });
+        }
+    };
+
+    const handleBulkCleanup = async () => {
+        const pendingOrders = orders.filter((o) => o.status === 'PENDING_PAYMENT');
+        if (pendingOrders.length === 0) {
+            toast.info('No pending orders to clean up');
+            return;
+        }
+        try {
+            const results = await Promise.allSettled(pendingOrders.map((o) => api.delete(`/orders/${o.id}`)));
+            const successCount = results.filter(r => r.status === 'fulfilled').length;
+            const failCount = results.length - successCount;
+
+            if (failCount === 0) {
+                toast.success(`${successCount} pending orders deleted`);
+            } else if (successCount > 0) {
+                toast.warning(`Partial Success: ${successCount} deleted, ${failCount} failed`);
+            } else {
+                toast.error(`Failed to delete all ${failCount} pending orders`);
+            }
+            
+            setBulkDeleteDialogOpen(false);
+            fetchOrders();
+        } catch (err: unknown) {
+            toast.error('Unexpected error during bulk cleanup');
+        }
+    };
+
     const handlePromote = async (orderId: string) => {
         try {
             const res = await api.post(`/orders/${orderId}/promote`);
@@ -93,14 +143,15 @@ export default function OrdersPage() {
         setPaymentModalOpen(true);
     };
 
+    const handleReceiptClick = (order: Order) => {
+        setSelectedOrderForReceipt(order);
+        setReceiptModalOpen(true);
+    };
+
     const handleDownloadInvoice = async (orderId: string) => {
         try {
             toast.loading('Generating invoice...', { id: 'invoice-toast' });
-
-            // Note: need responseType blob to trigger a file download from standard axios
             const res = await api.get(`/orders/${orderId}/invoice`, { responseType: 'blob' });
-
-            // Create a blob link to download
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -108,7 +159,6 @@ export default function OrdersPage() {
             document.body.appendChild(link);
             link.click();
             link.parentNode?.removeChild(link);
-
             toast.success('Invoice downloaded', { id: 'invoice-toast' });
         } catch (err: unknown) {
             toast.error('Invoice generation failed', { id: 'invoice-toast', description: 'Could not fetch the invoice PDF.' });
@@ -126,6 +176,8 @@ export default function OrdersPage() {
         }
     };
 
+    const pendingCount = orders.filter(o => o.status === 'PENDING_PAYMENT').length;
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -133,9 +185,21 @@ export default function OrdersPage() {
                     <h1 className="text-3xl font-black uppercase tracking-tight">Order Pipeline</h1>
                     <p className="text-muted-foreground font-medium">Manage orders and promote completed ones to portfolio.</p>
                 </div>
-                <Button onClick={fetchOrders} variant="outline" className="rounded-none border-2 border-foreground font-bold uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-foreground hover:text-background transition-none">
-                    Refresh
-                </Button>
+                <div className="flex items-center gap-3">
+                    {pendingCount > 0 && (
+                        <Button
+                            onClick={() => setBulkDeleteDialogOpen(true)}
+                            variant="outline"
+                            className="rounded-none border-2 border-red-600 text-red-600 font-bold uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(220,38,38,0.4)] hover:bg-red-600 hover:text-white transition-none"
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Clean Test Orders ({pendingCount})
+                        </Button>
+                    )}
+                    <Button onClick={fetchOrders} variant="outline" className="rounded-none border-2 border-foreground font-bold uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-foreground hover:text-background transition-none">
+                        Refresh
+                    </Button>
+                </div>
             </div>
 
             <div className="border-2 border-foreground bg-background shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -189,42 +253,70 @@ export default function OrdersPage() {
                                         </Select>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {order.status === 'PENDING_PAYMENT' && (
+                                        <div className="flex items-center justify-end gap-2">
+                                            {/* Manage Order Details */}
                                             <Button
-                                                size="sm"
-                                                onClick={() => handlePayClick(order)}
-                                                className="rounded-none border-2 border-foreground bg-blue-600 text-white font-bold text-xs uppercase hover:bg-blue-700 transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mr-2"
-                                            >
-                                                <CreditCard className="w-3 h-3 mr-1" />
-                                                Pay
-                                            </Button>
-                                        )}
-                                        {['PROCESSING', 'COMPLETED'].includes(order.status) && (
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleDownloadInvoice(order.id)}
+                                                size="icon"
                                                 variant="outline"
-                                                className="rounded-none border-2 border-foreground text-foreground font-bold text-xs uppercase hover:bg-muted transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] mr-2"
+                                                title="Manage Order Details"
+                                                className="relative rounded-none border-2 border-foreground hover:bg-muted transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                asChild
                                             >
-                                                <FileText className="w-3 h-3 mr-1" />
-                                                Receipt
+                                                <Link href={`/admin/orders/${order.id}`}>
+                                                    <FileText className="h-4 w-4" />
+                                                    {order._count && order._count.Notes > 0 && (
+                                                        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-foreground">
+                                                            {order._count.Notes}
+                                                        </span>
+                                                    )}
+                                                </Link>
                                             </Button>
-                                        )}
-                                        {order.status === 'COMPLETED' && !order.Project && (
+                                            
+                                            {order.status === 'PENDING_PAYMENT' && (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handlePayClick(order)}
+                                                    className="rounded-none border-2 border-foreground bg-blue-600 text-white font-bold text-xs uppercase hover:bg-blue-700 transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                >
+                                                    <CreditCard className="w-3 h-3 mr-1" />
+                                                    Pay
+                                                </Button>
+                                            )}
+                                            {['PROCESSING', 'COMPLETED'].includes(order.status) && (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleReceiptClick(order)}
+                                                    variant="outline"
+                                                    className="rounded-none border-2 border-foreground text-foreground font-bold text-xs uppercase hover:bg-muted transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                >
+                                                    <FileText className="w-3 h-3 mr-1" />
+                                                    Receipt
+                                                </Button>
+                                            )}
+                                            {order.status === 'COMPLETED' && !order.Project && (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handlePromote(order.id)}
+                                                    className="rounded-none border-2 border-foreground bg-green-600 text-white font-bold text-xs uppercase hover:bg-green-700 transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                >
+                                                    <Rocket className="w-3 h-3 mr-1" />
+                                                    Promote
+                                                </Button>
+                                            )}
+                                            {order.Project && (
+                                                <span className="text-[10px] font-bold uppercase text-green-700 border-2 border-green-700 px-2 py-1 bg-green-50 inline-block">
+                                                    ✓ Portfolio #{order.Project.id}
+                                                </span>
+                                            )}
                                             <Button
                                                 size="sm"
-                                                onClick={() => handlePromote(order.id)}
-                                                className="rounded-none border-2 border-foreground bg-green-600 text-white font-bold text-xs uppercase hover:bg-green-700 transition-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                variant="outline"
+                                                onClick={() => { setDeleteTarget(order); setDeleteDialogOpen(true); }}
+                                                className="rounded-none border-2 border-red-600 text-red-600 font-bold text-xs uppercase hover:bg-red-600 hover:text-white transition-none shadow-[2px_2px_0px_0px_rgba(220,38,38,0.4)]"
                                             >
-                                                <Rocket className="w-3 h-3 mr-1" />
-                                                Promote
+                                                <Trash2 className="w-3 h-3" />
                                             </Button>
-                                        )}
-                                        {order.Project && (
-                                            <span className="text-[10px] font-bold uppercase text-green-700 border-2 border-green-700 px-2 py-1 bg-green-50 inline-block mt-2">
-                                                ✓ Portfolio #{order.Project.id}
-                                            </span>
-                                        )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -232,6 +324,8 @@ export default function OrdersPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Payment Modal */}
             <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
                 <DialogContent className="border-4 border-foreground rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-background">
                     <DialogHeader>
@@ -268,11 +362,58 @@ export default function OrdersPage() {
                             </Button>
                         </div>
                         <p className="text-xs font-bold text-muted-foreground text-center mt-2 uppercase tracking-wide">
-                            Once the client sends the payment proof, manually change the status to "PROCESSING".
+                            Once the client sends the payment proof, manually change the status to &quot;PROCESSING&quot;.
                         </p>
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Single Delete Confirmation */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent className="border-4 border-foreground rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-background">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-600">Delete Order?</DialogTitle>
+                        <DialogDescription className="font-medium">
+                            This will soft-delete the order from <span className="font-bold">{deleteTarget?.Lead?.name}</span> for <span className="font-bold">{deleteTarget?.Package?.name}</span>. The record will be hidden but not permanently removed from the database.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <DialogClose asChild>
+                            <Button variant="outline" className="rounded-none border-2 border-foreground font-bold uppercase">Cancel</Button>
+                        </DialogClose>
+                        <Button onClick={() => deleteTarget && handleDelete(deleteTarget.id)} className="rounded-none border-2 border-red-600 bg-red-600 text-white font-bold uppercase hover:bg-red-700 transition-none">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirmation */}
+            <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+                <DialogContent className="border-4 border-foreground rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-background">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight text-red-600">Delete All Pending Orders?</DialogTitle>
+                        <DialogDescription className="font-medium">
+                            This will soft-delete <span className="font-bold">{pendingCount}</span> orders with status &quot;PENDING_PAYMENT&quot;. This is useful for cleaning up failed test orders. Records are not permanently removed.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <DialogClose asChild>
+                            <Button variant="outline" className="rounded-none border-2 border-foreground font-bold uppercase">Cancel</Button>
+                        </DialogClose>
+                        <Button onClick={handleBulkCleanup} className="rounded-none border-2 border-red-600 bg-red-600 text-white font-bold uppercase hover:bg-red-700 transition-none">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete All Pending ({pendingCount})
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <ReceiptTemplateModal 
+                open={receiptModalOpen} 
+                onOpenChange={setReceiptModalOpen} 
+                order={selectedOrderForReceipt} 
+            />
         </div>
     );
 }

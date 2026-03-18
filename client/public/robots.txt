@@ -1,0 +1,8 @@
+# DFD Agency Robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /track/
+Disallow: /api/
+
+Sitemap: https://dfdagency.com/sitemap.xml

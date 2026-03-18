@@ -16,7 +16,7 @@ router.get('/:slug', ProjectController.getBySlug);
  * ADMIN ROUTES (Protected)
  */
 router.post('/', authenticateJWT, requireSuperadmin, validateRequest(projectSchema), ProjectController.create);
-router.patch('/:id', authenticateJWT, requireSuperadmin, validateRequest(projectSchema.partial()), ProjectController.update);
+router.put('/:id', authenticateJWT, requireSuperadmin, validateRequest(projectSchema.partial()), ProjectController.update);
 router.delete('/:id', authenticateJWT, requireSuperadmin, ProjectController.delete);
 
 // Image Management

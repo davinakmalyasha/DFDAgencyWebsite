@@ -154,7 +154,9 @@ export function FloatingCTA() {
 
     return (
         <motion.a
-            href="#final-cta"
+            href="https://wa.me/62895324350359?text=Hey%20im%20interested"
+            target="_blank"
+            rel="noopener noreferrer"
             animate={controls}
             initial={{ y: 80, opacity: 0, scale: 0.8, width: 56 }}
             className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center h-14 bg-zinc-950 text-white shadow-[0_20px_40px_rgba(0,0,0,0.3)] cursor-pointer hover:bg-zinc-800 transition-colors duration-200 rounded-full overflow-hidden no-underline"

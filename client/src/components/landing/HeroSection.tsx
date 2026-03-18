@@ -2,7 +2,9 @@
 
 import { ArrowRight } from "lucide-react";
 import { motion, Variants, useScroll, useTransform, useSpring, motionValue } from "framer-motion";
+import Link from "next/link";
 import { useRef } from "react";
+import Script from "next/script";
 
 export function HeroSection() {
     const sectionRef = useRef<HTMLElement>(null);
@@ -75,8 +77,29 @@ export function HeroSection() {
         },
     };
 
+    const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "DFD Agency",
+        "alternateName": "Digital Foundry & Design",
+        "description": "Elite Software Architecture and Senior TypeScript Development studio specializing in Next.js and high-performance digital experiences.",
+        "url": process.env.NEXT_PUBLIC_SITE_URL || "https://dfdagency.com",
+        "logo": "https://dfdagency.com/logo.png",
+        "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "ID"
+        },
+        "priceRange": "$$$"
+    };
+
     return (
-        <section id="hero-section" ref={sectionRef} className="relative pt-24 pb-16 overflow-hidden min-h-[90vh] flex items-center">
+        <>
+            <Script
+                id="structured-data"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+            />
+            <section id="hero-section" ref={sectionRef} className="relative pt-24 pb-16 overflow-hidden min-h-[90vh] flex items-center">
             <div className="mx-auto w-[90%] max-w-[1440px]">
 
                 <motion.div
@@ -91,17 +114,16 @@ export function HeroSection() {
                         <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-200/50 mb-8">
                             <div className="w-2 h-2 rounded-full bg-zinc-950 animate-pulse"></div>
                             <span className="text-xs font-bold tracking-widest uppercase text-zinc-800">
-                                Elite Engineering
+                                Precision Engineering
                             </span>
                         </motion.div>
 
                         <h1 className="text-5xl md:text-6xl lg:text-[72px] font-black tracking-tighter leading-[1.05] mb-6">
                             {[
-                                { text: "High-", color: "text-zinc-950" },
-                                { text: "Performance", color: "text-zinc-950" },
-                                { text: "Solutions for", color: "text-zinc-400" },
-                                { text: "Modern", color: "text-zinc-950" },
-                                { text: "Enterprises", color: "text-zinc-950" }
+                                { text: "Designed to be", color: "text-zinc-950" },
+                                { text: "Flawless.", color: "text-zinc-950" },
+                                { text: "Dependable by", color: "text-zinc-400" },
+                                { text: "nature", color: "text-zinc-950" }
                             ].map((line, i) => (
                                 <span key={i} className="block overflow-hidden">
                                     <motion.span variants={textRevealVariants} className={`block ${line.color}`}>
@@ -113,18 +135,21 @@ export function HeroSection() {
 
                         <motion.div variants={fadeUpVariants} className="overflow-hidden mb-8">
                             <p className="text-base md:text-lg text-zinc-600 max-w-lg leading-relaxed">
-                                We deliver architectural precision in digital execution, blending luxury aesthetics
-                                with high-performance engineering for the world&apos;s most ambitious brands.
+                                We bridge the gap between human engineering and AI-Agent precision. Delivering 
+                                elite-tier digital architecture at a fraction of traditional agency costs. 
+                                We don&apos;t just build websites; we deploy high-performance assets.
                             </p>
                         </motion.div>
 
                         <motion.div variants={fadeUpVariants} className="flex flex-wrap items-center gap-4">
-                            <button className="flex items-center gap-2 bg-zinc-950 text-white px-8 py-4 rounded-full font-semibold hover:bg-zinc-800 hover:scale-105 transition-all duration-300 group">
-                                View Solutions
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </button>
+                            <Link href="/order">
+                                <button className="flex items-center gap-2 bg-zinc-950 text-white px-8 py-4 rounded-full font-semibold hover:bg-zinc-800 hover:scale-105 transition-all duration-300 group">
+                                    Initiate Project
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            </Link>
                             <button className="px-8 py-4 rounded-full font-semibold bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-100 transition-colors">
-                                Our Methodology
+                                Success Stories
                             </button>
                         </motion.div>
                     </motion.div>
@@ -185,14 +210,13 @@ export function HeroSection() {
                                 }}
                             >
                                 <h3 className="text-4xl font-black tracking-tighter text-zinc-950 mb-2">
-                                    {/* Simple counter effect could go here, for now it's static text */}
-                                    99.9%
+                                    10-Day
                                 </h3>
                                 <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">
-                                    Uptime Reliability
+                                    Avg. Deployment
                                 </p>
                                 <p className="text-sm text-zinc-400 leading-relaxed">
-                                    Optimized for high-traffic enterprise environments with zero-latency goals.
+                                    From strategic blueprint to global launch powered by AI-orchestrated engineering.
                                 </p>
                             </motion.div>
                         </motion.div>
@@ -201,5 +225,6 @@ export function HeroSection() {
                 </motion.div>
             </div>
         </section>
+        </>
     );
 }

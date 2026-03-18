@@ -90,15 +90,26 @@ export default function HostingPage() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [entriesRes, statsRes] = await Promise.all([
+            const [entriesResult, statsResult] = await Promise.allSettled([
                 api.get('/hosting'),
                 api.get('/hosting/stats')
             ]);
-            if (entriesRes.data.success) setEntries(entriesRes.data.data);
-            if (statsRes.data.success) setStats(statsRes.data.data);
+            
+            if (entriesResult.status === 'fulfilled' && entriesResult.value.data.success) {
+                setEntries(entriesResult.value.data.data);
+            } else {
+                toast.error('Partial Failure: Failed to load hosting entries');
+                setEntries([]);
+            }
+
+            if (statsResult.status === 'fulfilled' && statsResult.value.data.success) {
+                setStats(statsResult.value.data.data);
+            } else {
+                toast.error('Partial Failure: Failed to load hosting dashboard stats');
+                setStats({ active: 0, expiringSoon: 0, expired: 0, total: 0 });
+            }
         } catch (err: unknown) {
-            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Network error';
-            toast.error('Failed to load hosting data', { description: message });
+            toast.error('Unexpected error loading hosting data');
         } finally {
             setLoading(false);
         }
@@ -247,7 +258,7 @@ export default function HostingPage() {
                             <Label className="font-bold uppercase text-xs">Client WhatsApp *</Label>
                             <Input
                                 className="rounded-none border-foreground"
-                                placeholder="6281234567890"
+                                placeholder="62895324350359"
                                 value={form.clientWhatsapp}
                                 onChange={(e) => setForm({ ...form, clientWhatsapp: e.target.value })}
                             />
