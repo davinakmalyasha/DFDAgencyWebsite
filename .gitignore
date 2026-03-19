@@ -59,3 +59,6 @@ client/fix-any.js
 
 # Lock files
 *.htmllockfile*
+
+# Confidential Agency Documents
+Zdfd-agency-docs/
