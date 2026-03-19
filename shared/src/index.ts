@@ -7,3 +7,4 @@ export * from './validation/order.schema';
 export * from './validation/setting.schema';
 export * from './validation/article.schema';
 export * from './validation/hosting.schema';
+export * from './validation/common.schema';

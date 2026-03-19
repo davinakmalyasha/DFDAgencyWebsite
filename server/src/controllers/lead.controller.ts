@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { LeadService } from '../services/lead.service';
 import { AuditService } from '../services/audit.service';
+import { maskPII } from '../utils/security.util';
 
 export class LeadController {
     /**
@@ -13,10 +14,18 @@ export class LeadController {
 
             const result = await LeadService.getAllLeads(page, limit);
 
+            const reveal = req.query.reveal === 'true' && (req as any).user.role === 'SUPERADMIN';
+            
+            if (reveal) {
+                await AuditService.log((req as any).user.userId, 'REVEAL_PII_LEADS', 'All Leads Bulk Reveal', null, req.ip);
+            }
+
+            const data = reveal ? result.data : maskPII(result.data);
+
             res.status(200).json({
                 success: true,
                 message: 'Leads retrieved successfully',
-                data: result.data,
+                data: data,
                 meta: result.meta
             });
         } catch (error) {
@@ -90,7 +99,15 @@ export class LeadController {
             const id = parseInt(req.params.id as string);
             const lead = await LeadService.getLeadById(id);
             if (!lead) return res.status(404).json({ success: false, message: 'Lead not found' });
-            res.status(200).json({ success: true, data: lead });
+
+            const reveal = req.query.reveal === 'true' && (req as any).user.role === 'SUPERADMIN';
+            
+            if (reveal) {
+                await AuditService.log((req as any).user.userId, 'REVEAL_PII_LEAD_DETAIL', `Lead ID: ${id}`, null, req.ip);
+            }
+
+            const data = reveal ? lead : maskPII(lead);
+            res.status(200).json({ success: true, data });
         } catch (error) { next(error); }
     }
 }

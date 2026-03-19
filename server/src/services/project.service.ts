@@ -19,7 +19,27 @@ export class ProjectService {
                 skip,
                 take: l,
                 orderBy: { createdAt: 'desc' },
-                include: { Images: true }
+                select: {
+                    id: true,
+                    title: true,
+                    slug: true,
+                    clientName: true,
+                    category: true,
+                    thumbnailUrl: true,
+                    description: true,
+                    techStack: true,
+                    duration: true,
+                    testimonialQuote: true,
+                    testimonialAuthor: true,
+                    createdAt: true,
+                    Images: {
+                        select: {
+                            id: true,
+                            imageUrl: true,
+                            caption: true
+                        }
+                    }
+                }
             }),
             prisma.project.count({ where })
         ]);
@@ -37,7 +57,27 @@ export class ProjectService {
 
         return prisma.project.findFirst({
             where,
-            include: { Images: true }
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                clientName: true,
+                category: true,
+                thumbnailUrl: true,
+                description: true,
+                techStack: true,
+                duration: true,
+                testimonialQuote: true,
+                testimonialAuthor: true,
+                createdAt: true,
+                Images: {
+                    select: {
+                        id: true,
+                        imageUrl: true,
+                        caption: true
+                    }
+                }
+            }
         });
     }
 

@@ -56,6 +56,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className={`${plusJakartaSans.variable} font-sans antialiased bg-zinc-50 text-zinc-950`}>
         <SmoothScrolling>
           {children}

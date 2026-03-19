@@ -28,6 +28,7 @@ model Article {
   @@map("article")
   @@index([authorId])
   @@index([isPublished])
+  @@index([publishedAt])
 }
 
 model AuditLog {
@@ -154,6 +155,8 @@ model Package {
   Promos        Promo[]
 
   @@map("package")
+  @@index([isActive])
+  @@index([sortOrder])
 }
 
 model Payment {
@@ -198,6 +201,7 @@ model Project {
   Hosting           Hosting?
 
   @@map("project")
+  @@index([category])
 }
 
 model Hosting {

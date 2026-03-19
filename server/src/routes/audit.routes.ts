@@ -4,11 +4,7 @@ import { authenticateJWT, requireSuperadmin } from '../middlewares/auth.middlewa
 
 const router = Router();
 
-// System logs are strictly for Superadmins only
-router.use(authenticateJWT);
-router.use(requireSuperadmin);
-
-// Define routes
-router.get('/', AuditController.getLogs);
+// "Fortress" Security: Only Superadmins can view the audit trail
+router.get('/', authenticateJWT, requireSuperadmin, AuditController.getAll);
 
 export default router;

@@ -3,13 +3,14 @@ import { LeadController } from '../controllers/lead.controller';
 import { authenticateJWT, requireSuperadmin } from '../middlewares/auth.middleware';
 import { validateRequest } from '../middlewares/validate.middleware';
 import { leadSchema, updateLeadStatusSchema } from '@dfd/shared';
+import { publicFormLimiter } from '../middlewares/security.middleware';
 
 const router = Router();
 
 /**
  * PUBLIC ROUTES
  */
-router.post('/', validateRequest(leadSchema), LeadController.create);
+router.post('/', publicFormLimiter, validateRequest(leadSchema), LeadController.create);
 
 /**
  * ADMIN ROUTES (Protected)

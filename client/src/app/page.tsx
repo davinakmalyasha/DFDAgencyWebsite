@@ -1,21 +1,24 @@
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { TechMarquee } from "@/components/landing/TechMarquee";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { ComparisonTable } from "@/components/landing/ComparisonTable";
-import { WorkflowSection } from "@/components/landing/WorkflowSection";
-import { PortfolioMasonry } from "@/components/landing/PortfolioMasonry";
-import { TeamSection } from "@/components/landing/TeamSection";
-import { Testimonials } from "@/components/landing/Testimonials";
-import { FaqAccordion } from "@/components/landing/FaqAccordion";
-import { FinalCta } from "@/components/landing/FinalCta";
 import { Footer } from "@/components/landing/Footer";
-import { FloatingCTA } from "@/components/landing/FloatingCTA";
-import { CustomCursor } from "@/components/landing/CustomCursor";
 import { PublicService } from "@/services/public.service";
 
-export const dynamic = "force-dynamic";
+// Lazy load heavy components below the fold
+const WorkflowSection = dynamic(() => import("@/components/landing/WorkflowSection").then(m => m.WorkflowSection));
+const PortfolioMasonry = dynamic(() => import("@/components/landing/PortfolioMasonry").then(m => m.PortfolioMasonry));
+const TeamSection = dynamic(() => import("@/components/landing/TeamSection").then(m => m.TeamSection));
+const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(m => m.Testimonials));
+const FaqAccordion = dynamic(() => import("@/components/landing/FaqAccordion").then(m => m.FaqAccordion));
+const FinalCta = dynamic(() => import("@/components/landing/FinalCta").then(m => m.FinalCta));
+const FloatingCTA = dynamic(() => import("@/components/landing/FloatingCTA").then(m => m.FloatingCTA));
+const CustomCursor = dynamic(() => import("@/components/landing/CustomCursor").then(m => m.CustomCursor));
+
+export const revalidate = 3600; // Refresh data every hour (ISR)
 
 export default async function Home() {
   let packagesData = [];

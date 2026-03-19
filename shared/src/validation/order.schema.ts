@@ -13,6 +13,7 @@ export const orderSchema = z.object({
 
 export const updateOrderStatusSchema = z.object({
     status: z.enum(['PENDING_PAYMENT', 'PROCESSING', 'REVISION', 'COMPLETED', 'CANCELLED']),
+    handoffUrl: z.string().url('Invalid handoff URL').nullable().optional(),
 });
 
 export type OrderInput = z.infer<typeof orderSchema>;

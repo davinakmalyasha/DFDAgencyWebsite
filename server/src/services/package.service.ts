@@ -18,7 +18,17 @@ export class PackageService {
                 where,
                 skip,
                 take: l,
-                orderBy: { sortOrder: 'asc' }
+                orderBy: { sortOrder: 'asc' },
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    price: true,
+                    discountPrice: true,
+                    features: true,
+                    isActive: true,
+                    sortOrder: true
+                }
             }),
             prisma.package.count({ where })
         ]);
@@ -36,7 +46,16 @@ export class PackageService {
 
         // findFirst respects our soft-delete filter in prisma.ts
         return prisma.package.findFirst({
-            where
+            where,
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                price: true,
+                discountPrice: true,
+                features: true,
+                isActive: true
+            }
         });
     }
 

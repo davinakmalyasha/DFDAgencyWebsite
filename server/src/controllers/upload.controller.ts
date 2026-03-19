@@ -18,7 +18,13 @@ export class UploadController {
             }
 
             // Determine folder based on request body or use default
-            const folder = req.body.folder || 'dfd-agency';
+            const allowedFolders = ['articles', 'projects', 'general', 'dfd-agency'];
+            let folder = req.body.folder || 'dfd-agency';
+            
+            // Whitelist check (Security Hardening)
+            if (!allowedFolders.includes(folder)) {
+                folder = 'dfd-agency'; // Fallback to default if unauthorized folder requested
+            }
 
             // Upload to Cloudinary using the service
             const imageUrl = await CloudinaryService.uploadImage(multerReq.file.buffer, folder);

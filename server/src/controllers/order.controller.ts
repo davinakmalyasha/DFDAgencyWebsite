@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { OrderService } from '../services/order.service';
 import { AuditService } from '../services/audit.service';
 import { InvoiceService } from '../services/invoice.service';
 import { PaymentService } from '../services/payment.service';
 import { prisma } from '../lib/prisma';
+import { maskPII } from '../utils/security.util';
 
 export class OrderController {
     /**
@@ -32,10 +34,13 @@ export class OrderController {
 
     /**
      * Get Order Track by ID (Public Magic Link)
+     * SECURITY: "Deep Defense" implementation with Verification Lock
      */
     static async track(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.orderId as string;
+            const isAuth = (req as any).isMagicAuthenticated;
+
             const order = await OrderService.getOrderById(id);
 
             if (!order) {
@@ -46,6 +51,23 @@ export class OrderController {
                 });
             }
 
+            // --- LOCKED STATE (Zero PII if not verified) ---
+            if (!isAuth) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Order track retrieved (Verification required for details).',
+                    data: {
+                        id: order.id,
+                        status: order.status,
+                        packageName: order.Package.name,
+                        createdAt: order.createdAt,
+                        updatedAt: order.updatedAt,
+                        isLocked: true
+                    }
+                });
+            }
+
+            // --- UNLOCKED STATE (Full Data) ---
             // Securely fetch ONLY public notes for the tracking page
             const publicNotes = await prisma.orderNote.findMany({
                 where: { orderId: id, isPublic: true },
@@ -59,14 +81,90 @@ export class OrderController {
                 orderBy: { createdAt: 'desc' }
             });
 
+            // PII Sanitization (Safe Lead selection)
+            const sanitizedLead = {
+                name: order.Lead.name,
+                businessName: order.Lead.businessName
+            };
+
+            // Conditional Handoff URL
+            const showHandoff = ['PROCESSING', 'REVISION', 'COMPLETED'].includes(order.status);
+            const handoffUrl = showHandoff ? order.handoffUrl : null;
+
             res.status(200).json({
                 success: true,
                 message: 'Order track retrieved.',
                 data: {
-                    ...order,
+                    id: order.id,
+                    status: order.status,
+                    totalAmount: order.totalAmount,
+                    briefData: order.briefData,
+                    createdAt: order.createdAt,
+                    updatedAt: order.updatedAt,
+                    handoffUrl,
+                    Lead: sanitizedLead,
+                    Package: order.Package,
                     Notes: publicNotes,
-                    Resources: resources
+                    Resources: resources,
+                    isLocked: false
                 }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Verify identity via WhatsApp number (Magic Link Lock)
+     */
+    static async verifyMagicLink(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.orderId as string;
+            const { whatsapp } = req.body;
+
+            if (!whatsapp) {
+                return res.status(400).json({ success: false, message: 'WhatsApp number is required.' });
+            }
+
+            const order = await prisma.order.findUnique({
+                where: { id },
+                include: { Lead: true }
+            });
+
+            if (!order) {
+                return res.status(404).json({ success: false, message: 'Order not found.' });
+            }
+
+            // Normalize and compare
+            const inputWhatsapp = whatsapp.replace(/\D/g, '');
+            const dbWhatsapp = order.Lead.whatsapp.replace(/\D/g, '');
+
+            if (inputWhatsapp !== dbWhatsapp) {
+                return res.status(401).json({ 
+                    success: false, 
+                    message: 'Verification failed. Incorrect WhatsApp number.' 
+                });
+            }
+
+            // Create Magic Session Token
+            const token = jwt.sign(
+                { orderId: order.id },
+                process.env.JWT_SECRET || 'secret',
+                { expiresIn: '1d' }
+            );
+
+            // Set Signed Cookie
+            res.cookie(`magic_session_${order.id}`, token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                signed: true,
+                sameSite: 'strict',
+                maxAge: 24 * 60 * 60 * 1000 // 1 day
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Identity verified. Project details unlocked.'
             });
         } catch (error) {
             next(error);
@@ -296,10 +394,18 @@ export class OrderController {
 
             const result = await OrderService.getAllOrders(page, limit);
 
+            const reveal = req.query.reveal === 'true' && (req as any).user.role === 'SUPERADMIN';
+            
+            if (reveal) {
+                await AuditService.log((req as any).user.userId, 'REVEAL_PII_ORDERS', 'All Orders Bulk Reveal', null, req.ip);
+            }
+
+            const data = reveal ? result.data : maskPII(result.data);
+
             res.status(200).json({
                 success: true,
                 message: 'Orders retrieved successfully',
-                data: result.data,
+                data: data,
                 meta: result.meta
             });
         } catch (error) {
@@ -315,7 +421,15 @@ export class OrderController {
             const id = req.params.id as string;
             const order = await OrderService.getOrderById(id);
             if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-            res.status(200).json({ success: true, data: order });
+
+            const reveal = req.query.reveal === 'true' && (req as any).user.role === 'SUPERADMIN';
+            
+            if (reveal) {
+                await AuditService.log((req as any).user.userId, 'REVEAL_PII_ORDER_DETAIL', `Order ID: ${id}`, null, req.ip);
+            }
+
+            const data = reveal ? order : maskPII(order);
+            res.status(200).json({ success: true, data });
         } catch (error) { next(error); }
     }
 

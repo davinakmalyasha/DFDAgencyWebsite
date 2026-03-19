@@ -27,6 +27,8 @@ import auditRoutes from './routes/audit.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
 import { csrfProtection } from './middlewares/csrf.middleware';
+import { auditMiddleware } from './middlewares/audit.middleware';
+import { globalSanitizer } from './middlewares/security.middleware';
 import { CronService } from './services/cron.service';
 import { WhatsAppService } from './services/whatsapp.service';
 
@@ -59,7 +61,16 @@ const PORT = process.env.PORT || 5000;
 app.set('trust proxy', 1);
 
 // Security Middlewares
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "img-src": ["'self'", "data:", "https://res.cloudinary.com"],
+            "script-src": ["'self'", "'unsafe-inline'"], // Add as needed for Next.js or third-party scripts
+        },
+    },
+}));
+app.disable('x-powered-by');
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
@@ -91,7 +102,7 @@ if (process.env.NODE_ENV === 'production') {
 // Body Parsers & Cookie Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieParser(process.env.JWT_SECRET || 'secret'));
 
 // Persistent Logger
 const logFile = path.join(process.cwd(), 'request_debug.log');
@@ -108,7 +119,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     next();
 });
 
+app.use(globalSanitizer);
 app.use(csrfProtection);
+app.use(auditMiddleware);
 
 // Base Route
 app.get('/api/v1', (req, res) => {
@@ -137,9 +150,14 @@ app.use('/api/v1/hosting', hostingRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/whatsapp', whatsappRoutes);
+app.use('/api/v1/admin/audit', auditRoutes);
 
 // Global Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const errorLog = path.join(process.cwd(), 'error.log');
+    const logEntry = `[${new Date().toISOString()}] ERROR ${req.method} ${req.url}\n${err.stack}\n\n`;
+    fs.appendFileSync(errorLog, logEntry);
+
     console.error(err.stack); // Log the error stack for debugging
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';

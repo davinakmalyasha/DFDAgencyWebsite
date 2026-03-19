@@ -11,10 +11,17 @@ const upload = multer({
     storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (_req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        // 1. Check MIME type
+        const isMimeValid = file.mimetype.startsWith('image/');
+        
+        // 2. Check File Extension (Deep Defense against renaming .php to .jpg)
+        const allowedExtensions = /\.(jpg|jpeg|png|webp|gif)$/i;
+        const isExtValid = allowedExtensions.test(file.originalname);
+
+        if (isMimeValid && isExtValid) {
             cb(null, true);
         } else {
-            cb(new Error('Only images are allowed'));
+            cb(new Error('Only image files (jpg, jpeg, png, webp, gif) are allowed'));
         }
     }
 });

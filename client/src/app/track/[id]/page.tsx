@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import api from '@/lib/axios';
 
 interface Order {
     id: string;
@@ -21,9 +22,10 @@ interface Order {
     briefData?: any;
     Lead: { name: string; businessName: string };
     Package: { name: string };
-    handoffUrl?: string; // Add this
+    handoffUrl?: string;
     Notes: OrderNote[];
     Resources: OrderResource[];
+    isLocked: boolean;
     Project?: { id: number; testimonialQuote: string | null };
 }
 
@@ -59,10 +61,13 @@ export default function TrackOrder() {
     const [clientNote, setClientNote] = useState('');
     const [isSubmittingNote, setIsSubmittingNote] = useState(false);
 
-    // Edit/Reply state
     const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
     const [editContent, setEditContent] = useState('');
     const [replyingToNote, setReplyingToNote] = useState<OrderNote | null>(null);
+
+    // Verification Lock state
+    const [whatsappInput, setWhatsappInput] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
 
     useEffect(() => {
         if (!params.id) return;
@@ -84,25 +89,31 @@ export default function TrackOrder() {
             });
     }, [params.id]);
 
-    const triggerSuccessConfetti = () => {
-        const duration = 5 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    };
 
-        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
-
-        const interval: any = setInterval(function() {
-            const timeLeft = animationEnd - Date.now();
-
-            if (timeLeft <= 0) {
-                return clearInterval(interval);
+    const handleVerify = async () => {
+        if (!whatsappInput.trim()) return toast.error('Please enter your WhatsApp number.');
+        setIsVerifying(true);
+        try {
+            const res = await api.post(`/orders/track/${params.id}/verify`, { 
+                whatsapp: whatsappInput 
+            });
+            
+            if (res.data.success) {
+                toast.success('Identity verified! Details unlocked.');
+                // Refresh order data
+                const refreshRes = await PublicService.trackOrder(params.id as string);
+                if (refreshRes.success) {
+                    setOrder(refreshRes.data);
+                }
+            } else {
+                toast.error(res.data.message || 'Verification failed. Please check your number.');
             }
-
-            const particleCount = 50 * (timeLeft / duration);
-            // since particles fall down, start a bit higher than random
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-        }, 250);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Verification failed.');
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
     const handleSubmitReview = async () => {
@@ -112,14 +123,12 @@ export default function TrackOrder() {
 
         try {
             setIsSubmittingReview(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order!.id}/testimonial`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ quote: reviewQuote, overrideName: reviewNameOverride })
+            const res = await api.post(`/orders/track/${order!.id}/testimonial`, { 
+                quote: reviewQuote, 
+                overrideName: reviewNameOverride 
             });
-            const data = await res.json();
             
-            if (data.success) {
+            if (res.data.success) {
                 toast.success('Thank you for your review!');
                 // Optimistically update UI
                 setOrder(prev => {
@@ -130,10 +139,10 @@ export default function TrackOrder() {
                     };
                 });
             } else {
-                toast.error(data.message || 'Failed to submit review.');
+                toast.error(res.data.message || 'Failed to submit review.');
             }
-        } catch (error) {
-            toast.error('An unexpected error occurred.');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'An unexpected error occurred.');
         } finally {
             setIsSubmittingReview(false);
         }
@@ -143,16 +152,12 @@ export default function TrackOrder() {
         if (!clientNote.trim() || !order) return;
         setIsSubmittingNote(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/notes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    content: clientNote,
-                    parentId: replyingToNote?.id
-                })
+            const res = await api.post(`/orders/track/${order.id}/notes`, { 
+                content: clientNote,
+                parentId: replyingToNote?.id
             });
-            const data = await res.json();
-            if (data.success) {
+            
+            if (res.data.success) {
                 toast.success('Update posted!');
                 setClientNote('');
                 setReplyingToNote(null);
@@ -161,14 +166,14 @@ export default function TrackOrder() {
                     if (!prev) return prev;
                     return {
                         ...prev,
-                        Notes: [data.data, ...prev.Notes]
+                        Notes: [res.data.data, ...prev.Notes]
                     };
                 });
             } else {
-                toast.error(data.message || 'Failed to post update.');
+                toast.error(res.data.message || 'Failed to post update.');
             }
-        } catch (err) {
-            toast.error('An unexpected error occurred.');
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'An unexpected error occurred.');
         } finally {
             setIsSubmittingNote(false);
         }
@@ -177,13 +182,10 @@ export default function TrackOrder() {
     const handleEditClientNote = async (noteId: number) => {
         if (!editContent.trim() || !order) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/notes/${noteId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: editContent })
+            const res = await api.patch(`/orders/track/${order.id}/notes/${noteId}`, { 
+                content: editContent 
             });
-            const data = await res.json();
-            if (data.success) {
+            if (res.data.success) {
                 toast.success('Note updated!');
                 setEditingNoteId(null);
                 setEditContent('');
@@ -191,25 +193,22 @@ export default function TrackOrder() {
                     if (!prev) return prev;
                     return {
                         ...prev,
-                        Notes: prev.Notes.map(n => n.id === noteId ? data.data : n)
+                        Notes: prev.Notes.map(n => n.id === noteId ? res.data.data : n)
                     };
                 });
             } else {
-                toast.error(data.message || 'Failed to update note.');
+                toast.error(res.data.message || 'Failed to update note.');
             }
-        } catch (err) {
-            toast.error('Failed to update note.');
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to update note.');
         }
     };
 
     const handleDeleteClientNote = async (noteId: number) => {
         if (!confirm('Are you sure you want to delete this update?') || !order) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/notes/${noteId}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            if (data.success) {
+            const res = await api.delete(`/orders/track/${order.id}/notes/${noteId}`);
+            if (res.data.success) {
                 toast.success('Note deleted.');
                 setOrder(prev => {
                     if (!prev) return prev;
@@ -219,10 +218,10 @@ export default function TrackOrder() {
                     };
                 });
             } else {
-                toast.error(data.message || 'Failed to delete note.');
+                toast.error(res.data.message || 'Failed to delete note.');
             }
-        } catch (err) {
-            toast.error('Failed to delete note.');
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to delete note.');
         }
     };
 
@@ -268,6 +267,54 @@ export default function TrackOrder() {
     );
 
     if (!order) return null;
+
+    // --- VERIFICATION LOCK UI ---
+    if (order.isLocked) {
+        return (
+            <div className="min-h-screen bg-[#FDFDFC] flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zinc-100 via-transparent to-transparent">
+                <Card className="max-w-md w-full border-0 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[32px] overflow-hidden bg-white/80 backdrop-blur-xl">
+                    <CardHeader className="pt-12 pb-8 text-center space-y-4">
+                        <div className="mx-auto w-16 h-16 bg-zinc-950 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3 mb-2">
+                           <User className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                            <CardTitle className="text-3xl font-black tracking-tight text-zinc-900 uppercase">Verification</CardTitle>
+                            <CardDescription className="text-zinc-500 font-medium">Please enter your WhatsApp number to unlock project details.</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="px-10 pb-12 space-y-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">WhatsApp Number</label>
+                                <Input 
+                                    type="text" 
+                                    placeholder="e.g. 0812..." 
+                                    className="h-14 bg-zinc-50/50 border-zinc-200 rounded-2xl text-lg font-bold placeholder:text-zinc-300 focus:ring-0 focus:border-zinc-950 transition-all"
+                                    value={whatsappInput}
+                                    onChange={(e) => setWhatsappInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+                                    disabled={isVerifying}
+                                />
+                            </div>
+                            <Button 
+                                className="w-full h-14 bg-zinc-950 hover:bg-zinc-800 text-white rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+                                onClick={handleVerify}
+                                disabled={isVerifying}
+                            >
+                                {isVerifying ? 'Verifying...' : 'Unlock Project'}
+                            </Button>
+                        </div>
+                        <div className="pt-4 text-center">
+                            <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider leading-relaxed">
+                                Secure Identity Check by<br/>
+                                <span className="text-zinc-950 font-black">DFD AGENCY SECURITY</span>
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#FDFDFC] text-zinc-950 font-sans selection:bg-zinc-900 selection:text-white pb-20">
@@ -345,7 +392,7 @@ export default function TrackOrder() {
                                             <a href="#testimonial-section">Review</a>
                                         </Button>
                                         <Button variant="outline" size="lg" className="flex-1 border-zinc-800 hover:bg-zinc-800 text-white font-bold h-12" asChild>
-                                            <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/invoice`} download>Invoice</a>
+                                            <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/invoice`} target="_blank" rel="noopener noreferrer">Invoice</a>
                                         </Button>
                                     </div>
                                 </div>
