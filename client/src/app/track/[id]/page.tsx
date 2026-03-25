@@ -89,8 +89,6 @@ export default function TrackOrder() {
             });
     }, [params.id]);
 
-    };
-
     const handleVerify = async () => {
         if (!whatsappInput.trim()) return toast.error('Please enter your WhatsApp number.');
         setIsVerifying(true);
