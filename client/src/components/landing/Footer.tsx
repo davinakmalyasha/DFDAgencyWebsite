@@ -22,7 +22,7 @@ export function Footer() {
                         <Link href="/" className="flex items-center gap-3 mb-6 group">
                             <div className="relative w-8 h-8 overflow-hidden rounded-[8px] border border-zinc-200 shadow-sm group-hover:scale-105 transition-transform">
                                 <Image
-                                    src="/logo.png"
+                                    src="/logo-opt.webp"
                                     alt="DFD Agency Logo"
                                     fill
                                     className="object-cover"

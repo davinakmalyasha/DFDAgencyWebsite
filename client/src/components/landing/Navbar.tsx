@@ -42,7 +42,7 @@ export function Navbar() {
                             className="relative w-10 h-10 overflow-hidden rounded-[8px]"
                         >
                             <Image
-                                src="/logo.png"
+                                src="/logo-opt.webp"
                                 alt="DFD Agency Logo"
                                 fill
                                 className="object-cover"
