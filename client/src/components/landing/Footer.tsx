@@ -28,6 +28,7 @@ export function Footer() {
                                     className="object-cover"
                                     sizes="32px"
                                     priority
+                                    unoptimized
                                 />
                             </div>
                             <span className="font-extrabold text-xl tracking-tight text-zinc-950">DFD AGENCY</span>
