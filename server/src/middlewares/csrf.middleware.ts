@@ -13,11 +13,15 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
     const origin = req.headers.origin;
     const referer = req.headers.referer;
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const allowedOrigins = [
+        process.env.FRONTEND_URL || 'http://localhost:3000',
+        'https://dfd-agency-website.vercel.app',
+        'https://dfdagencywebsite.vercel.app'
+    ];
 
-    // Verify Origin or Referer matches our frontend
-    const isOriginValid = origin && origin.startsWith(frontendUrl);
-    const isRefererValid = referer && referer.startsWith(frontendUrl);
+    // Verify Origin or Referer matches our allowed frontend origins
+    const isOriginValid = origin && allowedOrigins.some(url => origin.startsWith(url));
+    const isRefererValid = referer && allowedOrigins.some(url => referer.startsWith(url));
 
     if (!isOriginValid && !isRefererValid) {
         return res.status(403).json({
