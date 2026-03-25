@@ -141,7 +141,7 @@ export function WorkflowSection() {
                                 {/* Content */}
                                 <div className="flex-1 pt-2">
                                     <div className="flex items-baseline gap-4 mb-4">
-                                        <span className="text-[10px] font-black tracking-widest text-zinc-400">
+                                        <span className="text-[10px] font-black tracking-widest text-zinc-500">
                                             {step.phase}
                                         </span>
                                         <h3 className="text-2xl md:text-3xl font-black tracking-tight text-zinc-950">

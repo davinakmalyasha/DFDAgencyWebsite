@@ -59,7 +59,7 @@ function ParallaxText({ children, baseVelocity = 100 }: ParallaxTextProps) {
 
 export function TechMarquee() {
     return (
-        <div className="w-full border-y border-zinc-200/50 py-8 bg-zinc-50 overflow-hidden relative flex flex-col gap-4">
+        <div aria-hidden="true" className="w-full border-y border-zinc-200/50 py-8 bg-zinc-50 overflow-hidden relative flex flex-col gap-4">
             <ParallaxText baseVelocity={2}>NEXT.JS &mdash; REACT &mdash; TYPESCRIPT &mdash; VERCEL &mdash; RENDER &mdash; CLOUDINARY &mdash; MIDTRANS &mdash; PRISMA &mdash; TAILWIND &mdash; OPENAI &mdash;</ParallaxText>
 
             {/* Fade edges */}

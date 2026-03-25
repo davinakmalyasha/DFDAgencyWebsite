@@ -28,7 +28,6 @@ export function Footer() {
                                     className="object-cover"
                                     sizes="32px"
                                     priority
-                                    unoptimized
                                 />
                             </div>
                             <span className="font-extrabold text-xl tracking-tight text-zinc-950">DFD AGENCY</span>
@@ -40,7 +39,7 @@ export function Footer() {
 
                     {/* Links - Services */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-400 mb-2">SERVICES</h4>
+                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">SERVICES</h4>
                         <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">UI/UX Design</Link>
                         <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Web Development</Link>
                         <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Branding</Link>
@@ -49,7 +48,7 @@ export function Footer() {
 
                     {/* Links - Legal */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-400 mb-2">LEGAL</h4>
+                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">LEGAL</h4>
                         <Link href="/privacy" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Terms of Service</Link>
                         <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Cookie Policy</Link>
@@ -58,32 +57,35 @@ export function Footer() {
 
                     {/* Links - Connect */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-400 mb-2">CONNECT</h4>
+                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">CONNECT</h4>
                         <div className="flex gap-4 mb-4">
                             <a 
                                 href="https://github.com/davinakmalyasha" 
+                                aria-label="GitHub Profile"
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="text-zinc-400 hover:text-zinc-950 transition-colors"
+                                className="text-zinc-500 hover:text-zinc-950 transition-colors"
                             >
                                 <Github className="w-5 h-5" />
                             </a>
                             <a 
                                 href="https://www.linkedin.com/in/davin-yasa-974ba82a1/" 
+                                aria-label="LinkedIn Profile"
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="text-zinc-400 hover:text-zinc-950 transition-colors"
+                                className="text-zinc-500 hover:text-zinc-950 transition-colors"
                             >
                                 <Linkedin className="w-5 h-5" />
                             </a>
                             <a 
                                 href="mailto:davinyasa06@gmail.com" 
-                                className="text-zinc-400 hover:text-zinc-950 transition-colors"
+                                aria-label="Send Email"
+                                className="text-zinc-500 hover:text-zinc-950 transition-colors"
                             >
                                 <Mail className="w-5 h-5" />
                             </a>
                         </div>
-                        <p className="text-[10px] text-zinc-400 uppercase tracking-widest leading-relaxed">
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">
                             Stay updated with our latest insights and digital trends.
                         </p>
                     </div>
@@ -91,7 +93,7 @@ export function Footer() {
 
                 {/* Bottom Bar */}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-zinc-200/50">
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-zinc-500">
                         &copy; {new Date().getFullYear()} DFD Agency. All rights reserved.
                     </p>
                     <p className="text-[10px] tracking-widest uppercase font-bold text-zinc-300 mt-4 md:mt-0">

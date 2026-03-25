@@ -48,7 +48,6 @@ export function Navbar() {
                                 className="object-cover"
                                 sizes="40px"
                                 priority
-                                unoptimized
                             />
                         </motion.div>
                     </Link>

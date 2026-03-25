@@ -122,7 +122,7 @@ export function HeroSection() {
                             {[
                                 { text: "Designed to be", color: "text-zinc-950" },
                                 { text: "Flawless.", color: "text-zinc-950" },
-                                { text: "Dependable by", color: "text-zinc-400" },
+                                { text: "Dependable by", color: "text-zinc-500" },
                                 { text: "nature", color: "text-zinc-950" }
                             ].map((line, i) => (
                                 <span key={i} className="block overflow-hidden">
@@ -209,13 +209,13 @@ export function HeroSection() {
                                     transform: "translateZ(80px)", // True CSS 3D floating effect
                                 }}
                             >
-                                <h3 className="text-4xl font-black tracking-tighter text-zinc-950 mb-2">
+                                <p className="text-4xl font-black tracking-tighter text-zinc-950 mb-2">
                                     10-Day
-                                </h3>
+                                </p>
                                 <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">
                                     Avg. Deployment
                                 </p>
-                                <p className="text-sm text-zinc-400 leading-relaxed">
+                                <p className="text-sm text-zinc-500 leading-relaxed">
                                     From strategic blueprint to global launch powered by AI-orchestrated engineering.
                                 </p>
                             </motion.div>

@@ -81,7 +81,7 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                 
                                 {plan.discountPrice && plan.price !== plan.discountPrice && !isCustom && (
                                     <div className="flex items-baseline gap-1 mb-6">
-                                        <span className="text-sm font-bold tracking-tighter line-through text-zinc-400">
+                                        <span className="text-sm font-bold tracking-tighter line-through text-zinc-500">
                                             {formatPrice(plan.price)}
                                         </span>
                                         <span className="text-green-600 text-xs font-bold tracking-widest uppercase ml-1">Discount</span>
@@ -100,7 +100,7 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                         const featureText = typeof feature === 'string' ? feature : feature.name;
                                         return (
                                         <div key={j} className="flex items-start gap-3">
-                                            <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${isFeatured ? "text-zinc-950" : "text-zinc-400"}`} />
+                                            <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${isFeatured ? "text-zinc-950" : "text-zinc-500"}`} />
                                             <span className="text-sm font-medium text-zinc-700 leading-tight">{featureText}</span>
                                         </div>
                                     )})}

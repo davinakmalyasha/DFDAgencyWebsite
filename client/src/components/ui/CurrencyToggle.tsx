@@ -15,7 +15,7 @@ export function CurrencyToggle() {
             >
                 <span
                     className={`text-sm font-bold transition-all duration-500 ${
-                        currency === "IDR" ? "text-inherit scale-110" : "opacity-30 group-hover:opacity-50"
+                        currency === "IDR" ? "text-inherit scale-110" : "text-zinc-500 group-hover:text-zinc-700"
                     }`}
                 >
                     IDR
@@ -36,7 +36,7 @@ export function CurrencyToggle() {
 
                 <span
                     className={`text-sm font-bold transition-all duration-500 ${
-                        currency === "USD" ? "text-inherit scale-110" : "opacity-30 group-hover:opacity-50"
+                        currency === "USD" ? "text-inherit scale-110" : "text-zinc-500 group-hover:text-zinc-700"
                     }`}
                 >
                     USD
