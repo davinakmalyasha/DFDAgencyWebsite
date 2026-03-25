@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc -p ../shared/tsconfig.json && tsc",
     "prisma:seed": "ts-node prisma/seed.ts"
