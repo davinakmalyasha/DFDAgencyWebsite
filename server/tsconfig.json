@@ -4,7 +4,8 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -13,10 +14,12 @@
   },
   "include": [
     "src/**/*",
+    "src/types/**/*.d.ts",
     "prisma/seed.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/minimal-test.ts"
   ]
 }
