@@ -62,3 +62,38 @@ client/fix-any.js
 
 # Confidential Agency Documents
 Zdfd-agency-docs/
+
+# ─────────────────────────────────────────────
+# LOCAL DEV / SCRATCH (never commit) — SECURITY
+# ─────────────────────────────────────────────
+
+# One-off test scripts that may contain real credentials
+test-login*.js
+server/check-auth.js
+server/tmp/*.js
+
+# Local runtime artifacts (pids, logs, process dumps)
+server/tmp/
+server/*.pid
+
+# npm artifacts downloaded to work around install issues
+*.tgz
+server/express/
+server/express.tar
+server/express.tgz
+
+# Local tooling dirs (installed binaries, scratch, IDE prefs)
+prisma-tools/
+server/tools/
+shared/tools/
+.commandcode/
+
+# Local MCP / editor configuration (may hold local DB creds)
+.mcp.json
+
+# Dev-only helpers (not part of the repo contract)
+docker-compose.yml
+setup-local.ps1
+
+# Root lockfile is not maintained; only per-workspace lockfiles are tracked
+package-lock.json
