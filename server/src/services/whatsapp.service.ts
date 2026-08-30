@@ -1,18 +1,23 @@
-import { Client, LocalAuth } from 'whatsapp-web.js';
+import { Client as WAWebClient, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import { AuditService } from './audit.service';
+
+// whatsapp-web.js types are exported via `export = WAWebJS` (namespace),
+// which is not directly importable as a value namespace. Use the namespace
+// qualifier through the module's own declaration.
+import WAWebJSNamespace = require('whatsapp-web.js');
 
 export type WAStatus = 'DISCONNECTED' | 'INITIALIZING' | 'CONNECTED';
 
 class WAClient {
-    private client: Client;
+    private client: InstanceType<typeof WAWebClient>;
     private status: WAStatus = 'DISCONNECTED';
     private qrCodeCache: string | null = null;
     private phoneRegex = /^(?:\+62|62|0)[2-9]\d{7,11}$/;
 
     constructor() {
-        this.client = new Client({
-            authStrategy: new LocalAuth({ clientId: "dfd-agency-bot" }),
+        this.client = new WAWebJSNamespace.Client({
+            authStrategy: new WAWebJSNamespace.LocalAuth({ clientId: "dfd-agency-bot" }),
             puppeteer: {
                 executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
                 headless: true,

@@ -75,7 +75,7 @@ export class NotificationService {
     /**
      * Unified logging / dispatching (Internal)
      */
-    private static async logToAgency(channel: 'TELEGRAM' | 'WHATSAPP', message: string, recipient?: string) {
+    static async logToAgency(channel: 'TELEGRAM' | 'WHATSAPP', message: string, recipient?: string) {
         if (channel === 'TELEGRAM') {
             const botToken = process.env.TELEGRAM_BOT_TOKEN;
             const chatId = process.env.TELEGRAM_CHAT_ID;
