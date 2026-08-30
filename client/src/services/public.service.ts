@@ -24,7 +24,6 @@ interface CreateOrderResponse {
     message: string;
     data: {
         id: string;
-        paymentUrl?: string;
         isDuplicate?: boolean;
     } | null;
     error: string | null;

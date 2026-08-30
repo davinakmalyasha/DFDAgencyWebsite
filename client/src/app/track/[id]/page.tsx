@@ -25,6 +25,7 @@ interface Order {
     handoffUrl?: string;
     Notes: OrderNote[];
     Resources: OrderResource[];
+    Milestones?: Milestone[];
     isLocked: boolean;
     Project?: { id: number; testimonialQuote: string | null };
 }
@@ -46,6 +47,17 @@ interface OrderResource {
     title: string;
     url: string;
     icon: string | null;
+}
+
+interface Milestone {
+    id: number;
+    title: string;
+    description: string | null;
+    coverUrl: string | null;
+    category: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export default function TrackOrder() {
@@ -407,6 +419,14 @@ export default function TrackOrder() {
                                             <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/invoice`} target="_blank" rel="noopener noreferrer">Invoice</a>
                                         </Button>
                                     </div>
+                                    <div className="flex gap-3">
+                                        <Button variant="outline" size="sm" className="flex-1 border-zinc-800 hover:bg-zinc-800 text-white font-bold h-10 text-xs" asChild>
+                                            <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/contract`} target="_blank" rel="noopener noreferrer">Contract</a>
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="flex-1 border-zinc-800 hover:bg-zinc-800 text-white font-bold h-10 text-xs" asChild>
+                                            <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/orders/track/${order.id}/welcome`} target="_blank" rel="noopener noreferrer">Welcome Kit</a>
+                                        </Button>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -493,6 +513,50 @@ export default function TrackOrder() {
                                 </CardContent>
                             </Card>
 
+                            {/* Deliverable Milestones */}
+                            {order.Milestones && order.Milestones.length > 0 && (
+                                <Card className="border border-zinc-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+                                    <CardHeader className="bg-zinc-50/50 border-b border-zinc-100 pb-4">
+                                        <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-800">
+                                            <CheckCircle2 className="w-4 h-4 text-zinc-400" /> Project Progress
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-5 space-y-4">
+                                        {order.Milestones.map((ms) => (
+                                            <div key={ms.id} className="space-y-2">
+                                                {ms.coverUrl && (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={ms.coverUrl}
+                                                        alt={ms.title}
+                                                        className="w-full rounded-xl border border-zinc-100 object-cover"
+                                                    />
+                                                )}
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="space-y-1">
+                                                        <p className="text-sm font-bold text-zinc-900">{ms.title}</p>
+                                                        {ms.description && (
+                                                            <p className="text-xs text-zinc-500 leading-relaxed">{ms.description}</p>
+                                                        )}
+                                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                                                            {ms.category.replace(/_/g, ' ')}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${
+                                                        ms.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                        ms.status === 'REVISION_NEEDED' || ms.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                        ms.status === 'IN_REVIEW' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                        'bg-zinc-50 text-zinc-500 border-zinc-200'
+                                                    }`}>
+                                                        {ms.status.replace(/_/g, ' ')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                            )}
+
                             {/* Testimonial Submission Widget */}
                             <div id="testimonial-section">
                                 {order.Project && !order.Project.testimonialQuote && (
@@ -556,7 +620,7 @@ export default function TrackOrder() {
                             <Card className="border border-zinc-200 shadow-sm rounded-2xl h-full min-h-[600px] bg-white overflow-hidden">
                                 <CardHeader className="bg-zinc-50/50 border-b border-zinc-100 pb-4">
                                     <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-800">
-                                        <Clock className="w-4 h-4 text-zinc-400" /> Milestone History
+                                        <Clock className="w-4 h-4 text-zinc-400" /> Project Updates
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="p-6 md:p-8">
