@@ -8,3 +8,9 @@ export * from './validation/setting.schema';
 export * from './validation/article.schema';
 export * from './validation/hosting.schema';
 export * from './validation/common.schema';
+export * from './validation/client.schema';
+export * from './validation/milestone.schema';
+export * from './validation/user.schema';
+// Note: api/responses exports *Entity* types only (Lead, Order, etc.)
+// to avoid clashes with input schemas in validation/
+export * from './api/responses';
