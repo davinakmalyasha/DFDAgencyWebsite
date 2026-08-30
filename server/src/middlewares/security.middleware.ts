@@ -18,6 +18,22 @@ export const authRateLimiter = rateLimit({
 });
 
 /**
+ * Invite Verify Rate Limiter: Defense-in-depth against 64-char hex token enumeration
+ * Limits to 10 attempts per 15 minutes per IP
+ */
+export const inviteVerifyRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: {
+        success: false,
+        message: 'Too many invite verification attempts. Please try again later.',
+        error: 'TOO_MANY_REQUESTS'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+/**
  * Public Form Limiter: Prevent spam on Order and Lead submissions
  * Limits to 3 submissions per hour per IP
  */

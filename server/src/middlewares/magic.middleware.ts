@@ -31,7 +31,7 @@ export const magicAuth = (req: Request, res: Response, next: NextFunction) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
         
         if (decoded.orderId !== orderId) {
             throw new Error('Token mismatch');
