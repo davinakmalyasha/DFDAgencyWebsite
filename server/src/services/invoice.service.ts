@@ -12,7 +12,14 @@ export class InvoiceService {
     static async generateInvoice(orderId: string): Promise<string> {
         const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { Lead: true, Package: true }
+            select: {
+                id: true,
+                totalAmount: true,
+                status: true,
+                createdAt: true,
+                Lead: { select: { name: true, whatsapp: true, businessName: true } },
+                Package: { select: { name: true, price: true, discountPrice: true } },
+            }
         });
 
         if (!order) throw new Error('Order not found for invoice generation');

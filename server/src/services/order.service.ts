@@ -3,12 +3,13 @@ import { prisma } from '../lib/prisma';
 import { OrderInput, UpdateOrderStatusInput } from '@dfd/shared';
 import { NotificationService } from './notification.service';
 import { LeadService } from './lead.service';
-import { PaymentService } from './payment.service';
 import { PaginationHelper } from '../utils/pagination.helper';
+import { logOrderActivity } from './activity.service';
 
 export class OrderService {
     /**
      * Get all orders (Admin)
+     * Returns only the fields the admin orders list page needs.
      */
     static async getAllOrders(page: number = 1, limit: number = 10) {
         const { skip, limit: l, page: p } = PaginationHelper.getSkipLimit(page, limit);
@@ -19,7 +20,20 @@ export class OrderService {
                 skip,
                 take: l,
                 orderBy: { createdAt: 'desc' },
-                include: { Lead: true, Package: true, Project: true, _count: { select: { Notes: true } } }
+                select: {
+                    id: true,
+                    idempotencyKey: true,
+                    totalAmount: true,
+                    status: true,
+                    briefData: true,
+                    createdAt: true,
+                    currentStep: true,
+                    handoffUrl: true,
+                    Lead: { select: { id: true, name: true, whatsapp: true, businessName: true } },
+                    Package: { select: { id: true, name: true } },
+                    Project: { select: { id: true, title: true } },
+                    _count: { select: { Notes: true } },
+                },
             }),
             prisma.order.count({ where: { deletedAt: null } })
         ]);
@@ -34,52 +48,50 @@ export class OrderService {
         if (idempotencyKey) {
             const existingOrder = await prisma.order.findUnique({
                 where: { idempotencyKey },
-                include: { Lead: true, Package: true }
+                select: {
+                    id: true,
+                    totalAmount: true,
+                    status: true,
+                    Lead: { select: { name: true, whatsapp: true } },
+                    Package: { select: { name: true } },
+                },
             });
             if (existingOrder) {
-                // If it exists, we still want to provide a fresh or existing payment URL
-                // In a more complex app, we might check if the previous Snap token is expired
-                let paymentUrl = null;
-                if (Number(existingOrder.totalAmount) > 0) {
-                    const snap = await PaymentService.createSnapTransaction(
-                        existingOrder.id,
-                        Number(existingOrder.totalAmount),
-                        {
-                            name: existingOrder.Lead.name,
-                            phone: existingOrder.Lead.whatsapp
-                        }
-                    );
-                    paymentUrl = snap.redirect_url;
-                }
-                return { ...existingOrder, paymentUrl, isDuplicate: true };
+                // Idempotency: return the existing order untouched.
+                return {
+                    ...existingOrder,
+                    isDuplicate: true,
+                };
             }
         }
 
         // 2. Find or create lead
         let lead = await prisma.lead.findFirst({
-            where: { whatsapp: data.whatsapp }
+            where: { whatsapp: data.whatsapp },
+            select: { id: true, name: true, whatsapp: true, businessName: true },
         });
 
         if (!lead) {
             lead = await LeadService.createLead({
                 name: data.name,
                 whatsapp: data.whatsapp,
-                businessName: data.businessName || null
+                businessName: data.businessName || null,
             });
         } else {
-            // Synchronize name and businessName for existing leads to avoid "davin" bug
             lead = await prisma.lead.update({
                 where: { id: lead.id },
                 data: {
                     name: data.name,
-                    businessName: data.businessName || lead.businessName
-                }
+                    businessName: data.businessName || lead.businessName,
+                },
+                select: { id: true, name: true, whatsapp: true, businessName: true },
             });
         }
 
         // 3. Get package details
         const pkg = await prisma.package.findUnique({
-            where: { id: data.packageId }
+            where: { id: data.packageId },
+            select: { id: true, name: true, price: true, discountPrice: true },
         });
 
         if (!pkg) throw new Error('Package not found');
@@ -95,74 +107,117 @@ export class OrderService {
                     totalAmount,
                     briefData: data.briefData as any || {},
                     agreedToTermsAt: new Date(),
-                    status: 'PENDING_PAYMENT'
+                    status: 'PENDING_PAYMENT',
                 },
-
-
-                include: {
-                    Lead: true,
-                    Package: true
-                }
+                select: {
+                    id: true,
+                    totalAmount: true,
+                    status: true,
+                    leadId: true,
+                    packageId: true,
+                    createdAt: true,
+                },
             });
 
             await tx.payment.create({
                 data: {
                     orderId: newOrder.id,
-                    paymentMethod: 'MIDTRANS',
-                    paymentStatus: 'UNPAID'
-                }
+                    paymentMethod: 'MANUAL',
+                    paymentStatus: 'UNPAID',
+                },
             });
 
             return newOrder;
         });
 
-        // 5. Create Real Midtrans Transaction OR ByPass for Custom Package ($0)
-        let paymentUrl = null;
-        if (Number(order.totalAmount) > 0) {
-            const snap = await PaymentService.createSnapTransaction(
-                order.id,
-                Number(order.totalAmount),
-                {
-                    name: lead!.name,
-                    phone: lead!.whatsapp
-                }
-            );
-            paymentUrl = snap.redirect_url;
-        }
-
-        // 6. Notifications
-        await NotificationService.notifyNewOrder(order, lead);
+        // 5. Notifications
+        await NotificationService.notifyNewOrder(order as any, lead as any);
+        await logOrderActivity(order.id, null, 'ORDER_CREATED', `New order placed for ${pkg.name}`, { packageId: pkg.id, totalAmount });
 
         return {
             ...order,
-            paymentUrl,
-            isDuplicate: false
+            isDuplicate: false,
         };
     }
 
     /**
-     * Get Order details by ID
+     * Get Order details by ID — PUBLIC tracker (no PII, no whatsapp).
+     * Only safe fields the client sees on /track/:orderId.
      */
     static async getOrderById(id: string) {
         return prisma.order.findUnique({
             where: { id },
-            include: {
-                Lead: true,
-                Package: true,
-                Payments: true,
-                Project: {
+            select: {
+                id: true,
+                status: true,
+                totalAmount: true,
+                briefData: true,
+                createdAt: true,
+                updatedAt: true,
+                handoffUrl: true,
+                currentStep: true,
+                Lead: {
+                    select: {
+                        name: true,
+                        businessName: true,
+                    },
+                },
+                Package: {
                     select: {
                         id: true,
-                        testimonialQuote: true
-                    }
+                        name: true,
+                        features: true,
+                    },
+                },
+                Project: {
+                    select: { id: true, testimonialQuote: true },
                 },
                 Notes: {
-                    where: { isPublic: true },
+                    where: { isPublic: true, isDeleted: false },
                     orderBy: { createdAt: 'desc' },
-                    include: { Author: { select: { username: true } } }
+                    select: {
+                        id: true,
+                        content: true,
+                        createdAt: true,
+                        Author: { select: { username: true } },
+                    },
                 },
-                Resources: true
-            }
+                Resources: {
+                    select: { id: true, title: true, url: true, icon: true, createdAt: true },
+                },
+            },
+        });
+    }
+
+    /**
+     * Get Order details by ID — ADMIN view (full PII: lead whatsapp, etc.).
+     * Used by /admin/orders/:id (with reveal masking in controller).
+     */
+    static async getOrderByIdForAdmin(id: string) {
+        return prisma.order.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                status: true,
+                totalAmount: true,
+                briefData: true,
+                createdAt: true,
+                updatedAt: true,
+                handoffUrl: true,
+                currentStep: true,
+                idempotencyKey: true,
+                Lead: {
+                    select: {
+                        id: true,
+                        name: true,
+                        whatsapp: true,
+                        businessName: true,
+                    },
+                },
+                Package: { select: { id: true, name: true, price: true } },
+                Payments: { select: { id: true, paymentStatus: true, paidAt: true, paymentMethod: true } },
+                Project: { select: { id: true, slug: true, testimonialQuote: true } },
+            },
         });
     }
 
@@ -170,13 +225,24 @@ export class OrderService {
      * Update Order Status (Admin or Webhook)
      */
     static async updateOrderStatus(id: string, data: UpdateOrderStatusInput) {
-        return prisma.order.update({
+        const step = data.status === 'PENDING_PAYMENT' ? 1
+            : data.status === 'PROCESSING' ? 2
+            : data.status === 'REVISION' ? 3
+            : data.status === 'COMPLETED' ? 4
+            : 0;
+        const updated = await prisma.order.update({
             where: { id },
-            data: { 
-                status: data.status,
-                handoffUrl: data.handoffUrl
-            }
+            data: { status: data.status, handoffUrl: data.handoffUrl, currentStep: step },
+            select: { id: true, status: true, handoffUrl: true, currentStep: true, updatedAt: true },
         });
+        if (data.status === 'PROCESSING') {
+            try {
+                const { ContractService } = await import('./contract.service');
+                await ContractService.generateWelcomeDoc(id);
+                await ContractService.generateContract(id);
+            } catch (e) { console.warn('[OrderService] auto-doc generation failed', e); }
+        }
+        return updated;
     }
 
     /**
@@ -185,7 +251,8 @@ export class OrderService {
     static async deleteOrder(id: string) {
         return prisma.order.update({
             where: { id },
-            data: { deletedAt: new Date() }
+            data: { deletedAt: new Date() },
+            select: { id: true, deletedAt: true },
         });
     }
 
@@ -195,7 +262,14 @@ export class OrderService {
     static async promoteOrderToProject(orderId: string) {
         const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { Lead: true, Package: true, Project: true }
+            select: {
+                id: true,
+                status: true,
+                briefData: true,
+                Lead: { select: { name: true, businessName: true } },
+                Package: { select: { name: true } },
+                Project: { select: { id: true } },
+            },
         });
 
         if (!order) throw Object.assign(new Error('Order not found'), { statusCode: 404 });
@@ -223,7 +297,14 @@ export class OrderService {
                 techStack: [],
                 duration: 'TBD',
             },
-            include: { Order: { include: { Lead: true, Package: true } } }
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                clientName: true,
+                category: true,
+                Order: { select: { Lead: { select: { name: true, businessName: true } }, Package: { select: { name: true } } } },
+            },
         });
 
         return project;
@@ -235,7 +316,12 @@ export class OrderService {
     static async submitTestimonial(orderId: string, quote: string, overrideName?: string) {
         const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { Project: true, Lead: true }
+            select: {
+                id: true,
+                status: true,
+                Lead: { select: { name: true, businessName: true } },
+                Project: { select: { id: true, testimonialQuote: true } },
+            },
         });
 
         if (!order) throw Object.assign(new Error('Order not found'), { statusCode: 404 });
@@ -247,10 +333,8 @@ export class OrderService {
 
         return prisma.project.update({
             where: { id: order.Project.id },
-            data: {
-                testimonialQuote: quote,
-                testimonialAuthor: authorName
-            }
+            data: { testimonialQuote: quote, testimonialAuthor: authorName },
+            select: { id: true, testimonialQuote: true, testimonialAuthor: true },
         });
     }
 }

@@ -25,9 +25,13 @@ router.patch('/track/:orderId/notes/:noteId', validateRequest({ params: orderIdP
 router.delete('/track/:orderId/notes/:noteId', validateRequest({ params: orderIdParamsSchema }), magicAuth, OrderController.deleteClientNote);
 router.post('/track/:id/testimonial', validateRequest({ params: uuidParamsSchema }), magicAuth, OrderController.submitTestimonial);
 router.get('/track/:id/invoice', validateRequest({ params: uuidParamsSchema }), magicAuth, OrderController.downloadInvoice);
+router.get('/track/:id/contract', validateRequest({ params: uuidParamsSchema }), magicAuth, OrderController.downloadContract);
+router.get('/track/:id/welcome', validateRequest({ params: uuidParamsSchema }), magicAuth, OrderController.downloadWelcome);
 
 import { OrderNoteController } from '../controllers/ordernote.controller';
 import { OrderResourceController } from '../controllers/orderresource.controller';
+import { MilestoneController } from '../controllers/milestone.controller';
+import { createMilestoneSchema, updateMilestoneSchema } from '@dfd/shared';
 
 /**
  * ADMIN ROUTES (Protected)
@@ -35,7 +39,8 @@ import { OrderResourceController } from '../controllers/orderresource.controller
 router.get('/', authenticateJWT, requireSuperadmin, OrderController.getAll);
 router.get('/:id', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.getById);
 router.get('/:id/invoice', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.downloadInvoice);
-router.get('/:id/pay', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.getPaymentUrl);
+router.get('/:id/contract', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.downloadContract);
+router.get('/:id/welcome', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.downloadWelcome);
 router.patch('/:id/status', authenticateJWT, requireSuperadmin, validateRequest({ body: updateOrderStatusSchema, params: uuidParamsSchema }), OrderController.updateStatus);
 router.post('/:id/promote', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.promoteToProject);
 router.delete('/:id', authenticateJWT, requireSuperadmin, validateRequest({ params: uuidParamsSchema }), OrderController.delete);
@@ -51,5 +56,13 @@ router.get('/:orderId/resources', authenticateJWT, requireSuperadmin, validateRe
 router.post('/:orderId/resources', authenticateJWT, requireSuperadmin, validateRequest({ params: orderIdParamsSchema }), OrderResourceController.createResource);
 router.patch('/resources/:resourceId', authenticateJWT, requireSuperadmin, validateRequest({ params: resourceIdParamsSchema }), OrderResourceController.updateResource);
 router.delete('/resources/:resourceId', authenticateJWT, requireSuperadmin, validateRequest({ params: resourceIdParamsSchema }), OrderResourceController.deleteResource);
+
+// Order Milestones (Deliverables) Routes
+router.get('/:orderId/milestones', authenticateJWT, requireSuperadmin, validateRequest({ params: orderIdParamsSchema }), MilestoneController.list);
+router.post('/:orderId/milestones', authenticateJWT, requireSuperadmin, validateRequest({ params: orderIdParamsSchema, body: createMilestoneSchema }), MilestoneController.create);
+router.patch('/milestones/:milestoneId', authenticateJWT, requireSuperadmin, validateRequest({ body: updateMilestoneSchema }), MilestoneController.update);
+router.delete('/milestones/:milestoneId', authenticateJWT, requireSuperadmin, MilestoneController.remove);
+router.get('/:orderId/whatsapp-link', authenticateJWT, requireSuperadmin, validateRequest({ params: orderIdParamsSchema }), MilestoneController.whatsappLink);
+router.get('/:orderId/activity', authenticateJWT, requireSuperadmin, validateRequest({ params: orderIdParamsSchema }), MilestoneController.activity);
 
 export default router;

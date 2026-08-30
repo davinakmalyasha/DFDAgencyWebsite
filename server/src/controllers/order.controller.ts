@@ -3,9 +3,9 @@ import jwt from 'jsonwebtoken';
 import { OrderService } from '../services/order.service';
 import { AuditService } from '../services/audit.service';
 import { InvoiceService } from '../services/invoice.service';
-import { PaymentService } from '../services/payment.service';
 import { prisma } from '../lib/prisma';
 import { maskPII } from '../utils/security.util';
+import { AuthRequest } from '../middlewares/auth.middleware';
 
 export class OrderController {
     /**
@@ -70,15 +70,29 @@ export class OrderController {
             // --- UNLOCKED STATE (Full Data) ---
             // Securely fetch ONLY public notes for the tracking page
             const publicNotes = await prisma.orderNote.findMany({
-                where: { orderId: id, isPublic: true },
-                include: { Author: { select: { username: true } } },
-                orderBy: { createdAt: 'desc' }
+                where: { orderId: id, isPublic: true, isDeleted: false },
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true, content: true, createdAt: true,
+                    Author: { select: { username: true } },
+                }
             });
 
             // Fetch attached resources
             const resources = await prisma.orderResource.findMany({
                 where: { orderId: id },
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' },
+                select: { id: true, title: true, url: true, icon: true, createdAt: true }
+            });
+
+            // Fetch deliverable milestones (non-draft only — drafts are internal)
+            const milestones = await prisma.orderMilestone.findMany({
+                where: { orderId: id, status: { not: 'DRAFT' } },
+                orderBy: { createdAt: 'asc' },
+                select: {
+                    id: true, title: true, description: true, coverUrl: true,
+                    category: true, status: true, createdAt: true, updatedAt: true,
+                }
             });
 
             // PII Sanitization (Safe Lead selection)
@@ -106,6 +120,7 @@ export class OrderController {
                     Package: order.Package,
                     Notes: publicNotes,
                     Resources: resources,
+                    Milestones: milestones,
                     isLocked: false
                 }
             });
@@ -128,7 +143,7 @@ export class OrderController {
 
             const order = await prisma.order.findUnique({
                 where: { id },
-                include: { Lead: true }
+                select: { id: true, Lead: { select: { whatsapp: true } } }
             });
 
             if (!order) {
@@ -146,10 +161,9 @@ export class OrderController {
                 });
             }
 
-            // Create Magic Session Token
             const token = jwt.sign(
                 { orderId: order.id },
-                process.env.JWT_SECRET || 'secret',
+                process.env.JWT_SECRET as string,
                 { expiresIn: '1d' }
             );
 
@@ -200,16 +214,18 @@ export class OrderController {
                     isClient: true,   // Flags this as originated from the client
                     parentId: parentId ? parseInt(parentId as string) : null
                 },
-                include: {
+                select: {
+                    id: true, orderId: true, content: true, isPublic: true, isClient: true,
+                    isEdited: true, parentId: true, createdAt: true,
                     Author: { select: { username: true } },
-                    Parent: { select: { id: true, content: true } }
+                    Parent: { select: { id: true, content: true } },
                 }
             });
 
             // PHASE 11: Notify admin of client update (Telegram)
             const { NotificationService } = require('../services/notification.service');
             const clientDisplayName = order.Lead?.businessName || order.Lead?.name || 'Unknown Client';
-            
+
             NotificationService.notifyClientUpdate(
                 id,
                 clientDisplayName,
@@ -237,11 +253,12 @@ export class OrderController {
             const { content } = req.body;
 
             const note = await prisma.orderNote.findFirst({
-                where: { 
+                where: {
                     id: parseInt(noteId),
                     orderId,
-                    isClient: true // Only allow editing client notes
-                }
+                    isClient: true
+                },
+                select: { id: true, content: true }
             });
 
             if (!note) {
@@ -250,13 +267,15 @@ export class OrderController {
 
             const updatedNote = await prisma.orderNote.update({
                 where: { id: note.id },
-                data: { 
+                data: {
                     content: content?.trim(),
                     isEdited: true
                 },
-                include: {
+                select: {
+                    id: true, orderId: true, content: true, isPublic: true, isClient: true,
+                    isEdited: true, parentId: true, createdAt: true, updatedAt: true,
                     Author: { select: { username: true } },
-                    Parent: { select: { id: true, content: true } }
+                    Parent: { select: { id: true, content: true } },
                 }
             });
 
@@ -279,11 +298,12 @@ export class OrderController {
             const noteId = req.params.noteId as string;
 
             const note = await prisma.orderNote.findFirst({
-                where: { 
+                where: {
                     id: parseInt(noteId),
                     orderId,
                     isClient: true
-                }
+                },
+                select: { id: true }
             });
 
             if (!note) {
@@ -292,7 +312,8 @@ export class OrderController {
 
             await prisma.orderNote.update({
                 where: { id: note.id },
-                data: { isDeleted: true }
+                data: { isDeleted: true },
+                select: { id: true, isDeleted: true }
             });
 
             res.status(200).json({
@@ -334,54 +355,38 @@ export class OrderController {
     static async downloadInvoice(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;
-
-            // Generate or fetch the invoice
             const filePath = await InvoiceService.generateInvoice(id);
-
-            // Serve the file as a download
             res.download(filePath, (err) => {
                 if (err) {
                     console.error('Error serving invoice:', err);
-                    // Avoid sending multiple responses if headers are already sent
                     if (!res.headersSent) {
                         res.status(500).json({ success: false, message: 'Failed to download invoice' });
                     }
                 }
             });
-        } catch (error) {
-            next(error);
-        }
+        } catch (error) { next(error); }
     }
 
-    /**
-     * Get Payment URL for an existing PENDING_PAYMENT order (Protected)
-     */
-    static async getPaymentUrl(req: Request, res: Response, next: NextFunction) {
+    static async downloadContract(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;
-            const order = await OrderService.getOrderById(id);
-            if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-            if (order.status !== 'PENDING_PAYMENT') {
-                return res.status(400).json({ success: false, message: 'Order is not pending payment' });
-            }
-
-            const snap = await PaymentService.createSnapTransaction(
-                order.id,
-                Number(order.totalAmount),
-                {
-                    name: order.Lead.name,
-                    phone: order.Lead.whatsapp
-                }
-            );
-
-            res.status(200).json({
-                success: true,
-                message: 'Payment URL generated',
-                data: { paymentUrl: snap.redirect_url, token: snap.token }
+            const { ContractService } = await import('../services/contract.service');
+            const { pdfUrl } = await ContractService.generateContract(id);
+            res.download(pdfUrl, (err) => {
+                if (err && !res.headersSent) res.status(500).json({ success: false, message: 'Failed to download contract' });
             });
-        } catch (error) {
-            next(error);
-        }
+        } catch (e) { next(e); }
+    }
+
+    static async downloadWelcome(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const { ContractService } = await import('../services/contract.service');
+            const { pdfUrl } = await ContractService.generateWelcomeDoc(id);
+            res.download(pdfUrl, (err) => {
+                if (err && !res.headersSent) res.status(500).json({ success: false, message: 'Failed to download welcome doc' });
+            });
+        } catch (e) { next(e); }
     }
 
     /**
@@ -419,11 +424,11 @@ export class OrderController {
     static async getById(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;
-            const order = await OrderService.getOrderById(id);
+            const order = await OrderService.getOrderByIdForAdmin(id);
             if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
             const reveal = req.query.reveal === 'true' && (req as any).user.role === 'SUPERADMIN';
-            
+
             if (reveal) {
                 await AuditService.log((req as any).user.userId, 'REVEAL_PII_ORDER_DETAIL', `Order ID: ${id}`, null, req.ip);
             }
@@ -443,7 +448,7 @@ export class OrderController {
             const order = await OrderService.updateOrderStatus(id, { status, handoffUrl });
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_ORDER_STATUS', `Order ID: ${id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_ORDER_STATUS', `Order ID: ${id}`, req.body, req.ip);
 
             res.status(200).json({ success: true, message: 'Order status updated', data: order });
         } catch (error) { next(error); }
@@ -458,7 +463,7 @@ export class OrderController {
             await OrderService.deleteOrder(id);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_ORDER', `Order ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_ORDER', `Order ID: ${id}`, null, req.ip);
 
             res.status(200).json({ success: true, message: 'Order deleted', data: null });
         } catch (error) { next(error); }
@@ -472,7 +477,7 @@ export class OrderController {
             const id = req.params.id as string;
             const project = await OrderService.promoteOrderToProject(id);
 
-            await AuditService.log((req as any).user.id, 'PROMOTE_ORDER_TO_PROJECT', `Order: ${id} → Project: ${project.id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'PROMOTE_ORDER_TO_PROJECT', `Order: ${id} → Project: ${project.id}`, null, req.ip);
 
             res.status(201).json({
                 success: true,
