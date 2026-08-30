@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuditService } from '../services/audit.service';
+import { cached, invalidate } from '../lib/cache';
 
 export class SettingController {
     static async getSettings(req: Request, res: Response) {
         try {
-            // There should only be one settings row as we seed it
-            const settings = await prisma.globalSetting.findFirst();
-
+            const settings = await cached('settings', 120, () => prisma.globalSetting.findFirst());
             return res.status(200).json({
                 success: true,
                 message: 'Settings retrieved successfully',
@@ -37,7 +36,9 @@ export class SettingController {
                 googleAnalyticsId
             } = req.body;
 
-            const settings = await prisma.globalSetting.findFirst();
+            const settings = await prisma.globalSetting.findFirst({
+                select: { id: true }
+            });
 
             if (!settings) {
                 return res.status(404).json({
@@ -58,8 +59,8 @@ export class SettingController {
                 }
             });
 
-            // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_SETTINGS', 'Global Settings', req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_SETTINGS', 'Global Settings', req.body, req.ip);
+            invalidate('settings');
 
             return res.status(200).json({
                 success: true,
@@ -71,7 +72,7 @@ export class SettingController {
             const message = error instanceof Error ? error.message : 'Failed to update settings';
             return res.status(500).json({
                 success: false,
-                message: 'Failed to update settings',
+                message: 'Failed to retrieve settings',
                 data: null,
                 error: message
             });

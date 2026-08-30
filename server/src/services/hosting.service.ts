@@ -1,13 +1,22 @@
 import { prisma } from '../lib/prisma';
 import { CreateHostingInput, UpdateHostingInput } from '@dfd/shared';
+import { PaginationHelper } from '../utils/pagination.helper';
 
 export class HostingService {
-    static async getAll() {
-        return prisma.hosting.findMany({
-            where: { deletedAt: null },
-            include: { Project: { select: { id: true, title: true, slug: true } } },
-            orderBy: { hostingEndDate: 'asc' }
-        });
+    static async getAll(page: number = 1, limit: number = 50) {
+        const { skip, limit: l, page: p } = PaginationHelper.getSkipLimit(page, limit);
+        const where = { deletedAt: null };
+        const [data, total] = await Promise.all([
+            prisma.hosting.findMany({
+                where,
+                skip,
+                take: l,
+                include: { Project: { select: { id: true, title: true, slug: true } } },
+                orderBy: { hostingEndDate: 'asc' }
+            }),
+            prisma.hosting.count({ where })
+        ]);
+        return PaginationHelper.formatResult(data, total, p, l);
     }
 
     static async getById(id: number) {
@@ -31,7 +40,8 @@ export class HostingService {
                 notifyBeforeDays: data.notifyBeforeDays ?? 30,
                 notes: data.notes || null,
                 projectId: data.projectId ?? null,
-            }
+            },
+            select: { id: true, domain: true, clientName: true, hostingEndDate: true, status: true }
         });
     }
 
@@ -52,14 +62,16 @@ export class HostingService {
 
         return prisma.hosting.update({
             where: { id },
-            data: updateData
+            data: updateData,
+            select: { id: true, domain: true, clientName: true, hostingEndDate: true, status: true, updatedAt: true }
         });
     }
 
     static async softDelete(id: number) {
         return prisma.hosting.update({
             where: { id },
-            data: { deletedAt: new Date(), status: 'CANCELLED' }
+            data: { deletedAt: new Date(), status: 'CANCELLED' },
+            select: { id: true, deletedAt: true, status: true }
         });
     }
 

@@ -12,11 +12,21 @@ export class LeadService {
 
         const [data, total] = await Promise.all([
             prisma.lead.findMany({
+                where: { deletedAt: null },
                 skip,
                 take: l,
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    name: true,
+                    whatsapp: true,
+                    businessName: true,
+                    message: true,
+                    status: true,
+                    createdAt: true,
+                },
             }),
-            prisma.lead.count()
+            prisma.lead.count({ where: { deletedAt: null } })
         ]);
 
         return PaginationHelper.formatResult(data, total, p, l);
@@ -27,11 +37,12 @@ export class LeadService {
      */
     static async createLead(data: LeadInput) {
         const lead = await prisma.lead.create({
-            data
+            data,
+            select: { id: true, name: true, whatsapp: true, businessName: true, message: true, status: true, createdAt: true },
         });
 
         try {
-            await NotificationService.notifyNewLead(lead);
+            await NotificationService.notifyNewLead(lead as any);
         } catch (error) {
             console.error('[ERROR]: Notification failed but lead was saved:', error);
             // Don't fail the request if just notification fails
@@ -47,7 +58,8 @@ export class LeadService {
     static async updateLeadStatus(id: number, data: UpdateLeadStatusInput) {
         return prisma.lead.update({
             where: { id },
-            data
+            data,
+            select: { id: true, status: true, name: true, whatsapp: true, updatedAt: true }
         });
     }
 
@@ -57,7 +69,8 @@ export class LeadService {
     static async deleteLead(id: number) {
         return prisma.lead.update({
             where: { id },
-            data: { deletedAt: new Date() }
+            data: { deletedAt: new Date() },
+            select: { id: true, deletedAt: true }
         });
     }
     /**
@@ -66,7 +79,16 @@ export class LeadService {
     static async getLeadById(id: number) {
         return prisma.lead.findUnique({
             where: { id },
-            include: { Orders: true }
+            select: {
+                id: true,
+                name: true,
+                whatsapp: true,
+                businessName: true,
+                message: true,
+                status: true,
+                createdAt: true,
+                Orders: { select: { id: true, status: true, totalAmount: true, createdAt: true } }
+            }
         });
     }
 }

@@ -43,6 +43,8 @@ model AuditLog {
 
   @@map("auditlog")
   @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model GlobalSetting {
@@ -51,7 +53,7 @@ model GlobalSetting {
   emailContact      String
   officeAddress     String   @db.Text
   instagramLink     String?
-  isMaintenanceMode Boolean  @default(false)
+  isMaintenanceMode Boolean   @default(false)
   metaPixelId       String?
   googleAnalyticsId String?
   updatedAt         DateTime @updatedAt
@@ -70,8 +72,12 @@ model Lead {
   updatedAt    DateTime    @updatedAt
   deletedAt    DateTime?
   Orders       Order[]
+  ClientUser   User?
 
   @@map("lead")
+  @@index([whatsapp])
+  @@index([status])
+  @@index([deletedAt])
 }
 
 model Order {
@@ -82,6 +88,9 @@ model Order {
   briefData       Json
   status          OrderStatus    @default(PENDING_PAYMENT)
   agreedToTermsAt DateTime
+  currentStep     Int            @default(0)
+  driveFolderId   String?
+  driveFolderUrl  String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime?
@@ -91,14 +100,19 @@ model Order {
   Package         Package        @relation(fields: [packageId], references: [id])
   Payments        Payment[]
   Project         Project?
-
   Notes           OrderNote[]
   Resources       OrderResource[]
+  ClientRequests  ClientRequest[]
+  Contract        Contract?
+  Milestones      OrderMilestone[]
+  Activities      OrderActivity[]
 
   @@map("order")
   @@index([leadId])
   @@index([packageId])
   @@index([status])
+  @@index([deletedAt])
+  @@index([createdAt])
 }
 
 model OrderNote {
@@ -113,14 +127,15 @@ model OrderNote {
   isEdited  Boolean  @default(false)
   isDeleted Boolean  @default(false)
   parentId  Int?
-  
+
   Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   Author    User?    @relation(fields: [authorId], references: [id])
   Parent    OrderNote? @relation("NoteReplies", fields: [parentId], references: [id])
   replies   OrderNote[] @relation("NoteReplies")
 
   @@map("ordernote")
-  @@index([orderId])
+  @@index([orderId, isDeleted])
+  @@index([orderId, isPublic])
   @@index([authorId])
   @@index([parentId])
 }
@@ -130,7 +145,7 @@ model OrderResource {
   orderId   String
   title     String
   url       String
-  icon      String?  // e.g., 'figma', 'gdrive', 'github'
+  icon      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -155,8 +170,8 @@ model Package {
   Promos        Promo[]
 
   @@map("package")
-  @@index([isActive])
-  @@index([sortOrder])
+  @@index([isActive, sortOrder])
+  @@index([deletedAt])
 }
 
 model Payment {
@@ -260,19 +275,126 @@ model Promo {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
-  username     String     @unique
-  email        String     @unique
-  passwordHash String
-  role         UserRole   @default(EDITOR)
-  tokenVersion Int        @default(0)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  Articles     Article[]
-  AuditLogs    AuditLog[]
-  OrderNotes   OrderNote[]
+  id                 Int       @id @default(autoincrement())
+  username           String    @unique
+  email              String    @unique
+  passwordHash       String
+  role               UserRole  @default(EDITOR)
+  tokenVersion       Int       @default(0)
+  inviteToken        String?   @unique
+  inviteTokenExpiry  DateTime?
+  leadId             Int?      @unique
+  deletedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  Articles           Article[]
+  AuditLogs          AuditLog[]
+  OrderNotes         OrderNote[]
+  Lead               Lead?     @relation(fields: [leadId], references: [id])
+  ClientRequests     ClientRequest[]
+  Contracts          Contract[]
+  MilestonesCreated  OrderMilestone[]
+  MilestoneViews     MilestoneView[]
+  OrderActivities    OrderActivity[]
 
   @@map("user")
+  @@index([inviteTokenExpiry])
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model ClientRequest {
+  id               Int           @id @default(autoincrement())
+  userId           Int
+  orderId          String?
+  type             RequestType   @default(GENERAL)
+  title            String
+  body             String        @db.Text
+  status           RequestStatus @default(PENDING)
+  adminNote        String?       @db.Text
+  driveUrl         String?
+  calendlyEventUrl String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+  User             User          @relation(fields: [userId], references: [id])
+  Order            Order?        @relation(fields: [orderId], references: [id])
+
+  @@map("clientrequest")
+  @@index([userId, deletedAt])
+  @@index([orderId])
+  @@index([status, deletedAt])
+  @@index([createdAt])
+}
+
+model Contract {
+  id        String   @id @default(uuid())
+  orderId   String   @unique
+  userId    Int?
+  pdfUrl    String?
+  status    String   @default("DRAFT")
+  signedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  Order     Order    @relation(fields: [orderId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("contract")
+  @@index([userId])
+}
+
+model OrderMilestone {
+  id           Int              @id @default(autoincrement())
+  orderId      String
+  title        String
+  description  String?          @db.Text
+  coverUrl     String?
+  category     MilestoneCategory @default(OTHER)
+  status       MilestoneStatus   @default(READY)
+  notifyClient Boolean           @default(true)
+  createdById  Int
+  viewedAt     DateTime?
+  decidedAt    DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  Order        Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Creator      User             @relation(fields: [createdById], references: [id])
+  Views        MilestoneView[]
+
+  @@map("ordermilestone")
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MilestoneView {
+  id          Int           @id @default(autoincrement())
+  milestoneId Int
+  userId      Int
+  viewedAt    DateTime      @default(now())
+  Milestone   OrderMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  User        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("milestoneview")
+  @@unique([milestoneId, userId])
+  @@index([milestoneId])
+}
+
+model OrderActivity {
+  id        Int      @id @default(autoincrement())
+  orderId   String
+  actorId   Int?
+  type      String
+  message   String   @db.Text
+  meta      Json?
+  createdAt DateTime @default(now())
+  Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@map("orderactivity")
+  @@index([orderId])
+  @@index([createdAt])
 }
 
 enum PaymentStatus {
@@ -297,6 +419,7 @@ enum ProjectCategory {
 enum UserRole {
   SUPERADMIN
   EDITOR
+  CLIENT
 }
 
 enum LeadStatus {
@@ -325,4 +448,38 @@ enum HostingStatus {
   EXPIRING_SOON
   EXPIRED
   CANCELLED
+}
+
+enum MilestoneCategory {
+  DESIGN
+  FRONTEND
+  BACKEND
+  COPY
+  CONTENT
+  REVIEW
+  ASSET
+  OTHER
+}
+
+enum MilestoneStatus {
+  DRAFT
+  READY
+  IN_REVIEW
+  REVISION_NEEDED
+  APPROVED
+  REJECTED
+}
+
+enum RequestType {
+  ACCESS
+  FILE
+  MEETING
+  REVISION
+  GENERAL
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
