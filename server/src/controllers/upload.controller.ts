@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CloudinaryService } from '../services/cloudinary.service';
+import { CloudinaryService, sniffImageType } from '../services/cloudinary.service';
 import { AuditService } from '../services/audit.service';
 
 export class UploadController {
@@ -14,6 +14,15 @@ export class UploadController {
                     success: false,
                     message: 'No file uploaded',
                     error: 'MISSING_FILE'
+                });
+            }
+
+            // Magic-byte verification (defense in depth beyond MIME/extension)
+            if (!sniffImageType(multerReq.file.buffer)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'File content is not a supported image (jpg, png, webp, gif)',
+                    error: 'INVALID_IMAGE_CONTENT'
                 });
             }
 
@@ -32,7 +41,7 @@ export class UploadController {
             // Audit log (if user is authenticated)
             if ((req as any).user) {
                 await AuditService.log(
-                    (req as any).user.id,
+                    (req as any).user.userId,
                     'UPLOAD_IMAGE',
                     `Uploaded to folder: ${folder}`,
                     null,

@@ -59,7 +59,7 @@ export class LeadController {
             const lead = await LeadService.updateLeadStatus(id, req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_LEAD_STATUS', `Lead ID: ${id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_LEAD_STATUS', `Lead ID: ${id}`, req.body, req.ip);
 
             res.status(200).json({
                 success: true,
@@ -80,7 +80,7 @@ export class LeadController {
             await LeadService.deleteLead(id);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_LEAD', `Lead ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_LEAD', `Lead ID: ${id}`, null, req.ip);
 
             res.status(200).json({
                 success: true,

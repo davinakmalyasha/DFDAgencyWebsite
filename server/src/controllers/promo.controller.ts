@@ -48,7 +48,7 @@ export class PromoController {
             const promo = await PromoService.createPromo(req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'CREATE_PROMO', `Promo ID: ${promo.id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'CREATE_PROMO', `Promo ID: ${promo.id}`, req.body, req.ip);
 
             res.status(201).json({
                 success: true,
@@ -69,7 +69,7 @@ export class PromoController {
             const promo = await PromoService.updatePromo(id, req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_PROMO', `Promo ID: ${id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_PROMO', `Promo ID: ${id}`, req.body, req.ip);
 
             res.status(200).json({
                 success: true,
@@ -90,7 +90,7 @@ export class PromoController {
             await PromoService.deletePromo(id);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_PROMO', `Promo ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_PROMO', `Promo ID: ${id}`, null, req.ip);
 
             res.status(200).json({
                 success: true,

@@ -63,7 +63,7 @@ export class ProjectController {
             const project = await ProjectService.createProject(req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'CREATE_PROJECT', `Project ID: ${project.id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'CREATE_PROJECT', `Project ID: ${project.id}`, req.body, req.ip);
 
             res.status(201).json({
                 success: true,
@@ -84,7 +84,7 @@ export class ProjectController {
             const project = await ProjectService.updateProject(id, req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_PROJECT', `Project ID: ${id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_PROJECT', `Project ID: ${id}`, req.body, req.ip);
 
             res.status(200).json({
                 success: true,
@@ -105,7 +105,7 @@ export class ProjectController {
             await ProjectService.deleteProject(id);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_PROJECT', `Project ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_PROJECT', `Project ID: ${id}`, null, req.ip);
 
             res.status(200).json({
                 success: true,
@@ -126,7 +126,7 @@ export class ProjectController {
             const image = await ProjectService.addImage(projectId, req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'ADD_PROJECT_IMAGE', `Project ID: ${projectId}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'ADD_PROJECT_IMAGE', `Project ID: ${projectId}`, req.body, req.ip);
 
             res.status(201).json({ success: true, message: 'Image added', data: image });
         } catch (error) { next(error); }
@@ -141,7 +141,7 @@ export class ProjectController {
             await ProjectService.deleteImage(imageId);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_PROJECT_IMAGE', `Image ID: ${imageId}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_PROJECT_IMAGE', `Image ID: ${imageId}`, null, req.ip);
 
             res.status(200).json({ success: true, message: 'Image deleted', data: null });
         } catch (error) { next(error); }

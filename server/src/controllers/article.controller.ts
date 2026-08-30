@@ -125,7 +125,7 @@ export class ArticleController {
             await ArticleService.deleteArticle(id);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_ARTICLE', `Article ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_ARTICLE', `Article ID: ${id}`, null, req.ip);
 
             res.status(200).json({
                 success: true,

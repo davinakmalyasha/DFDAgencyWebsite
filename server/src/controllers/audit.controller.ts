@@ -13,18 +13,14 @@ export class AuditController {
 
             const [logs, total] = await Promise.all([
                 prisma.auditLog.findMany({
-                    include: {
-                        User: {
-                            select: {
-                                username: true,
-                                email: true,
-                                role: true
-                            }
-                        }
-                    },
                     orderBy: { createdAt: 'desc' },
                     skip,
-                    take: limit
+                    take: limit,
+                    select: {
+                        id: true, userId: true, action: true, target: true, details: true,
+                        ipAddress: true, createdAt: true,
+                        User: { select: { username: true, email: true, role: true } },
+                    },
                 }),
                 prisma.auditLog.count()
             ]);

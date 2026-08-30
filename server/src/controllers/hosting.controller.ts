@@ -5,11 +5,14 @@ import { AuditService } from '../services/audit.service';
 export class HostingController {
     static async getAll(req: Request, res: Response) {
         try {
-            const entries = await HostingService.getAll();
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 50;
+            const result = await HostingService.getAll(page, limit);
             return res.status(200).json({
                 success: true,
                 message: 'Hosting entries retrieved',
-                data: entries,
+                data: result.data,
+                meta: result.meta,
                 error: null
             });
         } catch (error: unknown) {
@@ -48,7 +51,7 @@ export class HostingController {
     static async create(req: Request, res: Response) {
         try {
             const entry = await HostingService.create(req.body);
-            await AuditService.log((req as any).user.id, 'CREATE_HOSTING', `Hosting: ${entry.domain}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'CREATE_HOSTING', `Hosting: ${entry.domain}`, req.body, req.ip);
 
             return res.status(201).json({
                 success: true, message: 'Hosting entry created', data: entry, error: null
@@ -65,7 +68,7 @@ export class HostingController {
         try {
             const id = parseInt(req.params.id as string);
             const entry = await HostingService.update(id, req.body);
-            await AuditService.log((req as any).user.id, 'UPDATE_HOSTING', `Hosting: ${entry.domain}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_HOSTING', `Hosting: ${entry.domain}`, req.body, req.ip);
 
             return res.status(200).json({
                 success: true, message: 'Hosting entry updated', data: entry, error: null
@@ -82,7 +85,7 @@ export class HostingController {
         try {
             const id = parseInt(req.params.id as string);
             await HostingService.softDelete(id);
-            await AuditService.log((req as any).user.id, 'DELETE_HOSTING', `Hosting ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_HOSTING', `Hosting ID: ${id}`, null, req.ip);
 
             return res.status(200).json({
                 success: true, message: 'Hosting entry removed', data: null, error: null

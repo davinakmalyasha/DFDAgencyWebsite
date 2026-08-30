@@ -60,7 +60,7 @@ export class PackageController {
             const pkg = await PackageService.createPackage(req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'CREATE_PACKAGE', `Package ID: ${pkg.id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'CREATE_PACKAGE', `Package ID: ${pkg.id}`, req.body, req.ip);
 
             res.status(201).json({
                 success: true,
@@ -81,7 +81,7 @@ export class PackageController {
             const pkg = await PackageService.updatePackage(id, req.body);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'UPDATE_PACKAGE', `Package ID: ${id}`, req.body, req.ip);
+            await AuditService.log((req as any).user.userId, 'UPDATE_PACKAGE', `Package ID: ${id}`, req.body, req.ip);
 
             res.status(200).json({
                 success: true,
@@ -102,7 +102,7 @@ export class PackageController {
             await PackageService.deletePackage(id);
 
             // Audit Log
-            await AuditService.log((req as any).user.id, 'DELETE_PACKAGE', `Package ID: ${id}`, null, req.ip);
+            await AuditService.log((req as any).user.userId, 'DELETE_PACKAGE', `Package ID: ${id}`, null, req.ip);
 
             res.status(200).json({
                 success: true,

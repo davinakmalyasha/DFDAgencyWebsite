@@ -19,9 +19,23 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
         'https://dfdagencywebsite.vercel.app'
     ];
 
-    // Verify Origin or Referer matches our allowed frontend origins
-    const isOriginValid = origin && allowedOrigins.some(url => origin.startsWith(url));
-    const isRefererValid = referer && allowedOrigins.some(url => referer.startsWith(url));
+    const allowedHosts = allowedOrigins.map((url) => {
+        try { return new URL(url).host; } catch { return url; }
+    });
+
+    const getHost = (value: string) => {
+        try { return new URL(value).host; } catch { return ''; }
+    };
+
+    const isOriginValid = origin ? allowedHosts.includes(getHost(origin)) : false;
+    const isRefererValid = referer ? allowedHosts.includes(getHost(referer)) : false;
+
+    // If neither header is present (native apps, CLI, provider webhooks already
+    // exempted above), skip the check — CSRF requires a browser which always
+    // sends at least one of these on cross-origin state changes.
+    if (!origin && !referer) {
+        return next();
+    }
 
     if (!isOriginValid && !isRefererValid) {
         return res.status(403).json({

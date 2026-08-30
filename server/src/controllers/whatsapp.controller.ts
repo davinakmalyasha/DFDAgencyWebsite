@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { WhatsAppService } from '../services/whatsapp.service';
+import { AuditService } from '../services/audit.service';
 
 export class WhatsAppController {
     static getStatus(req: Request, res: Response) {
@@ -12,7 +13,7 @@ export class WhatsAppController {
         });
     }
 
-    static getQR(req: Request, res: Response) {
+    static async getQR(req: Request, res: Response) {
         const qr = WhatsAppService.getQRCode();
         const status = WhatsAppService.getStatus();
 
@@ -24,6 +25,11 @@ export class WhatsAppController {
             return res.status(404).json({ success: false, message: 'QR not ready or bot initializing', data: null, error: 'QR Payload Null' });
         }
 
+        // Audit QR fetch — the QR is a pairing secret; log who pulled it
+        try {
+            await AuditService.log((req as any).user?.userId, 'WA_QR_FETCH', 'WhatsApp QR code fetched', { status }, req.ip);
+        } catch { /* audit best-effort */ }
+
         return res.status(200).json({
             success: true,
             message: 'QR code fetched',
@@ -33,6 +39,9 @@ export class WhatsAppController {
     }
 
     static async startSession(req: Request, res: Response) {
+        try {
+            await AuditService.log((req as any).user?.userId, 'WA_START_SESSION', 'WhatsApp session start signaled', null, req.ip);
+        } catch { /* audit best-effort */ }
         // Fire and forget to avoid HTTP timeouts since Chromium takes 10-30s to boot
         WhatsAppService.initialize().catch(err => console.error('[WhatsApp] Async Init Error:', err));
         return res.status(200).json({
@@ -44,6 +53,9 @@ export class WhatsAppController {
     }
 
     static async logout(req: Request, res: Response) {
+        try {
+            await AuditService.log((req as any).user?.userId, 'WA_LOGOUT', 'WhatsApp session wiped', null, req.ip);
+        } catch { /* audit best-effort */ }
         await WhatsAppService.logout();
         return res.status(200).json({
             success: true,
