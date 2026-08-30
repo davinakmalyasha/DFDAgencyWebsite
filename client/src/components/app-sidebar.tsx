@@ -15,6 +15,8 @@ const navigation = [
     { name: 'Packages', href: '/admin/packages', icon: MessageSquare },
     { name: 'Articles', href: '/admin/articles', icon: FileText },
     { name: 'Promos', href: '/admin/promos', icon: Megaphone },
+    { name: 'Clients', href: '/admin/clients', icon: Users },
+    { name: 'Requests', href: '/admin/requests', icon: MessageSquare },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     { name: 'System Logs', href: '/admin/logs', icon: ShieldAlert },
     { name: 'WA Session', href: '/admin/whatsapp', icon: Smartphone },
