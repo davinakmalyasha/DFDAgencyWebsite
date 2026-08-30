@@ -46,7 +46,7 @@ export default function PrivacyPage() {
                             <h2 className="text-xl font-bold text-zinc-900 mb-4">4. Third-Party Integrations</h2>
                             <p>To provide elite digital services, we share specific data with trusted third-party providers:</p>
                             <ul className="list-disc pl-5 mt-4 space-y-2">
-                                <li><strong>Midtrans:</strong> For secure payment processing. We do not store your credit card or bank details on our servers.</li>
+                                <li><strong>Bank & Payment Processors:</strong> For processing payments and invoices. We do not store your credit card or bank details on our servers.</li>
                                 <li><strong>Google Gemini:</strong> To generate AI-assisted project copy and initial design conceptualization.</li>
                                 <li><strong>Cloudinary:</strong> For hosting and optimization of project assets and thumbnails.</li>
                             </ul>

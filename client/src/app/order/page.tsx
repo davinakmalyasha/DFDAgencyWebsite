@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
     title: "Order Website — DFD Agency",
     description:
-        "Order your professional website from DFD Agency. Choose a package, fill in your details, and pay securely via Midtrans.",
+        "Order your professional website from DFD Agency. Choose a package, fill in your details, and confirm your order via WhatsApp.",
 };
 
 interface PackageData {

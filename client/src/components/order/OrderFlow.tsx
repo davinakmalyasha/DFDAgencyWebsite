@@ -88,7 +88,6 @@ export function OrderFlow({ packages }: OrderFlowProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [shouldShake, setShouldShake] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<'MIDTRANS' | 'WHATSAPP' | null>(null);
 
     const [form, setForm] = useState<FormState>({
         packageId: preselectedId ? Number(preselectedId) : null,
@@ -215,7 +214,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [form, selectedPackage, paymentMethod]);
+    }, [form, selectedPackage]);
 
     // ─── Navigation ─────────────────────────────────────────────────────
 

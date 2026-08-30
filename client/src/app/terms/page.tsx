@@ -44,7 +44,7 @@ export default function TermsPage() {
                         <div>
                             <h2 className="text-xl font-bold text-zinc-900 mb-4">5. Payment Terms</h2>
                             <ul className="list-disc pl-5 mt-4 space-y-2">
-                                <li><strong>Invoicing:</strong> All payments are processed via our secure payment gateway partner (Midtrans).</li>
+                                <li><strong>Invoicing:</strong> All payments are processed via secure invoice, bank transfer, or an agreed payment method.</li>
                                 <li><strong>Deposit:</strong> A non-refundable deposit may be required before project commencement as specified in the selected package.</li>
                                 <li><strong>Final Payment:</strong> Project deliverables will be released or deployed only upon full receipt of final payment.</li>
                                 <li><strong>No Refunds:</strong> Due to the digital nature of our architectural services, all sales are final once work has commenced.</li>

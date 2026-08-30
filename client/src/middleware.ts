@@ -8,23 +8,23 @@ import type { NextRequest } from 'next/server';
  */
 export function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
-    const isLoginPage = request.nextUrl.pathname.startsWith('/admin/login');
-    const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
+    const path = request.nextUrl.pathname;
+    const isAdminLogin = path.startsWith('/admin/login');
+    const isAdminRoute = path.startsWith('/admin');
+    const isClientLogin = path === '/client/login' || path.startsWith('/client/invite');
+    const isClientRoute = path.startsWith('/client');
 
     if (isAdminRoute) {
-        if (!token && !isLoginPage) {
-            // No token, trying to access protected route -> Redirect to Login
-            return NextResponse.redirect(new URL('/admin/login', request.url));
-        }
-        if (token && isLoginPage) {
-            // Has token, trying to access Login -> Redirect to Dashboard
-            return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-        }
+        if (!token && !isAdminLogin) return NextResponse.redirect(new URL('/admin/login', request.url));
+        if (token && isAdminLogin) return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
-
+    if (isClientRoute) {
+        if (!token && !isClientLogin) return NextResponse.redirect(new URL('/client/login', request.url));
+        if (token && path === '/client/login') return NextResponse.redirect(new URL('/client/dashboard', request.url));
+    }
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ['/admin/:path*'],
+    matcher: ['/admin/:path*', '/client/:path*'],
 };
