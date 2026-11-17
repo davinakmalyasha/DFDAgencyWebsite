@@ -11,7 +11,7 @@ const nextConfig = {
                 source: '/api/v1/:path*',
                 // In production, proxy to the deployed AgentsProxy. In development, proxy to the local AgentsProxy.
                 destination: process.env.NODE_ENV === 'production'
-                    ? 'https://<agentsproxy-deploy>/api/v1/:path*'
+                    ? 'https://agents-proxy-nine.vercel.app/api/v1/:path*'
                     : 'http://localhost:8080/api/v1/:path*',
             },
         ];
