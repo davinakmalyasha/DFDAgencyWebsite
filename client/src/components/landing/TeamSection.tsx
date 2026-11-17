@@ -1,6 +1,7 @@
 "use client";
 
-import { Linkedin, Mail, Github, Cpu, Award, Zap } from "lucide-react";
+import { Mail, Cpu, Award, Zap } from "lucide-react";
+import { LinkedinIcon, GithubIcon } from "./BrandIcons";
 import { motion } from "framer-motion";
 
 export function TeamSection() {
@@ -108,7 +109,7 @@ export function TeamSection() {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-zinc-950 transition-colors group"
                             >
-                                <Linkedin className="w-4 h-4" />
+                                <LinkedinIcon className="w-4 h-4" />
                                 <span>LinkedIn</span>
                             </a>
                             <a 
@@ -117,7 +118,7 @@ export function TeamSection() {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-zinc-950 transition-colors group"
                             >
-                                <Github className="w-4 h-4" />
+                                <GithubIcon className="w-4 h-4" />
                                 <span>GitHub</span>
                             </a>
                             <a 

@@ -1,21 +1,16 @@
 {
   "name": "dfd-agency",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "workspaces": [
     "client",
-    "server",
     "shared"
   ],
   "engines": {
     "node": ">=20.0.0"
   },
-  "allowScripts": {
-    "@prisma/client@6.19.3": true,
-    "prisma@6.19.3": true,
-    "@prisma/engines@6.19.3": true,
-    "sharp@0.34.5": true,
-    "unrs-resolver@1.12.2": true,
-    "puppeteer@24.38.0": true
+  "scripts": {
+    "dev": "npm --workspace client run dev",
+    "build": "npm --workspace client run build"
   }
 }

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Linkedin, Github, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
+import { GithubIcon, LinkedinIcon } from "./BrandIcons";
 import { motion } from "framer-motion";
 
 export function Footer() {
@@ -67,7 +68,7 @@ export function Footer() {
                                 rel="noopener noreferrer" 
                                 className="text-zinc-500 hover:text-zinc-950 transition-colors"
                             >
-                                <Github className="w-5 h-5" />
+                                <GithubIcon className="w-5 h-5" />
                             </a>
                             <a 
                                 href="https://www.linkedin.com/in/davin-yasa-974ba82a1/" 
@@ -76,7 +77,7 @@ export function Footer() {
                                 rel="noopener noreferrer" 
                                 className="text-zinc-500 hover:text-zinc-950 transition-colors"
                             >
-                                <Linkedin className="w-5 h-5" />
+                                <LinkedinIcon className="w-5 h-5" />
                             </a>
                             <a 
                                 href="mailto:davinyasa06@gmail.com" 

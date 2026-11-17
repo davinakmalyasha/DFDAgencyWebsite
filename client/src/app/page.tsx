@@ -31,13 +31,14 @@ export default async function Home() {
     ]);
 
     if (packagesResult.status === "fulfilled") {
-      packagesData = packagesResult.value?.data || [];
+      // PublicService already unwraps the API envelope, so value IS the array.
+      packagesData = Array.isArray(packagesResult.value) ? packagesResult.value : [];
     } else {
       console.error("Partial Failure: Failed to fetch packages data:", packagesResult.reason);
     }
 
     if (projectsResult.status === "fulfilled") {
-      projectsData = projectsResult.value?.data || [];
+      projectsData = Array.isArray(projectsResult.value) ? projectsResult.value : [];
     } else {
       console.error("Partial Failure: Failed to fetch projects data:", projectsResult.reason);
     }

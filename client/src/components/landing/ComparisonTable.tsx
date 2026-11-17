@@ -113,7 +113,7 @@ export function ComparisonTable() {
                                     <td className="py-6 px-6 text-sm text-zinc-500">
                                         {row.traditional}
                                     </td>
-                                    <td className="py-6 px-6 text-sm font-bold text-zinc-950 bg-zinc-100 placeholder:last-of-type:rounded-b-xl">
+                                    <td className="py-6 px-6 text-sm font-bold text-zinc-950 bg-zinc-100">
                                         {row.dfd}
                                     </td>
                                 </motion.tr>

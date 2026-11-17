@@ -48,6 +48,8 @@ export const metadata: Metadata = {
 import { SmoothScrolling } from "@/components/providers/SmoothScrolling";
 import { Toaster } from "@/components/ui/sonner";
 import { NetworkStatus } from "@/components/ui/network-status";
+import { ChatProvider } from "@/components/chat/ChatProvider";
+import { ChatPanel, ChatWidget } from "@/components/chat/ChatPanel";
 
 export default function RootLayout({
   children,
@@ -67,6 +69,10 @@ export default function RootLayout({
         </SmoothScrolling>
         <Toaster position="top-right" />
         <NetworkStatus />
+        <ChatProvider>
+          <ChatPanel />
+          <ChatWidget />
+        </ChatProvider>
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from "@/components/app-sidebar";
+import { CopilotDrawer } from "@/components/chat/CopilotDrawer";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -36,8 +37,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                         </Sheet>
                     </div>
 
-                    <div className="ml-auto font-mono text-[10px] lg:text-xs uppercase font-bold tracking-widest text-foreground/50">
-                        Secure Connection Established
+                    <div className="ml-auto flex items-center gap-2">
+                        <span className="hidden md:inline font-mono text-[10px] lg:text-xs uppercase font-bold tracking-widest text-foreground/50">
+                            Secure Connection Established
+                        </span>
+                        <CopilotDrawer />
                     </div>
                 </div>
                 <div className="p-4 lg:p-8 flex-1">

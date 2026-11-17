@@ -1,6 +1,7 @@
 'use client';
 
-import { MessageCircle, Link as LinkIcon, Twitter, Facebook, Check } from 'lucide-react';
+import { MessageCircle, Link as LinkIcon, Check } from 'lucide-react';
+import { TwitterIcon, FacebookIcon } from './BrandIcons';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -34,10 +35,10 @@ export function ShareButtons({ url, text, whatsappPhone }: Props) {
                 <MessageCircle className="w-3 h-3" /> WhatsApp
             </a>
             <a href={twitterHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 border-2 border-foreground bg-foreground text-background px-3 py-2 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
-                <Twitter className="w-3 h-3" /> X / Twitter
+                <TwitterIcon className="w-3 h-3" /> X / Twitter
             </a>
             <a href={fbHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground px-3 py-2 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
-                <Facebook className="w-3 h-3" /> Facebook
+                <FacebookIcon className="w-3 h-3" /> Facebook
             </a>
             <button onClick={copy} className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground px-3 py-2 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
                 {copied ? <Check className="w-3 h-3" /> : <LinkIcon className="w-3 h-3" />}
