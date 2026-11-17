@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { loginSchema } from '@/lib/validations';
+import { loginSchema, otpSchema } from '@/lib/validations';
 import api from '@/lib/axios';
 
 import { Button } from '@/components/ui/button';
@@ -15,17 +15,25 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { toast } from 'sonner';
 
 type LoginFormValues = z.infer<typeof loginSchema>;
+type OtpFormValues = z.infer<typeof otpSchema>;
 
 export default function AdminLoginPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [otpUserId, setOtpUserId] = useState<number | null>(null);
+    const [otpEmail, setOtpEmail] = useState('');
 
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            email: '',
+            identity: '',
             password: '',
         },
+    });
+
+    const otpForm = useForm<OtpFormValues>({
+        resolver: zodResolver(otpSchema),
+        defaultValues: { code: '' },
     });
 
     async function onSubmit(data: LoginFormValues) {
@@ -34,14 +42,39 @@ export default function AdminLoginPage() {
             const response = await api.post('/auth/login', data);
 
             if (response.data.success) {
-                toast.success('Login Successful', { description: 'Welcome back to the dashboard.' });
-                // Force a hard navigation to trigger middleware and reset client cache properly
-                router.push('/admin/dashboard');
-                router.refresh();
+                if (response.data.data?.otpRequired) {
+                    setOtpUserId(response.data.data.userId);
+                    setOtpEmail(response.data.data.email || '');
+                    toast.success('Verification code sent to your email');
+                } else {
+                    toast.success('Login Successful', { description: 'Welcome back to the dashboard.' });
+                    // Force a hard navigation to trigger middleware and reset client cache properly
+                    router.push('/admin/dashboard');
+                    router.refresh();
+                }
             }
         } catch (error) {
             toast.error('Authentication Failed', {
                 description: (error as {response?: {data?: {message?: string}}}).response?.data?.message || 'Invalid credentials',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    async function onVerify(data: OtpFormValues) {
+        if (!otpUserId) return;
+        setIsLoading(true);
+        try {
+            const response = await api.post('/auth/login/verify', { userId: otpUserId, code: data.code });
+            if (response.data.success) {
+                toast.success('Login Successful', { description: 'Welcome back to the dashboard.' });
+                router.push('/admin/dashboard');
+                router.refresh();
+            }
+        } catch (error) {
+            toast.error('Verification Failed', {
+                description: (error as {response?: {data?: {message?: string}}}).response?.data?.message || 'Invalid or expired code',
             });
         } finally {
             setIsLoading(false);
@@ -58,19 +91,54 @@ export default function AdminLoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {otpUserId ? (
+                        <Form {...otpForm}>
+                            <form onSubmit={otpForm.handleSubmit(onVerify)} className="space-y-4">
+                                <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to <span className="font-bold">{otpEmail}</span></p>
+                                <FormField
+                                    control={otpForm.control}
+                                    name="code"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="font-bold">Verification code</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="123456"
+                                                    inputMode="numeric"
+                                                    maxLength={6}
+                                                    autoComplete="one-time-code"
+                                                    className="border-foreground focus-visible:ring-foreground rounded-none text-center text-2xl tracking-[0.5em]"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button
+                                    type="submit"
+                                    className="w-full rounded-none font-bold tracking-widest uppercase transition-all hover:bg-white hover:text-black border-2 border-transparent hover:border-black active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Verifying...' : 'Verify'}
+                                </Button>
+                                <Button type="button" variant="ghost" className="w-full rounded-none text-xs" onClick={() => { setOtpUserId(null); otpForm.reset(); }}>Back to sign in</Button>
+                            </form>
+                        </Form>
+                    ) : (
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField
                                 control={form.control}
-                                name="email"
+                                name="identity"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-bold">Email Address</FormLabel>
+                                        <FormLabel className="font-bold">Email or Username</FormLabel>
                                         <FormControl>
                                             <Input
                                                 placeholder="admin@dfdagency.com"
                                                 className="border-foreground focus-visible:ring-foreground rounded-none"
-                                                autoComplete="email"
+                                                autoComplete="username"
                                                 {...field}
                                             />
                                         </FormControl>
@@ -106,6 +174,7 @@ export default function AdminLoginPage() {
                             </Button>
                         </form>
                     </Form>
+                    )}
                 </CardContent>
             </Card>
         </div>

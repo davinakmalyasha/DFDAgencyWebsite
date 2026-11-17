@@ -12,8 +12,7 @@ export default function AdminClientsPage() {
     const [rows, setRows] = useState<any[]>([]);
     const [search, setSearch] = useState('');
     const [open, setOpen] = useState(false);
-    const [form, setForm] = useState({ username: '', email: '', password: '', role: 'CLIENT', sendInvite: true });
-    const [lastInvite, setLastInvite] = useState<string | null>(null);
+    const [form, setForm] = useState({ username: '', email: '', password: '', role: 'CLIENT' });
 
     async function load() {
         const r = await api.get('/users', { params: { role: 'CLIENT', search: search || undefined, limit: 100 } });
@@ -23,9 +22,8 @@ export default function AdminClientsPage() {
 
     async function create() {
         try {
-            const r = await api.post('/users', form);
-            toast.success('Client created');
-            if (r.data.data?.inviteUrl) setLastInvite(r.data.data.inviteUrl);
+            await api.post('/users', form);
+            toast.success('Client created with password login');
             setOpen(false);
             load();
         } catch (e: any) { toast.error(e.response?.data?.message || 'Create failed'); }
@@ -34,15 +32,6 @@ export default function AdminClientsPage() {
     async function copy(text: string, label: string) {
         await navigator.clipboard.writeText(text);
         toast.success(`${label} copied`);
-    }
-
-    async function resend(id: number) {
-        try {
-            const r = await api.post(`/users/${id}/resend-invite`);
-            const url = r.data.data.inviteUrl;
-            await copy(url, 'Invite link');
-            toast.success('Invite resent & copied');
-        } catch (e: any) { toast.error(e.response?.data?.message || 'Resend failed'); }
     }
 
     async function revoke(id: number) {
@@ -64,11 +53,9 @@ export default function AdminClientsPage() {
                             <div className="space-y-3 pt-2">
                                 <Input placeholder="Username" value={form.username} onChange={e => setForm(s => ({ ...s, username: e.target.value }))} className="rounded-none border-foreground" />
                                 <Input placeholder="Email" value={form.email} onChange={e => setForm(s => ({ ...s, email: e.target.value }))} className="rounded-none border-foreground" />
-                                <Input placeholder="Password (min 8)" type="password" value={form.password} onChange={e => setForm(s => ({ ...s, password: e.target.value }))} className="rounded-none border-foreground" />
+                                <Input placeholder="Password (min 8, letters+numbers)" type="password" value={form.password} onChange={e => setForm(s => ({ ...s, password: e.target.value }))} className="rounded-none border-foreground" />
                                 <Select value={form.role} onValueChange={v => setForm(s => ({ ...s, role: v }))}><SelectTrigger className="rounded-none border-foreground"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CLIENT">CLIENT</SelectItem><SelectItem value="EDITOR">EDITOR</SelectItem></SelectContent></Select>
-                                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.sendInvite} onChange={e => setForm(s => ({ ...s, sendInvite: e.target.checked }))} /> Send invite email (magic link, 48h)</label>
-                                <Button onClick={create} className="w-full rounded-none font-bold uppercase">Create & invite</Button>
-                                {lastInvite && <p className="text-xs break-all bg-muted p-2">Last invite: <a href={lastInvite} className="underline">{lastInvite}</a></p>}
+                                <Button onClick={create} className="w-full rounded-none font-bold uppercase">Create with password</Button>
                             </div>
                         </DialogContent>
                     </Dialog>
@@ -80,16 +67,14 @@ export default function AdminClientsPage() {
                 <CardContent className="p-0">
                     <div className="overflow-auto">
                         <table className="w-full text-sm">
-                            <thead className="bg-muted/30"><tr className="border-b-2 border-foreground"><th className="text-left p-2">User</th><th className="text-left p-2">Email</th><th className="text-left p-2">Invite</th><th className="text-left p-2">Actions</th></tr></thead>
+                            <thead className="bg-muted/30"><tr className="border-b-2 border-foreground"><th className="text-left p-2">User</th><th className="text-left p-2">Email</th><th className="text-left p-2">Actions</th></tr></thead>
                             <tbody>
                                 {rows.map((u: any) => (
                                     <tr key={u.id} className="border-b">
                                         <td className="p-2 font-bold">{u.username}</td>
                                         <td className="p-2 font-mono text-xs">{u.email}</td>
-                                        <td className="p-2 text-xs">{u.inviteTokenExpiry ? `expires ${new Date(u.inviteTokenExpiry).toLocaleString()}` : '—'}</td>
                                         <td className="p-2 flex flex-wrap gap-1">
                                             <Button size="sm" variant="outline" className="rounded-none h-7" onClick={() => copy(u.email, 'Email')}>Copy email</Button>
-                                            <Button size="sm" variant="outline" className="rounded-none h-7" onClick={() => resend(u.id)}>Resend invite</Button>
                                             <Button size="sm" variant="outline" className="rounded-none h-7" onClick={() => copy(`https://wa.me/?text=${encodeURIComponent(u.email)}`, 'WA')}>Copy WA text</Button>
                                             <Button size="sm" variant="ghost" className="rounded-none h-7 text-red-600" onClick={() => revoke(u.id)}>Revoke</Button>
                                         </td>

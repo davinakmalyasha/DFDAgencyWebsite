@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
     const isAdminLogin = path.startsWith('/admin/login');
     const isAdminRoute = path.startsWith('/admin');
-    const isClientLogin = path === '/client/login' || path.startsWith('/client/invite');
+    const isClientLogin = path === '/client/login';
     const isClientRoute = path.startsWith('/client');
 
     if (isAdminRoute) {

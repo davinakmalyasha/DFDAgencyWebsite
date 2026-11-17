@@ -4,8 +4,12 @@ import { z } from 'zod';
 // Mirrors the backend architecture to ensure 100% data integrity without Turbopack symlink breakage.
 
 export const loginSchema = z.object({
-    email: z.string().email('Format email tidak valid'),
+    identity: z.string().min(1, 'Email or username is required'),
     password: z.string().min(8, 'Password minimal 8 karakter')
+});
+
+export const otpSchema = z.object({
+    code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code')
 });
 
 // We will add other CRUD schemas here as needed (Projects, Packages, Leads)
