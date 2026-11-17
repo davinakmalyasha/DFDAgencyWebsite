@@ -25,7 +25,7 @@ interface ApiResponse {
 
 async function getPackages(): Promise<PackageData[]> {
     try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
         const res = await fetch(`${apiUrl}/packages?isPublished=true`, {
             next: { revalidate: 60 },
         });

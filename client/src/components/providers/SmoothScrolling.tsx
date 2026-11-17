@@ -1,13 +1,13 @@
 "use client"
 
-import { ReactLenis } from '@studio-freight/react-lenis'
+import { ReactLenis } from 'lenis/react'
 import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 
 // Routes where smooth scrolling should be disabled
 const DISABLED_ROUTES = ['/order', '/track', '/admin']
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Lenis types are incompatible with React 19 ReactNode
-export function SmoothScrolling({ children }: { children: any }) {
+export function SmoothScrolling({ children }: { children: ReactNode }) {
     const pathname = usePathname()
     const isDisabled = DISABLED_ROUTES.some((route) => pathname.startsWith(route))
 

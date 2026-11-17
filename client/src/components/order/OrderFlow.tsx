@@ -170,7 +170,6 @@ export function OrderFlow({ packages }: OrderFlowProps) {
 
         setIsSubmitting(true);
         try {
-            const idempotencyKey = crypto.randomUUID();
             const fullWhatsapp = form.countryCode + form.whatsapp.replace(/^0+/, "");
             const payload = {
                 packageId: form.packageId,

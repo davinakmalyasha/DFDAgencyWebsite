@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     default: "DFD Agency | High-Performance Digital Solutions",
     template: "%s | DFD Agency"
   },
-  description: "Elite Software Architecture and Senior TypeScript Development for modern enterprises. We build decoupled, high-performance web applications using Next.js and Express.",
-  keywords: ["Software Architect", "Next.js", "Express.js", "TypeScript", "Digital Agency", "Web Development", "DFD Agency"],
+  description: "Elite Software Architecture and Senior TypeScript Development for modern enterprises. We build decoupled, high-performance web applications using Next.js and Go.",
+  keywords: ["Software Architect", "Next.js", "Go", "TypeScript", "Digital Agency", "Web Development", "DFD Agency"],
   authors: [{ name: "DFD Agency" }],
   creator: "DFD Agency",
   openGraph: {
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "DFD Agency | Elite Software Studio",
-    description: "High-performance Next.js & Express solutions for modern businesses.",
+    description: "High-performance Next.js & Go solutions for modern businesses.",
     images: ["/og-image.png"],
   },
   robots: {
