@@ -22,9 +22,14 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
     // Animate header text from black (#09090b) to white (#ffffff)
     const textColor = useTransform(scrollYProgress, [0, 1], ["#09090b", "#ffffff"]);
 
-    const handlePlanSelect = (planSlug: string) => {
+    const handlePlanSelect = (planSlug: string, custom: boolean, planName: string) => {
+        if (custom) {
+            const text = encodeURIComponent(`Hi DFD, I'd like to talk about a custom project (${planName}).`);
+            window.open(`https://wa.me/62895324350359?text=${text}`, '_blank');
+            return;
+        }
         setLoadingId(planSlug);
-        router.push(`/order?package=${planSlug}`);
+        router.push(`/start?next=${encodeURIComponent(`/order?package=${planSlug}`)}`);
     };
 
     const displayPackages = packages && packages.length > 0 ? (packages as any[]) : [];
@@ -55,7 +60,7 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                             const isCustom = plan.slug === 'custom' || finalPrice === 0 || finalPrice === '0' || finalPrice === null;
                             const isFeatured = i === 2 || plan.slug === 'ecosystem'; // Highlight the 3rd or specific plan
                             const badge = "COMMERCIAL CHOICE";
-                            const buttonText = isCustom ? "Contact Us" : "Initiate Project";
+                            const buttonText = isCustom ? "Contact Us" : "Start Project";
 
                             return (
                             <div
@@ -107,7 +112,7 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                 </div>
 
                                 <button
-                                    onClick={() => handlePlanSelect(plan.slug)}
+                                    onClick={() => handlePlanSelect(plan.slug, isCustom, plan.name)}
                                     disabled={loadingId !== null}
                                     className={`w-full py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 ${isFeatured
                                         ? "bg-zinc-950 text-white hover:bg-zinc-800 hover:scale-105 shadow-xl"

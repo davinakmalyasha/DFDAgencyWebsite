@@ -2,7 +2,7 @@
 
 import { LayoutDashboard, Users, MessageSquare, Briefcase, FileText, Settings, KeySquare, LogOut, Globe, ShieldAlert, Smartphone, Megaphone } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import api from "@/lib/axios";
 import { toast } from "sonner";
 
@@ -24,16 +24,20 @@ const navigation = [
 
 export function AppSidebar({ className }: { className?: string }) {
     const pathname = usePathname();
-    const router = useRouter();
 
     const handleLogout = async () => {
         try {
             await api.post('/auth/logout');
             toast.info('Logged out seamlessly.');
-            router.push('/admin/login');
-            router.refresh();
         } catch (error) {
             toast.error('Logout failed.');
+        } finally {
+            try {
+                window.sessionStorage.removeItem('dfd_session_user');
+            } catch {
+                /* ignore */
+            }
+            window.location.assign('/admin/login');
         }
     };
 

@@ -56,7 +56,7 @@ export default function NotFound() {
                         </motion.button>
                     </Link>
 
-                    <Link href="/order">
+                    <Link href="/start">
                         <motion.button
                             whileHover={{ x: 10 }}
                             whileTap={{ scale: 0.98 }}
@@ -68,7 +68,7 @@ export default function NotFound() {
                                 </div>
                                 <div className="text-left">
                                     <span className="block text-xs font-bold tracking-widest uppercase opacity-50">New Mission</span>
-                                    <span className="block text-lg font-black tracking-tight">Initiate Project</span>
+                                    <span className="block text-lg font-black tracking-tight">Get Started</span>
                                 </div>
                             </div>
                             <ArrowLeft className="w-6 h-6 rotate-180" />

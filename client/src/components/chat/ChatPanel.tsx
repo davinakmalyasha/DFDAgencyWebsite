@@ -27,12 +27,13 @@ export function ChatPanel() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isClientPortal = pathname?.startsWith('/client');
+  const isPrivateRoute = pathname?.startsWith('/admin') || pathname?.startsWith('/order');
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [open, messages.length, typing]);
 
-  if (!open) return null;
+  if (!open || isPrivateRoute) return null;
 
   const submit = () => {
     send(value);
@@ -123,7 +124,7 @@ export function ChatPanel() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') submit();
           }}
-          placeholder="Ask about packages, pricing, tracking…"
+          placeholder="Ask about packages, pricing, or your portal…"
           aria-label="Chat message"
           className="flex-1 px-3 py-2 text-sm bg-background border-2 border-foreground focus:outline-none placeholder:text-muted-foreground"
         />
@@ -147,10 +148,10 @@ export function ChatPanel() {
           </Link>
         )}
         <Link
-          href="/order"
+          href="/start"
           className="block text-center text-[11px] font-black uppercase tracking-widest py-2 border-2 border-foreground bg-background hover:bg-foreground hover:text-background"
         >
-          Start an order instead →
+          Start a project instead →
         </Link>
       </div>
     </div>
@@ -159,6 +160,8 @@ export function ChatPanel() {
 
 export function ChatWidget() {
   const { open, toggle } = useChat();
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/order')) return null;
   return (
     <button
       onClick={toggle}

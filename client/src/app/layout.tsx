@@ -46,6 +46,7 @@ export const metadata: Metadata = {
 };
 
 import { SmoothScrolling } from "@/components/providers/SmoothScrolling";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { NetworkStatus } from "@/components/ui/network-status";
 import { ChatProvider } from "@/components/chat/ChatProvider";
@@ -64,15 +65,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${plusJakartaSans.variable} font-sans antialiased bg-zinc-50 text-zinc-950`}>
-        <SmoothScrolling>
-          {children}
-        </SmoothScrolling>
-        <Toaster position="top-right" />
-        <NetworkStatus />
-        <ChatProvider>
-          <ChatPanel />
-          <ChatWidget />
-        </ChatProvider>
+        <SessionProvider>
+          <SmoothScrolling>
+            {children}
+          </SmoothScrolling>
+          <Toaster position="top-right" />
+          <NetworkStatus />
+          <ChatProvider>
+            <ChatPanel />
+            <ChatWidget />
+          </ChatProvider>
+        </SessionProvider>
       </body>
     </html>
   );

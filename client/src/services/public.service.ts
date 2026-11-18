@@ -61,9 +61,5 @@ export const PublicService = {
             },
         });
         return res.data;
-    },
-    trackOrder: async (orderId: string) => {
-        const res = await api.get(`/orders/track/${orderId}`);
-        return res.data;
     }
 };

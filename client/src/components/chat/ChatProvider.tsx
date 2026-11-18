@@ -28,7 +28,7 @@ function seed(): ChatMessageModel[] {
     {
       id: 'welcome',
       role: 'bot',
-      text: 'Hi, DFD Concierge here. Ask about packages, pricing, or tracking — or talk to a human anytime.',
+      text: 'Hi, DFD Concierge here. Ask about packages, pricing, or your project portal — or talk to a human anytime.',
       at: Date.now(),
     },
   ];

@@ -18,7 +18,7 @@ export type ChatIntentType =
   | 'create_lead'
   | 'create_order'
   | 'create_request'
-  | 'track_order'
+  | 'portal_status'
   | 'handoff';
 
 export interface ChatIntent {
@@ -32,7 +32,7 @@ export interface ChatIntent {
 export interface ChatIntentResult {
   ok: boolean;
   reply: string;
-  /** Optional deep link, e.g. /track/<orderId> after create_order. */
+  /** Optional deep link, e.g. /client/dashboard after create_order. */
   link?: string;
   linkLabel?: string;
 }
@@ -75,7 +75,7 @@ export interface ChatMessageModel {
 export const QUICK_REPLIES = [
   'Packages',
   'Pricing',
-  'Track order',
+  'My project',
   'Talk to human',
 ] as const;
 
@@ -94,13 +94,13 @@ export function offlineAnswer(input: string): string {
     return 'Our packages start from Rp 1.500.000 (Landing Page). Open Pricing on this page for the full list, or start an order and we will confirm the quote on WhatsApp.';
   }
   if (q.includes('track') || q.includes('lacak') || q.includes('status') || q.includes('order')) {
-    return 'You can track your project with the Track Order button — just paste the order link we sent you after checkout.';
+    return 'Sign in to your client portal to see live milestones, invoices and deliverables. New here? Use Get Started to create an account.';
   }
   if (q.includes('human') || q.includes('admin') || q.includes('cs') || q.includes('whatsapp') || q.includes('wa')) {
-    return 'Connecting you to a human — use the WhatsApp button or the order form and our team will reply directly.';
+    return 'Connecting you to a human — use the WhatsApp button and our team will reply directly.';
   }
   if (q.includes('lama') || q.includes('long') || q.includes('duration') || q.includes('waktu')) {
     return 'A landing page typically takes 1–2 weeks, business sites 3–4 weeks. Your dashboard shows live milestones once production starts.';
   }
-  return 'I can help with packages, pricing, order tracking, or connecting you to our team. Pick a topic below.';
+  return 'I can help with packages, pricing, your project portal, or connecting you to our team. Pick a topic below.';
 }

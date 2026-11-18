@@ -65,7 +65,13 @@ export default function ClientDashboardPage() {
             setMilestonesByOrder(m);
             const r = await api.get('/client/requests');
             setRequests(r.data.data || []);
-        } catch {}
+        } catch (e: any) {
+            if (e?.response?.status !== 401) {
+                toast.error('Could not load your projects', {
+                    description: e.response?.data?.message || 'Refresh and try again',
+                });
+            }
+        }
     }
     useEffect(() => { load(); }, []);
 
@@ -124,8 +130,25 @@ export default function ClientDashboardPage() {
 
             {orders.length === 0 && (
                 <Card className="border-2 border-foreground rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <CardContent className="p-8 text-center font-bold uppercase tracking-widest text-muted-foreground">
-                        No projects yet. Your orders will appear here once your agency links your account.
+                    <CardContent className="p-8 text-center space-y-4">
+                        <p className="font-bold uppercase tracking-widest text-muted-foreground">
+                            No projects yet. Start your first one and it will appear here instantly.
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-3">
+                            <a href="/order">
+                                <Button className="rounded-none border-2 border-foreground bg-foreground text-background font-bold uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                    <Plus className="w-4 h-4 mr-1" /> Start a Project
+                                </Button>
+                            </a>
+                            <a
+                                href="https://wa.me/62895324350359?text=Hi%20DFD%2C%20I%27d%20like%20to%20start%20a%20project"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs font-bold uppercase tracking-widest underline"
+                            >
+                                or message us on WhatsApp
+                            </a>
+                        </div>
                     </CardContent>
                 </Card>
             )}

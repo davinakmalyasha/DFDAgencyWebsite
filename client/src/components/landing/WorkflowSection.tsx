@@ -60,7 +60,7 @@ export function WorkflowSection() {
         {
             phase: "PHASE 04",
             title: "Ecosystem Ascension",
-            description: "Live & Beyond. We deploy your site to the global edge and provide you with your Tracking Dashboard to manage your business growth on autopilot.",
+            description: "Live & Beyond. We deploy your site to the global edge and provide you with your client portal to manage your business growth on autopilot.",
             icon: <Globe className="w-5 h-5 text-white" />,
             placeholder: (
                 <div className="w-full h-48 md:h-64 bg-zinc-950 rounded-2xl flex flex-col items-center justify-center text-white relative overflow-hidden">

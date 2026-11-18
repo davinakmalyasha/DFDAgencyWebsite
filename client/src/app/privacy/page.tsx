@@ -36,7 +36,7 @@ export default function PrivacyPage() {
                             <p>We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:</p>
                             <ul className="list-disc pl-5 mt-4 space-y-2">
                                 <li>To execute a contract we are about to enter into or have entered into with you (Project Delivery).</li>
-                                <li>To communicate project updates via WhatsApp or the Project Tracking Dashboard.</li>
+                                <li>To communicate project updates via WhatsApp or the client portal dashboard.</li>
                                 <li>Where it is necessary for our legitimate interests (or those of a third party).</li>
                                 <li>To comply with a legal or regulatory obligation.</li>
                             </ul>

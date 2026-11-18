@@ -5,8 +5,11 @@ import { motion, Variants, useScroll, useTransform, useSpring, motionValue } fro
 import Link from "next/link";
 import { useRef } from "react";
 import Script from "next/script";
+import { useSession } from "@/components/providers/SessionProvider";
 
 export function HeroSection() {
+    const { user } = useSession();
+    const dashboard = user?.role === "SUPERADMIN" || user?.role === "EDITOR" ? "/admin/dashboard" : "/client/dashboard";
     const sectionRef = useRef<HTMLElement>(null);
     const { scrollYProgress } = useScroll({
         target: sectionRef,
@@ -142,15 +145,18 @@ export function HeroSection() {
                         </motion.div>
 
                         <motion.div variants={fadeUpVariants} className="flex flex-wrap items-center gap-4">
-                            <Link href="/order">
+                            <Link href={user ? dashboard : "/start"}>
                                 <button className="flex items-center gap-2 bg-zinc-950 text-white px-8 py-4 rounded-full font-semibold hover:bg-zinc-800 hover:scale-105 transition-all duration-300 group">
-                                    Initiate Project
+                                    {user ? "Open Dashboard" : "Start a Project"}
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </Link>
-                            <button className="px-8 py-4 rounded-full font-semibold bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-100 transition-colors">
+                            <a
+                                href="#testimonials"
+                                className="px-8 py-4 rounded-full font-semibold bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-100 transition-colors"
+                            >
                                 Success Stories
-                            </button>
+                            </a>
                         </motion.div>
                     </motion.div>
 

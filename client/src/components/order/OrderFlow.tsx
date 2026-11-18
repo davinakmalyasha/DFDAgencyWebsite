@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Loader2, ShieldCheck, CreditCard, MessageCircle, Sparkles } from "lucide-react";
@@ -9,6 +9,7 @@ import { OrderSummary } from "./OrderSummary";
 import { PublicService } from "@/services/public.service";
 import { CurrencyToggle } from "@/components/ui/CurrencyToggle";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useSession } from "@/components/providers/SessionProvider";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
     const searchParams = useSearchParams();
     const preselectedId = searchParams.get("package");
     const { currency, exchangeRate } = useCurrency();
+    const { user } = useSession();
 
     const [step, setStep] = useState(1);
     const [direction, setDirection] = useState(0);
@@ -98,6 +100,12 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         briefDescription: "",
         agreedToTerms: false,
     });
+
+    // Signed-in clients get a head start; the server still owns identity.
+    useEffect(() => {
+        if (!user) return;
+        setForm((prev) => (prev.name ? prev : { ...prev, name: user.username.replace(/_/g, ' ') }));
+    }, [user]);
 
     // Auto-advance to step 2 if package was preselected via query param
     const initialStep = preselectedId ? 2 : 1;
@@ -171,7 +179,27 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         setIsSubmitting(true);
         try {
             const fullWhatsapp = form.countryCode + form.whatsapp.replace(/^0+/, "");
-            const payload = {
+            const priceMatch = Number(selectedPackage?.discountPrice || selectedPackage?.price);
+            const isCustom = priceMatch === 0;
+            const waNumber = "62895324350359";
+
+            // Custom work is a WhatsApp consultation, not a checkout. Capture
+            // the lead for the CRM and hand the visitor to a human.
+            if (isCustom) {
+                const lead = await PublicService.createLead({
+                    name: form.name,
+                    whatsapp: fullWhatsapp,
+                    businessName: form.businessName || null,
+                    message: form.briefDescription,
+                });
+                if (!lead?.success) throw new Error("Inquiry could not be saved");
+                const message = `*CUSTOM PROJECT INQUIRY* 🤝\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\nI would like to consult directly regarding a custom quote for my project.`;
+                window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, "_blank");
+                alert("Inquiry received — continue the conversation on WhatsApp.");
+                return;
+            }
+
+            const res = await PublicService.createOrder({
                 packageId: form.packageId,
                 name: form.name,
                 whatsapp: fullWhatsapp,
@@ -180,22 +208,11 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                     description: form.briefDescription,
                 },
                 agreedToTerms: true as const,
-            };
-
-            const res = await PublicService.createOrder(payload);
+            });
 
             if (res.success && res.data) {
-                const priceMatch = Number(selectedPackage?.discountPrice || selectedPackage?.price);
-                const isCustom = priceMatch === 0;
-
-                const waNumber = "62895324350359";
-                const message = isCustom
-                    ? `*CUSTOM PROJECT INQUIRY* 🤝\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Track Request:* ${window.location.origin}/track/${res.data.id}\n\nI would like to consult directly regarding a custom quote for my project.`
-                    : `*NEW PROJECT ORDER* 🚀\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Track Order:* ${window.location.origin}/track/${res.data.id}\n\nI am ready to proceed with payment.`;
-
-                const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-                window.open(waUrl, "_blank");
-
+                const message = `*NEW PROJECT ORDER* 🚀\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Order ID:* ${res.data.id}\n\nI am ready to proceed with payment.`;
+                window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, "_blank");
                 window.setTimeout(() => {
                     if (res.data?.id) {
                         window.location.href = `/order/success/${res.data.id}`;
