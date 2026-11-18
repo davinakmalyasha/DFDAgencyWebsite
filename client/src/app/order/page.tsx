@@ -3,9 +3,9 @@ import { OrderFlow } from "@/components/order/OrderFlow";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Order Website — DFD Agency",
+    title: "Start a Project — DFD Agency",
     description:
-        "Order your professional website from DFD Agency. Choose a package, fill in your details, and confirm your order via WhatsApp.",
+        "Choose a package, share your brief, and track the build in your DFD client portal.",
 };
 
 interface PackageData {
