@@ -5,7 +5,20 @@ import { z } from 'zod';
 
 export const loginSchema = z.object({
     identity: z.string().min(1, 'Email or username is required'),
-    password: z.string().min(8, 'Password minimal 8 karakter')
+    password: z.string().min(8, 'Password must be at least 8 characters')
+});
+
+export const registerSchema = z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Enter a valid email'),
+    password: z.string()
+        .min(8, 'Password must be at least 8 characters')
+        .regex(/[A-Za-z]/, 'Include at least one letter')
+        .regex(/\d/, 'Include at least one number'),
+    confirmPassword: z.string().min(8, 'Confirm your password'),
+}).refine((v) => v.password === v.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
 });
 
 export const otpSchema = z.object({

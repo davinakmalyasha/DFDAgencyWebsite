@@ -3,7 +3,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, Download, ExternalLink } from 'lucide-react';
+import { Copy, Check, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OrderReceiptModalProps {
@@ -31,7 +31,7 @@ export function ReceiptTemplateModal({ open, onOpenChange, order }: OrderReceipt
         }).format(Number(amount));
     };
 
-    const trackUrl = `${window.location.origin}/track/${order.id}`;
+    const portalUrl = `${window.location.origin}/client/login`;
 
     const templateText = `--- DFD AGENCY ORDER RECEIPT ---
 🚀 Project: ${order.Package.name}
@@ -43,8 +43,8 @@ export function ReceiptTemplateModal({ open, onOpenChange, order }: OrderReceipt
 🏢 Business: ${order.Lead.businessName || '-'}
 📞 WhatsApp: ${order.Lead.whatsapp}
 
-🔗 Track Your Progress:
-${trackUrl}
+🔗 Client Portal:
+${portalUrl}
 --------------------------------`;
 
     const handleCopy = () => {

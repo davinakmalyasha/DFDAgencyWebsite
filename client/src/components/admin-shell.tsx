@@ -6,6 +6,7 @@ import { CopilotDrawer } from "@/components/chat/CopilotDrawer";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { AuthGate } from "@/components/auth/AuthGate";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -16,6 +17,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     }
 
     return (
+        <AuthGate loginPath="/admin/login" adminOnly>
         <div className="flex min-h-screen">
             {/* Desktop Sidebar */}
             <AppSidebar />
@@ -49,5 +51,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </div>
             </main>
         </div>
+        </AuthGate>
     );
 }

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 // Routes where smooth scrolling should be disabled
-const DISABLED_ROUTES = ['/order', '/track', '/admin']
+const DISABLED_ROUTES = ['/order', '/admin', '/client']
 
 export function SmoothScrolling({ children }: { children: ReactNode }) {
     const pathname = usePathname()
