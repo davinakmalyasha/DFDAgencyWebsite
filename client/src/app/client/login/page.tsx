@@ -184,7 +184,9 @@ function LoginContent() {
             if (code === 'EMAIL_TAKEN') {
                 loginForm.setValue('identity', data.email);
                 setMode('signin');
-                toast.error('Email already registered', { description: 'Sign in instead.' });
+                toast.error('Email already registered', {
+                    description: 'Sign in with your password, or use Continue with Google.',
+                });
             } else {
                 toast.error('Could not create account', {
                     description: e.response?.data?.message || 'Try again',
