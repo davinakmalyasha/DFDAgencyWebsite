@@ -1,8 +1,8 @@
 import api from '@/lib/axios';
+import { SERVER_API_BASE } from '@/lib/api-base';
 
 const fetchWithCache = async (endpoint: string, tags?: string[]) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
-    const res = await fetch(`${baseUrl}${endpoint}`, {
+    const res = await fetch(`${SERVER_API_BASE}${endpoint}`, {
         next: { revalidate: 3600, tags }, // Cache for 1 hour by default
         headers: { 'Content-Type': 'application/json' }
     });

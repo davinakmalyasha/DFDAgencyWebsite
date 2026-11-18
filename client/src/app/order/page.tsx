@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { OrderFlow } from "@/components/order/OrderFlow";
 import type { Metadata } from "next";
+import { SERVER_API_BASE } from "@/lib/api-base";
 
 export const metadata: Metadata = {
     title: "Start a Project — DFD Agency",
@@ -25,8 +26,7 @@ interface ApiResponse {
 
 async function getPackages(): Promise<PackageData[]> {
     try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-        const res = await fetch(`${apiUrl}/packages?isPublished=true`, {
+        const res = await fetch(`${SERVER_API_BASE}/packages?isPublished=true`, {
             next: { revalidate: 60 },
         });
         const json: ApiResponse = await res.json();
