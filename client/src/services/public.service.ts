@@ -47,7 +47,7 @@ export const PublicService = {
         return res.data;
     },
     getSettings: async () => {
-        const res = await fetchWithCache('/settings/public');
+        const res = await fetchWithCache('/settings');
         return res.data;
     },
     createLead: async (data: Record<string, unknown>) => {
