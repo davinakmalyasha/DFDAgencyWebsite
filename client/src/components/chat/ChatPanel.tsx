@@ -148,7 +148,7 @@ export function ChatPanel() {
           </Link>
         )}
         <Link
-          href="/start"
+          href="/start?next=%2Forder"
           className="block text-center text-[11px] font-black uppercase tracking-widest py-2 border-2 border-foreground bg-background hover:bg-foreground hover:text-background"
         >
           Start a project instead →

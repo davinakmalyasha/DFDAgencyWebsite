@@ -145,7 +145,7 @@ export function HeroSection() {
                         </motion.div>
 
                         <motion.div variants={fadeUpVariants} className="flex flex-wrap items-center gap-4">
-                            <Link href={user ? dashboard : "/start"}>
+                            <Link href={user ? dashboard : "/start?next=%2Forder"}>
                                 <button className="flex items-center gap-2 bg-zinc-950 text-white px-8 py-4 rounded-full font-semibold hover:bg-zinc-800 hover:scale-105 transition-all duration-300 group">
                                     {user ? "Open Dashboard" : "Start a Project"}
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
