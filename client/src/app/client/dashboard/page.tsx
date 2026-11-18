@@ -118,10 +118,15 @@ export default function ClientDashboardPage() {
                     <h1 className="text-2xl font-black uppercase tracking-tighter">Your Projects</h1>
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Updates from the team land here in real time</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={load} className="rounded-none border-2 border-foreground font-bold uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                         <RefreshCw className="w-3 h-3 mr-1" /> Refresh
                     </Button>
+                    <a href="/order">
+                        <Button variant="outline" className="rounded-none border-2 border-foreground font-bold uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                            <Plus className="w-4 h-4 mr-1" /> Start Project
+                        </Button>
+                    </a>
                     <Button onClick={() => setRequestOpen(true)} className="rounded-none border-2 border-foreground bg-foreground text-background font-bold uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                         <Plus className="w-4 h-4 mr-1" /> New Request
                     </Button>

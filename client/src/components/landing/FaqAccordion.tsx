@@ -119,9 +119,14 @@ export function FaqAccordion() {
                         <h4 className="text-sm font-bold text-zinc-950 mb-2">Still have questions?</h4>
                         <p className="text-xs text-zinc-500">Can&apos;t find the answer you&apos;re looking for? Please chat with our friendly team.</p>
                     </div>
-                    <button className="whitespace-nowrap px-6 py-3 bg-zinc-950 text-white text-xs font-bold tracking-widest uppercase rounded-lg hover:bg-zinc-800 transition-colors">
+                    <a
+                        href="https://wa.me/62895324350359?text=Hi%20DFD%2C%20I%20have%20a%20question"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="whitespace-nowrap px-6 py-3 bg-zinc-950 text-white text-xs font-bold tracking-widest uppercase rounded-lg hover:bg-zinc-800 transition-colors"
+                    >
                         Contact Us
-                    </button>
+                    </a>
                 </motion.div>
 
             </div>

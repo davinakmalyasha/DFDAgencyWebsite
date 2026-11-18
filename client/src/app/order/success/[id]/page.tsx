@@ -91,6 +91,14 @@ export default function OrderSuccessPage() {
                                 Open Dashboard
                                 <ArrowRight className="w-5 h-5 ml-2" />
                             </Button>
+                            <a
+                                href={`https://wa.me/62895324350359?text=${encodeURIComponent(`Hi DFD, I just placed order ${id.slice(0, 8)} and I'm ready to confirm payment.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block w-full py-3 rounded-2xl border-2 border-zinc-200 text-sm font-bold text-zinc-700 hover:border-zinc-900 transition-colors"
+                            >
+                                Confirm payment on WhatsApp
+                            </a>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                                 You stay signed in for 30 days on this device
                             </p>
