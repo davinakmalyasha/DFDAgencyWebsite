@@ -81,7 +81,12 @@ const slideVariants = {
 
 export function OrderFlow({ packages }: OrderFlowProps) {
     const searchParams = useSearchParams();
-    const preselectedId = searchParams.get("package");
+    const preselectedParam = searchParams.get("package");
+    const preselectedPkg = useMemo(
+        () => packages.find((p) => String(p.id) === preselectedParam || p.slug === preselectedParam),
+        [packages, preselectedParam]
+    );
+    const preselectedId = preselectedPkg?.id ?? null;
     const { currency, exchangeRate } = useCurrency();
     const { user } = useSession();
 
@@ -92,7 +97,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
     const [shouldShake, setShouldShake] = useState(false);
 
     const [form, setForm] = useState<FormState>({
-        packageId: preselectedId ? Number(preselectedId) : null,
+        packageId: preselectedId,
         name: "",
         countryCode: "+62",
         whatsapp: "",
@@ -211,7 +216,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
             });
 
             if (res.success && res.data) {
-                const message = `*NEW PROJECT ORDER* 🚀\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Order ID:* ${res.data.id}\n\nI am ready to proceed with payment.`;
+                const message = `*NEW PROJECT ORDER* 🚀\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Order ID:* ${res.data.id}\n*Portal:* ${window.location.origin}/client/dashboard\n\nI am ready to proceed with payment.`;
                 window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, "_blank");
                 window.setTimeout(() => {
                     if (res.data?.id) {

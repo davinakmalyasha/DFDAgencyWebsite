@@ -19,6 +19,8 @@ const AUTH_PATHS = [
     '/auth/register',
     '/auth/register/verify',
     '/auth/register/resend',
+    '/auth/change-password',
+    '/auth/logout',
 ];
 
 let redirecting = false;

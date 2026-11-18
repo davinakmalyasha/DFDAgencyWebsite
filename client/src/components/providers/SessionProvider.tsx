@@ -45,9 +45,9 @@ function saveUser(user: SessionUser | null) {
 }
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-    // Cached value avoids a "Sign in" flash on repeat navigations; the live
-    // /auth/me call below always wins.
-    const [user, setUser] = useState<SessionUser | null>(() => cachedUser());
+    // Start neutral on the server to keep hydration identical, then load the
+    // tab cache and revalidate with /auth/me.
+    const [user, setUser] = useState<SessionUser | null>(null);
     const [loading, setLoading] = useState(true);
     const mounted = useRef(true);
 
@@ -73,6 +73,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         mounted.current = true;
+        const cached = cachedUser();
+        if (cached) setUser(cached);
         void refresh();
         return () => {
             mounted.current = false;

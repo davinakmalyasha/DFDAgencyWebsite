@@ -26,8 +26,10 @@ export function ChatPanel() {
   const [value, setValue] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const isClientPortal = pathname?.startsWith('/client');
-  const isPrivateRoute = pathname?.startsWith('/admin') || pathname?.startsWith('/order');
+  const isClientPortal = Boolean(pathname?.startsWith('/client') && pathname !== '/client/login');
+  const isPrivateRoute = Boolean(
+    pathname?.startsWith('/admin') || pathname?.startsWith('/order') || pathname === '/client/login'
+  );
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -161,7 +163,7 @@ export function ChatPanel() {
 export function ChatWidget() {
   const { open, toggle } = useChat();
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/order')) return null;
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/order') || pathname === '/client/login') return null;
   return (
     <button
       onClick={toggle}
