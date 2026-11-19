@@ -52,7 +52,6 @@ export const id: Dictionary = {
         process: 'Proses',
         portfolio: 'Portofolio',
         pricing: 'Harga',
-        team: 'Tim',
         faq: 'FAQ',
         signIn: 'Masuk',
         dashboard: 'Dasbor',
@@ -64,7 +63,7 @@ export const id: Dictionary = {
         badge: 'Rekayasa Presisi',
         lines: ['Dirancang untuk', 'Sempurna.', 'Andal secara', 'alami'],
         description:
-            'Kami menjembatani rekayasa manusia dengan presisi agen AI. Menghadirkan arsitektur digital kelas elit dengan biaya jauh lebih efisien dibanding agensi tradisional. Kami bukan sekadar membuat website; kami meluncurkan aset berperforma tinggi.',
+            'Kami menjembatani rekayasa manusia dengan presisi agen AI. Menghadirkan arsitektur digital kelas elit dengan biaya jauh lebih efisien dibanding agensi tradisional. Kami bukan sekadar membangun Sistem; kami meluncurkan aset berperforma tinggi.',
         startProject: 'Mulai Proyek',
         openDashboard: 'Buka Dasbor',
         successStories: 'Kisah Sukses',
@@ -186,35 +185,6 @@ export const id: Dictionary = {
             'Lab arsitektur kami sedang menyempurnakan generasi berikutnya dari aset digital. Nantikan rilis berikutnya.',
         standby: 'DFD_ENGINE / STATUS: STANDBY',
         viewCaseStudy: 'Lihat Studi Kasus',
-    },
-    team: {
-        eyebrow: 'Inti Logika',
-        title: 'Orkestrator Utama.',
-        description:
-            'Di DFD, kami mengganti beban agensi dengan presisi arsitektur. Satu engineer visioner, mengorkestrasi kawanan agen AI berperforma tinggi untuk membangun apa yang butuh berbulan-bulan bagi orang lain.',
-        name: 'Davin Akmal Yasha',
-        role: 'Founder & Lead Software Architect',
-        traits: [
-            {
-                title: 'Orkestrasi Hibrida',
-                description:
-                    'Memadukan arsitektur perangkat lunak klasik dengan pipeline AI mutakhir untuk menghadirkan performa yang teroptimasi secara matematis.',
-            },
-            {
-                title: 'Mindset Keamanan Utama',
-                description:
-                    'Spesialisasi pada ekosistem terpisah yang terkunci. Setiap baris kode diaudit untuk keandalan tanpa kerentanan.',
-            },
-            {
-                title: 'Ahli Kecepatan',
-                description:
-                    'Memanfaatkan agen AI untuk mengotomatiskan pekerjaan dasar, memfokuskan 100% logika manusia pada nilai unik bisnis Anda.',
-            },
-        ],
-        ctaTitle: 'Siap berkembang dengan fondasi yang kokoh?',
-        ctaDescription:
-            'Berhenti membayar beban agensi. Mulai bangun dengan presisi rekayasa kelas elit.',
-        ctaButton: 'JADWALKAN SESI ARSITEKTUR',
     },
     testimonials: {
         eyebrow: 'TESTIMONI KLIEN',
@@ -719,13 +689,13 @@ export const id: Dictionary = {
     },
     chat: {
         title: 'DFD Concierge',
+        online: 'Online — balas secepatnya',
         welcome:
             'Halo, saya DFD Concierge. Tanyakan tentang paket, harga, atau portal proyek Anda — atau langsung bicara dengan tim kami.',
         quickReplies: ['Paket', 'Harga', 'Proyek saya', 'Bicara dengan tim'],
         inputPlaceholder: 'Tanyakan tentang paket, harga, atau portal Anda…',
         open: 'Buka chat concierge',
         close: 'Tutup chat concierge',
-        viewProjects: 'Lihat proyek saya',
         startInstead: 'Mulai proyek',
         typing: 'sedang mengetik',
         offline: {

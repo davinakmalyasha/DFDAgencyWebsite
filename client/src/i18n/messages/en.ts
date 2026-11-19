@@ -50,7 +50,6 @@ export const en = {
         process: 'Process',
         portfolio: 'Portfolio',
         pricing: 'Pricing',
-        team: 'Team',
         faq: 'FAQ',
         signIn: 'Sign in',
         dashboard: 'Dashboard',
@@ -62,7 +61,7 @@ export const en = {
         badge: 'Precision Engineering',
         lines: ['Designed to be', 'Flawless.', 'Dependable by', 'nature'],
         description:
-            'We bridge the gap between human engineering and AI-Agent precision. Delivering elite-tier digital architecture at a fraction of traditional agency costs. We don’t just build websites; we deploy high-performance assets.',
+            'We bridge the gap between human engineering and AI-Agent precision. Delivering elite-tier digital architecture at a fraction of traditional agency costs. We don’t just build Systems; we deploy high-performance assets.',
         startProject: 'Start a Project',
         openDashboard: 'Open Dashboard',
         successStories: 'Success Stories',
@@ -179,34 +178,6 @@ export const en = {
             'Our architecture lab is currently refining the next generation of digital assets. Stay synchronized for the upcoming release.',
         standby: 'DFD_ENGINE / STATUS: STANDBY',
         viewCaseStudy: 'View Case Study',
-    },
-    team: {
-        eyebrow: 'The Core Logic',
-        title: 'The Lead Orchestrator.',
-        description:
-            'At DFD, we’ve replaced agency bloat with architectural precision. One visionary engineer, orchestrating a swarm of high-performance AI agents to build what others take months to design.',
-        name: 'Davin Akmal Yasha',
-        role: 'Founder & Lead Software Architect',
-        traits: [
-            {
-                title: 'Hybrid Orchestration',
-                description:
-                    'Fusing classical software architecture with cutting-edge AI pipelines to deliver mathematically optimized performance.',
-            },
-            {
-                title: 'Security-First Mindset',
-                description:
-                    'Specialized in decoupled, hardened ecosystems. Every line of code is audited for zero-vulnerability reliability.',
-            },
-            {
-                title: 'Velocity Expert',
-                description:
-                    'Leveraging AI agents to automate the boilerplate, focusing 100% of human logic on your business’s core unique value.',
-            },
-        ],
-        ctaTitle: 'Ready to scale with a rock-solid foundation?',
-        ctaDescription: 'Stop paying for agency bloat. Start building with elite engineering precision.',
-        ctaButton: 'BOOK ARCHITECTURE SYNC',
     },
     testimonials: {
         eyebrow: 'CLIENT TESTIMONIALS',
@@ -710,13 +681,13 @@ export const en = {
     },
     chat: {
         title: 'DFD Concierge',
+        online: 'Online — replies in a moment',
         welcome:
             'Hi, DFD Concierge here. Ask about packages, pricing, or your project portal — or talk to a human anytime.',
         quickReplies: ['Packages', 'Pricing', 'My project', 'Talk to human'],
         inputPlaceholder: 'Ask about packages, pricing, or your portal…',
         open: 'Open concierge chat',
         close: 'Close concierge chat',
-        viewProjects: 'View my projects →',
         startInstead: 'Start a project instead →',
         typing: 'typing',
         offline: {

@@ -11,7 +11,6 @@ import { PublicService } from "@/services/public.service";
 // Lazy load heavy components below the fold
 const WorkflowSection = dynamic(() => import("@/components/landing/WorkflowSection").then(m => m.WorkflowSection));
 const PortfolioMasonry = dynamic(() => import("@/components/landing/PortfolioMasonry").then(m => m.PortfolioMasonry));
-const TeamSection = dynamic(() => import("@/components/landing/TeamSection").then(m => m.TeamSection));
 const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(m => m.Testimonials));
 const FaqAccordion = dynamic(() => import("@/components/landing/FaqAccordion").then(m => m.FaqAccordion));
 const FinalCta = dynamic(() => import("@/components/landing/FinalCta").then(m => m.FinalCta));
@@ -65,9 +64,6 @@ export default async function Home() {
       </div>
       <div id="portfolio">
         <PortfolioMasonry projects={projectsData} />
-      </div>
-      <div id="team">
-        <TeamSection />
       </div>
       <div id="testimonials">
         <Testimonials projects={projectsData} />

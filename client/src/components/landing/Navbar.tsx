@@ -17,7 +17,6 @@ const LINKS = [
     { href: '#process', key: 'process' },
     { href: '#portfolio', key: 'portfolio' },
     { href: '#pricing', key: 'pricing' },
-    { href: '#team', key: 'team' },
     { href: '#faq', key: 'faq' },
 ] as const;
 

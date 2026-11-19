@@ -1,5 +1,9 @@
 'use client';
 
+// DFD Concierge — client-portal design language.
+// Calm, modern surface: white card, zinc borders, soft shadows, pill controls.
+// One visual treatment everywhere (landing, public pages, client portal) so the
+// widget never falls back to the old blocky/brutalist styling.
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,7 +18,7 @@ function TypingDots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="w-1.5 h-1.5 rounded-full bg-foreground animate-bounce"
+          className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce"
           style={{ animationDelay: `${i * 150}ms` }}
         />
       ))}
@@ -30,7 +34,6 @@ export function ChatPanel() {
   const locale = useLocale();
   const dict = useDictionary();
   const path = stripLocale(pathname || '/');
-  const isClientPortal = Boolean(path.startsWith('/client') && path !== '/client/login');
   const isPrivateRoute = Boolean(
     path.startsWith('/admin') || path.startsWith('/order') || path === '/client/login'
   );
@@ -50,76 +53,54 @@ export function ChatPanel() {
     <div
       role="dialog"
       aria-label="DFD Concierge chat"
-      className={
-        isClientPortal
-          ? 'fixed bottom-24 right-4 z-[70] flex h-[560px] max-h-[70vh] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/20 sm:right-6'
-          : 'fixed bottom-24 right-4 z-[70] w-[calc(100vw-2rem)] max-w-[400px] h-[560px] max-h-[70vh] flex flex-col bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
-      }
+      className="fixed bottom-24 right-4 z-[70] flex h-[560px] max-h-[70vh] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl shadow-zinc-950/20 sm:right-6"
     >
       {/* Header */}
-      <div
-        className={
-          isClientPortal
-            ? 'flex items-center justify-between border-b border-zinc-100 bg-white px-5 py-4 text-zinc-950'
-            : 'flex items-center justify-between px-4 py-3 border-b-2 border-foreground bg-foreground text-background'
-        }
-      >
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-400" aria-hidden />
-          <p className={isClientPortal ? 'text-sm font-semibold tracking-tight' : 'text-xs font-black uppercase tracking-widest'}>{dict.chat.title}</p>
+      <div className="flex items-center justify-between border-b border-zinc-100 bg-white px-5 py-4 text-zinc-950">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-zinc-950 text-[10px] font-bold text-white">
+            DFD
+          </span>
+          <div>
+            <p className="text-sm font-semibold leading-tight tracking-tight">{dict.chat.title}</p>
+            <p className="flex items-center gap-1.5 text-[11px] leading-tight text-zinc-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+              {dict.chat.online}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={reset}
             aria-label="Restart conversation"
-            className={
-              isClientPortal
-                ? 'grid h-8 w-8 place-items-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900'
-                : 'p-1.5 border-2 border-transparent hover:border-background'
-            }
+            className="grid h-8 w-8 place-items-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="h-4 w-4" />
           </button>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close chat"
-            className={
-              isClientPortal
-                ? 'grid h-8 w-8 place-items-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900'
-                : 'p-1.5 border-2 border-transparent hover:border-background'
-            }
+            className="grid h-8 w-8 place-items-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className={isClientPortal ? 'flex-1 space-y-2.5 overflow-y-auto bg-white p-4' : 'flex-1 overflow-y-auto p-3 space-y-2 bg-background'}>
+      <div className="flex-1 space-y-2.5 overflow-y-auto bg-white p-4">
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={
-                isClientPortal
-                  ? `max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${
-                      m.role === 'user' ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-900'
-                    }`
-                  : `max-w-[85%] px-3 py-2 text-sm border-2 ${
-                      m.role === 'user'
-                        ? 'bg-foreground text-background border-foreground'
-                        : 'bg-background text-foreground border-foreground'
-                    }`
-              }
+              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${
+                m.role === 'user' ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-900'
+              }`}
             >
               <p className="whitespace-pre-wrap">{m.text}</p>
               {m.link && (
                 <Link
                   href={m.link}
-                  className={
-                    isClientPortal
-                      ? 'mt-2 block text-xs font-semibold underline underline-offset-2 opacity-80'
-                      : 'block mt-2 text-xs font-bold uppercase tracking-widest underline'
-                  }
+                  className="mt-2 block text-xs font-semibold underline underline-offset-2 opacity-80"
                 >
                   {m.linkLabel || 'Open →'}
                 </Link>
@@ -129,7 +110,7 @@ export function ChatPanel() {
         ))}
         {typing && (
           <div className="flex justify-start">
-            <div className={isClientPortal ? 'rounded-2xl bg-zinc-100' : 'border-2 border-foreground bg-background'}>
+            <div className="rounded-2xl bg-zinc-100">
               <TypingDots />
             </div>
           </div>
@@ -138,16 +119,12 @@ export function ChatPanel() {
       </div>
 
       {/* Quick replies */}
-      <div className={isClientPortal ? 'flex flex-wrap gap-1.5 border-t border-zinc-100 px-4 py-2.5' : 'flex gap-1.5 flex-wrap px-3 py-2 border-t-2 border-foreground bg-muted/40'}>
+      <div className="flex flex-wrap gap-1.5 border-t border-zinc-100 px-4 py-2.5">
         {dict.chat.quickReplies.map((q) => (
           <button
             key={q}
             onClick={() => send(q)}
-            className={
-              isClientPortal
-                ? 'rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-600 transition-colors hover:border-zinc-950 hover:text-zinc-950'
-                : 'text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 border-2 border-foreground bg-background hover:bg-foreground hover:text-background'
-            }
+            className="rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-600 transition-colors hover:border-zinc-950 hover:text-zinc-950"
           >
             {q}
           </button>
@@ -155,7 +132,7 @@ export function ChatPanel() {
       </div>
 
       {/* Composer */}
-      <div className={isClientPortal ? 'flex items-center gap-2 border-t border-zinc-100 p-3' : 'flex items-center gap-2 p-2 border-t-2 border-foreground bg-background'}>
+      <div className="flex items-center gap-2 border-t border-zinc-100 p-3">
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -164,42 +141,22 @@ export function ChatPanel() {
           }}
           placeholder={dict.chat.inputPlaceholder}
           aria-label={dict.chat.inputPlaceholder}
-          className={
-            isClientPortal
-              ? 'h-9 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-950/10 placeholder:text-zinc-400'
-              : 'flex-1 px-3 py-2 text-sm bg-background border-2 border-foreground focus:outline-none placeholder:text-muted-foreground'
-          }
+          className="h-10 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-4 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-950/10"
         />
         <button
           onClick={submit}
           aria-label="Send message"
-          className={
-            isClientPortal
-              ? 'grid h-9 w-9 shrink-0 place-items-center rounded-full bg-zinc-950 text-white transition-colors hover:bg-zinc-800'
-              : 'p-2 bg-foreground text-background border-2 border-foreground'
-          }
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-zinc-950 text-white transition-colors hover:bg-zinc-800"
         >
-          <Send className="w-4 h-4" />
+          <Send className="h-4 w-4" />
         </button>
       </div>
 
       {/* Handoff strip */}
-      <div className={isClientPortal ? 'space-y-2 border-t border-zinc-100 px-4 py-3' : 'px-3 py-2 border-t-2 border-foreground bg-background space-y-2'}>
-        {isClientPortal && (
-          <Link
-            href={localePath(locale, '/client/dashboard')}
-            className="block rounded-full bg-zinc-950 py-2 text-center text-[11px] font-semibold text-white transition-colors hover:bg-zinc-800"
-          >
-            {dict.chat.viewProjects}
-          </Link>
-        )}
+      <div className="border-t border-zinc-100 px-4 py-3">
         <Link
           href={`${localePath(locale, '/start')}?next=${encodeURIComponent(localePath(locale, '/order'))}`}
-          className={
-            isClientPortal
-              ? 'block rounded-full border border-zinc-200 py-2 text-center text-[11px] font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-950'
-              : 'block text-center text-[11px] font-black uppercase tracking-widest py-2 border-2 border-foreground bg-background hover:bg-foreground hover:text-background'
-          }
+          className="block rounded-full border border-zinc-200 py-2 text-center text-[11px] font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-950"
         >
           {dict.chat.startInstead}
         </Link>
@@ -213,21 +170,17 @@ export function ChatWidget() {
   const pathname = usePathname();
   const dict = useDictionary();
   const path = stripLocale(pathname || '/');
-  const isClientPortal = Boolean(path.startsWith('/client') && path !== '/client/login');
   if (path.startsWith('/admin') || path.startsWith('/order') || path === '/client/login') return null;
   return (
     <button
       onClick={toggle}
       aria-label={open ? dict.chat.close : dict.chat.open}
-      title={isClientPortal ? (open ? dict.chat.close : dict.chat.title) : undefined}
-      className={
-        isClientPortal
-          ? 'fixed bottom-5 right-4 z-[70] grid h-12 w-12 place-items-center rounded-full bg-zinc-950 text-white shadow-lg shadow-zinc-950/25 transition-transform duration-200 hover:-translate-y-0.5 sm:right-6'
-          : 'fixed bottom-4 right-4 z-[70] flex items-center gap-2 px-4 py-3 bg-foreground text-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,0.25)] text-xs font-black uppercase tracking-widest hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.25)]'
-      }
+      className="group fixed bottom-5 right-4 z-[70] flex h-14 items-center gap-0 rounded-full bg-zinc-950 pl-4 pr-4 text-white shadow-lg shadow-zinc-950/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-zinc-800 sm:right-6"
     >
-      {open ? <X className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
-      {!isClientPortal && (open ? 'Close' : 'Chat')}
+      {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+      <span className="max-w-0 overflow-hidden whitespace-nowrap text-[13px] font-semibold opacity-0 transition-all duration-300 group-hover:ml-2 group-hover:max-w-[120px] group-hover:opacity-100">
+        {open ? dict.chat.close : dict.chat.title}
+      </span>
     </button>
   );
 }
