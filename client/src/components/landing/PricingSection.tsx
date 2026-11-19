@@ -6,8 +6,12 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CurrencyToggle } from "@/components/ui/CurrencyToggle";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useDictionary, useLocale } from "@/i18n/provider";
+import { localePath } from "@/i18n/config";
 
 export function PricingSection({ packages = [] }: { packages?: Record<string, unknown>[] }) {
+    const dict = useDictionary();
+    const locale = useLocale();
     const sectionRef = useRef<HTMLElement>(null);
     const { scrollYProgress } = useScroll({
         target: sectionRef,
@@ -24,12 +28,17 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
 
     const handlePlanSelect = (planSlug: string, custom: boolean, planName: string) => {
         if (custom) {
-            const text = encodeURIComponent(`Hi DFD, I'd like to talk about a custom project (${planName}).`);
+            const text = encodeURIComponent(
+                locale === 'id'
+                    ? `Halo DFD, saya ingin membahas proyek custom (${planName}).`
+                    : `Hi DFD, I'd like to talk about a custom project (${planName}).`
+            );
             window.open(`https://wa.me/62895324350359?text=${text}`, '_blank');
             return;
         }
         setLoadingId(planSlug);
-        router.push(`/start?next=${encodeURIComponent(`/order?package=${planSlug}`)}`);
+        const next = encodeURIComponent(localePath(locale, `/order?package=${planSlug}`));
+        router.push(`${localePath(locale, '/start')}?next=${next}`);
     };
 
     const displayPackages = packages && packages.length > 0 ? (packages as any[]) : [];
@@ -42,11 +51,10 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                 {/* Header */}
                 <div className="text-center max-w-2xl mx-auto mb-20">
                     <motion.h2 style={{ color: textColor }} className="text-4xl md:text-5xl font-black tracking-tighter mb-6">
-                        Simple, Transparent Pricing
+                        {dict.pricing.title}
                     </motion.h2>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        Choose the plan that best fits your agency&apos;s needs. From solo creators to
-                        global enterprises, we have you covered.
+                        {dict.pricing.description}
                     </p>
                 </div>
 
@@ -59,8 +67,18 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                             const finalPrice = plan.discountPrice ? plan.discountPrice : plan.price;
                             const isCustom = plan.slug === 'custom' || finalPrice === 0 || finalPrice === '0' || finalPrice === null;
                             const isFeatured = i === 2 || plan.slug === 'ecosystem'; // Highlight the 3rd or specific plan
-                            const badge = "COMMERCIAL CHOICE";
-                            const buttonText = isCustom ? "Contact Us" : "Start Project";
+                            const badge = dict.pricing.commercialChoice;
+                            const buttonText = isCustom ? dict.pricing.contactUs : dict.pricing.startProject;
+                            const slug = String(plan.slug || '');
+                            const localizedName =
+                                dict.pricing.packageNames[slug as keyof typeof dict.pricing.packageNames] ||
+                                String(plan.name);
+                            const localizedDescription =
+                                dict.pricing.packageDescriptions[
+                                    slug as keyof typeof dict.pricing.packageDescriptions
+                                ] ||
+                                (plan.description as string) ||
+                                dict.pricing.defaultDescription;
 
                             return (
                             <div
@@ -75,12 +93,12 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                 )}
 
                                 <h3 className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-6">
-                                    {plan.name}
+                                    {localizedName}
                                 </h3>
 
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-black tracking-tighter">
-                                        {isCustom ? "Custom" : formatPrice(finalPrice)}
+                                        {isCustom ? dict.pricing.custom : formatPrice(finalPrice)}
                                     </span>
                                 </div>
                                 
@@ -89,7 +107,7 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                         <span className="text-sm font-bold tracking-tighter line-through text-zinc-500">
                                             {formatPrice(plan.price)}
                                         </span>
-                                        <span className="text-green-600 text-xs font-bold tracking-widest uppercase ml-1">Discount</span>
+                                        <span className="text-green-600 text-xs font-bold tracking-widest uppercase ml-1">{dict.pricing.discount}</span>
                                     </div>
                                 )}
                                 {!plan.discountPrice && !isCustom && (
@@ -97,16 +115,20 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                 )}
 
                                 <p className="text-sm text-zinc-600 mb-8 h-10">
-                                    {plan.description || "Comprehensive digital architecture designed to scale your business."}
+                                    {localizedDescription}
                                 </p>
 
                                 <div className="flex flex-col gap-4 mb-10 mt-auto">
                                     {(Array.isArray(plan.features) ? plan.features : []).map((feature: any, j: number) => {
                                         const featureText = typeof feature === 'string' ? feature : feature.name;
+                                        const localizedFeature =
+                                            dict.pricing.featureLabels[
+                                                featureText as keyof typeof dict.pricing.featureLabels
+                                            ] || featureText;
                                         return (
                                         <div key={j} className="flex items-start gap-3">
                                             <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${isFeatured ? "text-zinc-950" : "text-zinc-500"}`} />
-                                            <span className="text-sm font-medium text-zinc-700 leading-tight">{featureText}</span>
+                                            <span className="text-sm font-medium text-zinc-700 leading-tight">{localizedFeature}</span>
                                         </div>
                                     )})}
                                 </div>
@@ -122,7 +144,7 @@ export function PricingSection({ packages = [] }: { packages?: Record<string, un
                                     {loadingId === plan.slug ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            Processing...
+                                            {dict.pricing.processing}
                                         </>
                                     ) : buttonText}
                                 </button>

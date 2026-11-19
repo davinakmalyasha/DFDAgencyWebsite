@@ -5,8 +5,13 @@ import Image from "next/image";
 import { Mail } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./BrandIcons";
 import { motion } from "framer-motion";
+import { useDictionary, useLocale } from "@/i18n/provider";
+import { localePath } from "@/i18n/config";
 
 export function Footer() {
+    const dict = useDictionary();
+    const locale = useLocale();
+    const home = localePath(locale, '/');
     return (
         <footer className="bg-white pt-24 pb-12">
             <motion.div
@@ -20,7 +25,7 @@ export function Footer() {
 
                     {/* Logo / Brand Info */}
                     <div className="col-span-1">
-                        <Link href="/" className="flex items-center gap-3 mb-6 group">
+                        <Link href={home} className="flex items-center gap-3 mb-6 group">
                             <div className="relative w-8 h-8 overflow-hidden rounded-[8px] border border-zinc-200 shadow-sm group-hover:scale-105 transition-transform">
                                 <Image
                                     src="/logo-opt.webp"
@@ -35,33 +40,32 @@ export function Footer() {
                             <span className="font-extrabold text-xl tracking-tight text-zinc-950">DFD AGENCY</span>
                         </Link>
                         <p className="text-sm text-zinc-500 max-w-xs leading-relaxed">
-                            Architecting digital legacies for the world&apos;s most discerning brands.
+                            {dict.footer.tagline}
                         </p>
                     </div>
 
                     {/* Links - Services */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">SERVICES</h4>
-                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">UI/UX Design</Link>
-                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Web Development</Link>
-                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Branding</Link>
-                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Consulting</Link>
-                        <Link href="/client/login" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Client Sign In</Link>
-                        <Link href="/start" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Get Started</Link>
+                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">{dict.footer.servicesTitle}</h4>
+                        {dict.footer.services.map((service) => (
+                            <a key={service} href={`${home}#services`} className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{service}</a>
+                        ))}
+                        <Link href={localePath(locale, '/client/login')} className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{dict.footer.clientSignIn}</Link>
+                        <Link href={localePath(locale, '/start')} className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{dict.footer.getStarted}</Link>
                     </div>
 
                     {/* Links - Legal */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">LEGAL</h4>
-                        <Link href="/privacy" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Terms of Service</Link>
-                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Cookie Policy</Link>
-                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">Accessibility</Link>
+                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">{dict.footer.legalTitle}</h4>
+                        <Link href={localePath(locale, '/privacy')} className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{dict.footer.privacy}</Link>
+                        <Link href={localePath(locale, '/terms')} className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{dict.footer.terms}</Link>
+                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{dict.footer.cookiePolicy}</Link>
+                        <Link href="#" className="text-sm text-zinc-600 hover:text-zinc-950 transition-colors">{dict.footer.accessibility}</Link>
                     </div>
 
                     {/* Links - Connect */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">CONNECT</h4>
+                        <h4 className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">{dict.footer.connectTitle}</h4>
                         <div className="flex gap-4 mb-4">
                             <a 
                                 href="https://github.com/davinakmalyasha" 
@@ -90,7 +94,7 @@ export function Footer() {
                             </a>
                         </div>
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-relaxed">
-                            Stay updated with our latest insights and digital trends.
+                            {dict.footer.newsletter}
                         </p>
                     </div>
                 </div>
@@ -98,10 +102,10 @@ export function Footer() {
                 {/* Bottom Bar */}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-zinc-200/50">
                     <p className="text-xs text-zinc-500">
-                        &copy; {new Date().getFullYear()} DFD Agency. All rights reserved.
+                        &copy; {new Date().getFullYear()} DFD Agency. {dict.footer.copyright}
                     </p>
                     <p className="text-[10px] tracking-widest uppercase font-bold text-zinc-300 mt-4 md:mt-0">
-                        MADE BY DAVIN AKMAL YASHA
+                        {dict.footer.madeBy}
                     </p>
                 </div>
             </motion.div>

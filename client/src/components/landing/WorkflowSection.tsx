@@ -2,13 +2,16 @@
 
 import { ShieldCheck, Compass, Cpu, Globe } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useDictionary } from "@/i18n/provider";
 
 export function WorkflowSection() {
+    const dict = useDictionary();
+    const copy = dict.workflow.steps;
     const steps = [
         {
-            phase: "PHASE 01",
-            title: "Secure Foundation",
-            description: "Initiate the vision. Secure your development slot and lock in the high-performance engineering resources required for your architectural success.",
+            phase: copy[0].phase,
+            title: copy[0].title,
+            description: copy[0].description,
             icon: <ShieldCheck className="w-5 h-5 text-white" />,
             placeholder: (
                 <div className="w-full h-32 md:h-48 flex items-center justify-center opacity-10">
@@ -24,9 +27,9 @@ export function WorkflowSection() {
             )
         },
         {
-            phase: "PHASE 02",
-            title: "Strategic Blueprinting",
-            description: "Architecture before code. We sync on your business goals and map out a technical blueprint that guarantees flawless results and peak performance.",
+            phase: copy[1].phase,
+            title: copy[1].title,
+            description: copy[1].description,
             icon: <Compass className="w-5 h-5 text-white" />,
             placeholder: (
                 <div className="w-full h-32 md:h-48 relative overflow-hidden opacity-10 border border-zinc-200 rounded-xl bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:32px_32px]">
@@ -36,9 +39,9 @@ export function WorkflowSection() {
             )
         },
         {
-            phase: "PHASE 03",
-            title: "Orchestrated Engineering",
-            description: "High-Performance Logic meets AI-Agent precision. We rapidly build your site using our elite dev-stack, ensuring perfect speed and impregnable security.",
+            phase: copy[2].phase,
+            title: copy[2].title,
+            description: copy[2].description,
             icon: <Cpu className="w-5 h-5 text-white" />,
             placeholder: (
                 <div className="w-full h-32 md:h-48 flex flex-col justify-center gap-4 px-8 opacity-10">
@@ -58,9 +61,9 @@ export function WorkflowSection() {
             )
         },
         {
-            phase: "PHASE 04",
-            title: "Ecosystem Ascension",
-            description: "Live & Beyond. We deploy your site to the global edge and provide you with your client portal to manage your business growth on autopilot.",
+            phase: copy[3].phase,
+            title: copy[3].title,
+            description: copy[3].description,
             icon: <Globe className="w-5 h-5 text-white" />,
             placeholder: (
                 <div className="w-full h-48 md:h-64 bg-zinc-950 rounded-2xl flex flex-col items-center justify-center text-white relative overflow-hidden">
@@ -106,14 +109,13 @@ export function WorkflowSection() {
                     className="mb-24 flex flex-col items-center text-center"
                 >
                     <span className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-6 block">
-                        HOW WE WORK
+                        {dict.workflow.eyebrow}
                     </span>
                     <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-zinc-950 mb-8 leading-[1.1] max-w-4xl">
-                        Engineered for Speed.<br />Built for Excellence.
+                        {dict.workflow.titleLine1}<br />{dict.workflow.titleLine2}
                     </h2>
                     <p className="text-zinc-500 text-lg leading-relaxed max-w-2xl">
-                        We&apos;ve removed the friction. Our orchestrated delivery pipeline is 
-                        engineered for peak velocity and total transparency.
+                        {dict.workflow.description}
                     </p>
                 </motion.div>
 

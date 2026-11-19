@@ -1,9 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { useDictionary, useLocale } from "@/i18n/provider";
 
 export function FinalCta() {
+    const dict = useDictionary();
+    const locale = useLocale();
+    const whatsappText = encodeURIComponent(
+        locale === 'id' ? 'Halo, saya tertarik dengan layanan DFD.' : 'Hey im interested'
+    );
     return (
         <section id="final-cta" className="bg-zinc-950 text-white rounded-t-[40px] md:rounded-t-[80px] overflow-hidden">
             <div className="mx-auto w-[90%] max-w-[1024px] py-32 md:py-48 text-center flex flex-col items-center">
@@ -23,12 +28,12 @@ export function FinalCta() {
                 >
                     <motion.div variants={{ hidden: { y: "100%" }, visible: { y: 0, transition: { duration: 0.7, ease: "easeOut" } } }}>
                         <h2 className="text-5xl md:text-7xl lg:text-[120px] font-black tracking-tighter leading-[0.9] text-zinc-400">
-                            FROM IDEA TO LIVE
+                            {dict.finalCta.line1}
                         </h2>
                     </motion.div>
                     <motion.div variants={{ hidden: { y: "100%" }, visible: { y: 0, transition: { duration: 0.7, ease: "easeOut" } } }}>
                         <h2 className="text-5xl md:text-7xl lg:text-[120px] font-black tracking-tighter leading-[0.9] text-white">
-                            IN 7 DAYS
+                            {dict.finalCta.line2}
                         </h2>
                     </motion.div>
                 </motion.div>
@@ -40,12 +45,11 @@ export function FinalCta() {
                     transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                     className="max-w-xl text-zinc-400 text-lg md:text-xl leading-relaxed mb-16"
                 >
-                    We leverage proprietary AI pipelines to accelerate design, code generation,
-                    and content creation. Quality is not sacrificed; it&apos;s engineered.
+                    {dict.finalCta.description}
                 </motion.p>
 
                 <a 
-                    href="https://wa.me/62895324350359?text=Hey%20im%20interested"
+                    href={`https://wa.me/62895324350359?text=${whatsappText}`}
                     target="_blank"
                     rel="noopener noreferrer"
                 >
@@ -56,7 +60,7 @@ export function FinalCta() {
                         transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
                         className="px-10 py-5 bg-white text-zinc-950 rounded-full font-bold text-lg hover:bg-zinc-200 hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
                     >
-                        Contact Us
+                        {dict.finalCta.button}
                     </motion.button>
                 </a>
 

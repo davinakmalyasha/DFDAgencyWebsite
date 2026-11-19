@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MessageCircle, X, Send, RotateCcw } from 'lucide-react';
 import { useChat } from './ChatProvider';
-import { QUICK_REPLIES } from '@/lib/chat.contract';
+import { useDictionary, useLocale } from '@/i18n/provider';
+import { localePath, stripLocale } from '@/i18n/config';
 
 function TypingDots() {
   return (
@@ -26,9 +27,12 @@ export function ChatPanel() {
   const [value, setValue] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const isClientPortal = Boolean(pathname?.startsWith('/client') && pathname !== '/client/login');
+  const locale = useLocale();
+  const dict = useDictionary();
+  const path = stripLocale(pathname || '/');
+  const isClientPortal = Boolean(path.startsWith('/client') && path !== '/client/login');
   const isPrivateRoute = Boolean(
-    pathname?.startsWith('/admin') || pathname?.startsWith('/order') || pathname === '/client/login'
+    path.startsWith('/admin') || path.startsWith('/order') || path === '/client/login'
   );
 
   useEffect(() => {
@@ -62,7 +66,7 @@ export function ChatPanel() {
       >
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-400" aria-hidden />
-          <p className={isClientPortal ? 'text-sm font-semibold tracking-tight' : 'text-xs font-black uppercase tracking-widest'}>DFD Concierge</p>
+          <p className={isClientPortal ? 'text-sm font-semibold tracking-tight' : 'text-xs font-black uppercase tracking-widest'}>{dict.chat.title}</p>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -135,7 +139,7 @@ export function ChatPanel() {
 
       {/* Quick replies */}
       <div className={isClientPortal ? 'flex flex-wrap gap-1.5 border-t border-zinc-100 px-4 py-2.5' : 'flex gap-1.5 flex-wrap px-3 py-2 border-t-2 border-foreground bg-muted/40'}>
-        {QUICK_REPLIES.map((q) => (
+        {dict.chat.quickReplies.map((q) => (
           <button
             key={q}
             onClick={() => send(q)}
@@ -158,8 +162,8 @@ export function ChatPanel() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') submit();
           }}
-          placeholder="Ask about packages, pricing, or your portal…"
-          aria-label="Chat message"
+          placeholder={dict.chat.inputPlaceholder}
+          aria-label={dict.chat.inputPlaceholder}
           className={
             isClientPortal
               ? 'h-9 flex-1 rounded-full border border-zinc-200 bg-zinc-50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-950/10 placeholder:text-zinc-400'
@@ -183,21 +187,21 @@ export function ChatPanel() {
       <div className={isClientPortal ? 'space-y-2 border-t border-zinc-100 px-4 py-3' : 'px-3 py-2 border-t-2 border-foreground bg-background space-y-2'}>
         {isClientPortal && (
           <Link
-            href="/client/dashboard"
+            href={localePath(locale, '/client/dashboard')}
             className="block rounded-full bg-zinc-950 py-2 text-center text-[11px] font-semibold text-white transition-colors hover:bg-zinc-800"
           >
-            View my projects →
+            {dict.chat.viewProjects}
           </Link>
         )}
         <Link
-          href="/start?next=%2Forder"
+          href={`${localePath(locale, '/start')}?next=${encodeURIComponent(localePath(locale, '/order'))}`}
           className={
             isClientPortal
               ? 'block rounded-full border border-zinc-200 py-2 text-center text-[11px] font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-950'
               : 'block text-center text-[11px] font-black uppercase tracking-widest py-2 border-2 border-foreground bg-background hover:bg-foreground hover:text-background'
           }
         >
-          Start a project instead →
+          {dict.chat.startInstead}
         </Link>
       </div>
     </div>
@@ -207,13 +211,15 @@ export function ChatPanel() {
 export function ChatWidget() {
   const { open, toggle } = useChat();
   const pathname = usePathname();
-  const isClientPortal = Boolean(pathname?.startsWith('/client') && pathname !== '/client/login');
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/order') || pathname === '/client/login') return null;
+  const dict = useDictionary();
+  const path = stripLocale(pathname || '/');
+  const isClientPortal = Boolean(path.startsWith('/client') && path !== '/client/login');
+  if (path.startsWith('/admin') || path.startsWith('/order') || path === '/client/login') return null;
   return (
     <button
       onClick={toggle}
-      aria-label={open ? 'Close concierge chat' : 'Open concierge chat'}
-      title={isClientPortal ? (open ? 'Close chat' : 'Chat with DFD') : undefined}
+      aria-label={open ? dict.chat.close : dict.chat.open}
+      title={isClientPortal ? (open ? dict.chat.close : dict.chat.title) : undefined}
       className={
         isClientPortal
           ? 'fixed bottom-5 right-4 z-[70] grid h-12 w-12 place-items-center rounded-full bg-zinc-950 text-white shadow-lg shadow-zinc-950/25 transition-transform duration-200 hover:-translate-y-0.5 sm:right-6'

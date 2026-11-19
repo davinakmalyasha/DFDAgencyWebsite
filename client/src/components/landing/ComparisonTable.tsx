@@ -2,40 +2,11 @@
 
 import { Sparkles } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useDictionary } from "@/i18n/provider";
 
 export function ComparisonTable() {
-    const comparisons = [
-        {
-            feature: "Development Speed",
-            freelancers: "Unpredictable / Often Lags",
-            traditional: "Slow (3-6 Months)",
-            dfd: "Rapid (Days-to-Market)",
-        },
-        {
-            feature: "Engineering Quality",
-            freelancers: "Inconsistent / Buggy",
-            traditional: "Manual / Heavy Bloat",
-            dfd: "Architectural Excellence",
-        },
-        {
-            feature: "Pricing Logic",
-            freelancers: "Cheap / Hidden Costs",
-            traditional: "Inflated Agency Hours",
-            dfd: "Value Engineering",
-        },
-        {
-            feature: "Platform Security",
-            freelancers: "Basic / Vulnerable",
-            traditional: "Standard / Plugin-Heavy",
-            dfd: "Hardened & Decoupled",
-        },
-        {
-            feature: "Scalability",
-            freelancers: "Limited / DIY feeling",
-            traditional: "Manual Re-engineering",
-            dfd: "Enterprise-Ready (Global)",
-        },
-    ];
+    const dict = useDictionary();
+    const comparisons = dict.comparison.rows;
 
     const tableRowVariants: Variants = {
         hidden: { opacity: 0, x: -20 },
@@ -54,11 +25,10 @@ export function ComparisonTable() {
                     className="mb-16"
                 >
                     <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-950 mb-4">
-                        The Engineering Edge
+                        {dict.comparison.title}
                     </h2>
                     <p className="text-zinc-500 max-w-2xl text-lg leading-relaxed">
-                        A transparent contrast of how our orchestrated delivery pipeline provides 
-                        elite-tier performance without the traditional agency bloat.
+                        {dict.comparison.description}
                     </p>
                 </motion.div>
 
@@ -74,18 +44,18 @@ export function ComparisonTable() {
                         <thead>
                             <tr className="border-b border-zinc-200">
                                 <th className="py-6 px-6 text-sm font-bold tracking-widest uppercase text-zinc-400 w-1/4">
-                                    Feature
+                                    {dict.comparison.headers.feature}
                                 </th>
                                 <th className="py-6 px-6 text-sm font-bold tracking-widest uppercase text-zinc-400 w-1/4">
-                                    Freelancers
+                                    {dict.comparison.headers.freelancers}
                                 </th>
                                 <th className="py-6 px-6 text-sm font-bold tracking-widest uppercase text-zinc-400 w-1/4">
-                                    Traditional Agency
+                                    {dict.comparison.headers.traditional}
                                 </th>
                                 <th className="py-6 px-6 text-sm font-black tracking-widest uppercase text-zinc-950 bg-zinc-100 rounded-t-xl w-1/4">
                                     <div className="flex items-center gap-2">
                                         <Sparkles className="w-4 h-4" />
-                                        DFD Agency
+                                        {dict.comparison.headers.dfd}
                                     </div>
                                 </th>
                             </tr>

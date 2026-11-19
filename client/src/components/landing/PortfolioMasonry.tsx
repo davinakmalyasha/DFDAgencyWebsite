@@ -4,6 +4,7 @@ import { useRef, useState, useMemo } from "react";
 import { ArrowUpRight, ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { motion, Variants, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useDictionary } from "@/i18n/provider";
 
 interface ProjectItem {
     title: string;
@@ -17,6 +18,7 @@ interface ProjectItem {
 
 // Local component for individual projects to track their own scroll parallax
 function MasonryProjectItem({ item, variants }: { item: ProjectItem, variants: Variants }) {
+    const dict = useDictionary();
     const ref = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
         target: ref,
@@ -37,7 +39,7 @@ function MasonryProjectItem({ item, variants }: { item: ProjectItem, variants: V
     };
 
     return (
-        <motion.div variants={variants} className={`group cursor-pointer ${item.extraClass}`} data-cursor-text="VIEW">
+        <motion.div variants={variants} className={`group cursor-pointer ${item.extraClass}`} data-cursor-text={dict.portfolio.viewCaseStudy}>
             <div ref={ref} className={`w-full ${item.aspect} bg-zinc-100 mb-6 overflow-hidden relative rounded-sm`}>
                 <motion.div
                     variants={clipVariants}
@@ -68,7 +70,7 @@ function MasonryProjectItem({ item, variants }: { item: ProjectItem, variants: V
                             <div className="w-16 h-16 rounded-full border border-white/30 bg-white/10 backdrop-blur-md flex items-center justify-center">
                                 <Play className="w-6 h-6 text-white fill-white ml-1" />
                             </div>
-                            <span className="text-[10px] font-black tracking-[0.3em] text-white uppercase">View Case Study</span>
+                            <span className="text-[10px] font-black tracking-[0.3em] text-white uppercase">{dict.portfolio.viewCaseStudy}</span>
                         </motion.div>
                     </div>
                 </motion.div>
@@ -85,6 +87,7 @@ function MasonryProjectItem({ item, variants }: { item: ProjectItem, variants: V
 }
 
 export function PortfolioMasonry({ projects = [] }: { projects?: any[] }) {
+    const dict = useDictionary();
     const tabs = ["ALL", "PLATFORM", "E-COMMERCE", "LANDING", "SaaS", "CUSTOM"];
     const [activeTab, setActiveTab] = useState("ALL");
 
@@ -148,12 +151,11 @@ export function PortfolioMasonry({ projects = [] }: { projects?: any[] }) {
                     className="mb-16"
                 >
                     <h2 className="text-[12vw] md:text-[8vw] lg:text-[140px] font-black tracking-tighter text-zinc-950 leading-[0.8] mb-8">
-                        PROJECTS
+                        {dict.portfolio.title}
                     </h2>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
                         <p className="text-zinc-500 max-w-sm text-lg leading-relaxed">
-                            A curated selection of high-performance digital assets. We explore the
-                            intersection of elite software architecture and seamless user experience.
+                            {dict.portfolio.description}
                         </p>
 
                         {/* Filter Tabs */}
@@ -165,7 +167,7 @@ export function PortfolioMasonry({ projects = [] }: { projects?: any[] }) {
                                     className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-all duration-300 relative ${activeTab === tab ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-950"
                                         }`}
                                 >
-                                    {tab}
+                                    {dict.portfolio.tabs[i] ?? tab}
                                     {activeTab === tab && (
                                         <motion.div 
                                             layoutId="activeTab"
@@ -186,18 +188,17 @@ export function PortfolioMasonry({ projects = [] }: { projects?: any[] }) {
                         className="py-24 border-y-2 border-zinc-950/10 flex flex-col items-center justify-center text-center"
                     >
                         <div className="mb-8 relative">
-                            <h3 className="text-[10vw] font-black text-zinc-100 uppercase select-none leading-none">Zero_Point</h3>
+                            <h3 className="text-[10vw] font-black text-zinc-100 uppercase select-none leading-none">{dict.portfolio.emptyTitle}</h3>
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[10px] font-black tracking-[0.5em] uppercase text-zinc-400 bg-zinc-50 px-4">Initializing Portfolio</span>
+                                <span className="text-[10px] font-black tracking-[0.5em] uppercase text-zinc-400 bg-zinc-50 px-4">{dict.portfolio.emptyLabel}</span>
                             </div>
                         </div>
                         <p className="max-w-md text-zinc-400 text-sm font-medium uppercase tracking-widest leading-relaxed px-4">
-                            Our architecture lab is currently refining the next generation of digital assets. 
-                            Stay synchronized for the upcoming release.
+                            {dict.portfolio.emptyDescription}
                         </p>
                         <div className="mt-12 flex flex-col items-center gap-4">
                             <div className="w-12 h-[2px] bg-zinc-950/20" />
-                            <span className="text-[8px] font-mono text-zinc-300 uppercase tracking-[0.3em]">DFD_ENGINE / STATUS: STANDBY</span>
+                            <span className="text-[8px] font-mono text-zinc-300 uppercase tracking-[0.3em]">{dict.portfolio.standby}</span>
                         </div>
                     </motion.div>
                 ) : (

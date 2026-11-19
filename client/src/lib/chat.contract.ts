@@ -86,21 +86,29 @@ export function newIdempotencyKey(): string {
   return `chat-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
 }
 
+export interface OfflineAnswerSet {
+  pricing: string;
+  project: string;
+  human: string;
+  duration: string;
+  fallback: string;
+}
+
 // Deterministic offline answers. Used whenever the external backend is
 // disabled or unreachable. These never pretend to be AI reasoning.
-export function offlineAnswer(input: string): string {
+export function offlineAnswer(input: string, answers: OfflineAnswerSet): string {
   const q = input.toLowerCase();
   if (q.includes('pric') || q.includes('harga') || q.includes('cost') || q.includes('paket') || q.includes('package')) {
-    return 'Our packages start from Rp 1.500.000 (Landing Page). Open Pricing on this page for the full list, or start an order and we will confirm the quote on WhatsApp.';
+    return answers.pricing;
   }
-  if (q.includes('track') || q.includes('lacak') || q.includes('status') || q.includes('order')) {
-    return 'Sign in to your client portal to see live milestones, invoices and deliverables. New here? Use Get Started to create an account.';
+  if (q.includes('track') || q.includes('lacak') || q.includes('status') || q.includes('order') || q.includes('proyek')) {
+    return answers.project;
   }
-  if (q.includes('human') || q.includes('admin') || q.includes('cs') || q.includes('whatsapp') || q.includes('wa')) {
-    return 'Connecting you to a human — use the WhatsApp button and our team will reply directly.';
+  if (q.includes('human') || q.includes('admin') || q.includes('cs') || q.includes('whatsapp') || q.includes('wa') || q.includes('tim')) {
+    return answers.human;
   }
   if (q.includes('lama') || q.includes('long') || q.includes('duration') || q.includes('waktu')) {
-    return 'A landing page typically takes 1–2 weeks, business sites 3–4 weeks. Your dashboard shows live milestones once production starts.';
+    return answers.duration;
   }
-  return 'I can help with packages, pricing, your project portal, or connecting you to our team. Pick a topic below.';
+  return answers.fallback;
 }

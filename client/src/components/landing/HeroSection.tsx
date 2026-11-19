@@ -6,10 +6,15 @@ import Link from "next/link";
 import { useRef } from "react";
 import Script from "next/script";
 import { useSession } from "@/components/providers/SessionProvider";
+import { useDictionary, useLocale } from "@/i18n/provider";
+import { localePath } from "@/i18n/config";
+import { SITE_URL } from "@/lib/site";
 
 export function HeroSection() {
     const { user } = useSession();
-    const dashboard = user?.role === "SUPERADMIN" || user?.role === "EDITOR" ? "/admin/dashboard" : "/client/dashboard";
+    const locale = useLocale();
+    const dict = useDictionary();
+    const dashboard = user?.role === "SUPERADMIN" || user?.role === "EDITOR" ? "/admin/dashboard" : localePath(locale, "/client/dashboard");
     const sectionRef = useRef<HTMLElement>(null);
     const { scrollYProgress } = useScroll({
         target: sectionRef,
@@ -86,8 +91,8 @@ export function HeroSection() {
         "name": "DFD Agency",
         "alternateName": "Digital Foundry & Design",
         "description": "Elite Software Architecture and Senior TypeScript Development studio specializing in Next.js and high-performance digital experiences.",
-        "url": process.env.NEXT_PUBLIC_SITE_URL || "https://dfdagency.com",
-        "logo": "https://dfdagency.com/logo.png",
+        "url": SITE_URL,
+        "logo": `${SITE_URL}/logo.png`,
         "address": {
             "@type": "PostalAddress",
             "addressCountry": "ID"
@@ -117,16 +122,16 @@ export function HeroSection() {
                         <motion.div variants={fadeUpVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-200/50 mb-8">
                             <div className="w-2 h-2 rounded-full bg-zinc-950 animate-pulse"></div>
                             <span className="text-xs font-bold tracking-widest uppercase text-zinc-800">
-                                Precision Engineering
+                                {dict.hero.badge}
                             </span>
                         </motion.div>
 
                         <h1 className="text-5xl md:text-6xl lg:text-[72px] font-black tracking-tighter leading-[1.05] mb-6">
                             {[
-                                { text: "Designed to be", color: "text-zinc-950" },
-                                { text: "Flawless.", color: "text-zinc-950" },
-                                { text: "Dependable by", color: "text-zinc-500" },
-                                { text: "nature", color: "text-zinc-950" }
+                                { text: dict.hero.lines[0], color: "text-zinc-950" },
+                                { text: dict.hero.lines[1], color: "text-zinc-950" },
+                                { text: dict.hero.lines[2], color: "text-zinc-500" },
+                                { text: dict.hero.lines[3], color: "text-zinc-950" }
                             ].map((line, i) => (
                                 <span key={i} className="block overflow-hidden">
                                     <motion.span variants={textRevealVariants} className={`block ${line.color}`}>
@@ -138,16 +143,14 @@ export function HeroSection() {
 
                         <motion.div variants={fadeUpVariants} className="overflow-hidden mb-8">
                             <p className="text-base md:text-lg text-zinc-600 max-w-lg leading-relaxed">
-                                We bridge the gap between human engineering and AI-Agent precision. Delivering 
-                                elite-tier digital architecture at a fraction of traditional agency costs. 
-                                We don&apos;t just build websites; we deploy high-performance assets.
+                                {dict.hero.description}
                             </p>
                         </motion.div>
 
                         <motion.div variants={fadeUpVariants} className="flex flex-wrap items-center gap-4">
-                            <Link href={user ? dashboard : "/start?next=%2Forder"}>
+                            <Link href={user ? dashboard : `${localePath(locale, '/start')}?next=${encodeURIComponent(localePath(locale, '/order'))}`}>
                                 <button className="flex items-center gap-2 bg-zinc-950 text-white px-8 py-4 rounded-full font-semibold hover:bg-zinc-800 hover:scale-105 transition-all duration-300 group">
-                                    {user ? "Open Dashboard" : "Start a Project"}
+                                    {user ? dict.hero.openDashboard : dict.hero.startProject}
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </Link>
@@ -155,7 +158,7 @@ export function HeroSection() {
                                 href="#testimonials"
                                 className="px-8 py-4 rounded-full font-semibold bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-100 transition-colors"
                             >
-                                Success Stories
+                                {dict.hero.successStories}
                             </a>
                         </motion.div>
                     </motion.div>
@@ -216,13 +219,13 @@ export function HeroSection() {
                                 }}
                             >
                                 <p className="text-4xl font-black tracking-tighter text-zinc-950 mb-2">
-                                    10-Day
+                                    {dict.hero.statValue}
                                 </p>
                                 <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">
-                                    Avg. Deployment
+                                    {dict.hero.statLabel}
                                 </p>
                                 <p className="text-sm text-zinc-500 leading-relaxed">
-                                    From strategic blueprint to global launch powered by AI-orchestrated engineering.
+                                    {dict.hero.statDescription}
                                 </p>
                             </motion.div>
                         </motion.div>

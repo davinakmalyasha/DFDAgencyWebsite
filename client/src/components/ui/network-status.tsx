@@ -5,11 +5,15 @@ import { usePathname } from "next/navigation";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { motion, AnimatePresence } from "framer-motion";
 import { WifiOff, Wifi, AlertTriangle } from "lucide-react";
+import { useDictionary } from "@/i18n/provider";
+import { stripLocale } from "@/i18n/config";
 
 export function NetworkStatus() {
     const isOnline = useNetworkStatus();
     const pathname = usePathname();
-    const isClientPortal = Boolean(pathname?.startsWith("/client") && pathname !== "/client/login");
+    const dict = useDictionary();
+    const path = stripLocale(pathname || "/");
+    const isClientPortal = Boolean(path.startsWith("/client") && path !== "/client/login");
     const [showReconnected, setShowReconnected] = useState(false);
     const wasOffline = useRef(false);
 
@@ -70,7 +74,7 @@ export function NetworkStatus() {
                                             : "text-2xl font-black uppercase leading-none tracking-tighter"
                                     }
                                 >
-                                    {isClientPortal ? "You're offline" : "Connection_Severed"}
+                                    {isClientPortal ? dict.network.offlineTitle : "Connection_Severed"}
                                 </h2>
                                 <p
                                     className={
@@ -80,7 +84,7 @@ export function NetworkStatus() {
                                     }
                                 >
                                     {isClientPortal
-                                        ? "The portal will reconnect automatically."
+                                        ? dict.network.offlineSubtitle
                                         : "Status: Offline_Protocol_Active"}
                                 </p>
                             </div>
@@ -93,7 +97,7 @@ export function NetworkStatus() {
                                 }
                             >
                                 {isClientPortal
-                                    ? "Your work is safe. Keep this tab open and we will pick up where you left off once the connection is back."
+                                    ? dict.network.offlineDescription
                                     : "Our neural link to the global grid has been interrupted. The system is operating in isolated mode. Attempting re-synchronization..."}
                             </div>
 
@@ -106,7 +110,7 @@ export function NetworkStatus() {
                                             : "text-[9px] font-black uppercase tracking-widest"
                                     }
                                 >
-                                    {isClientPortal ? "Retrying automatically" : "Emergency Exit Local Only"}
+                                    {isClientPortal ? dict.network.retrying : "Emergency Exit Local Only"}
                                 </span>
                             </div>
                         </div>
@@ -133,7 +137,7 @@ export function NetworkStatus() {
                                 : "text-xs font-black uppercase tracking-widest"
                         }
                     >
-                        {isClientPortal ? "Back online" : "Grid_Restored / Online"}
+                        {isClientPortal ? dict.network.backOnline : "Grid_Restored / Online"}
                     </span>
                 </motion.div>
             )}
