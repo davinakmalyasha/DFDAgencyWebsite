@@ -3,13 +3,15 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Loader2, ShieldCheck, CreditCard, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { PackageCard } from "./PackageCard";
 import { OrderSummary } from "./OrderSummary";
 import { PublicService } from "@/services/public.service";
 import { CurrencyToggle } from "@/components/ui/CurrencyToggle";
-import { useCurrency } from "@/hooks/useCurrency";
 import { useSession } from "@/components/providers/SessionProvider";
+import { useDictionary, useLocale } from "@/i18n/provider";
+import { localePath } from "@/i18n/config";
+import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -59,10 +61,10 @@ interface OrderFlowProps {
 
 // ─── Stepper Steps ──────────────────────────────────────────────────────
 
-const STEPS = [
-    { id: 1, label: "Package", shortLabel: "01" },
-    { id: 2, label: "Details", shortLabel: "02" },
-    { id: 3, label: "Review", shortLabel: "03" },
+const STEP_META = [
+    { id: 1, shortLabel: "01", key: 0 },
+    { id: 2, shortLabel: "02", key: 1 },
+    { id: 3, shortLabel: "03", key: 2 },
 ] as const;
 
 const slideVariants = {
@@ -80,6 +82,9 @@ const slideVariants = {
 // ─── Component ──────────────────────────────────────────────────────────
 
 export function OrderFlow({ packages }: OrderFlowProps) {
+    const dict = useDictionary();
+    const locale = useLocale();
+    const t = dict.order;
     const searchParams = useSearchParams();
     const preselectedParam = searchParams.get("package");
     const preselectedPkg = useMemo(
@@ -87,7 +92,6 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         [packages, preselectedParam]
     );
     const preselectedId = preselectedPkg?.id ?? null;
-    const { currency, exchangeRate } = useCurrency();
     const { user } = useSession();
 
     const [step, setStep] = useState(1);
@@ -127,16 +131,16 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         if (form.packageId === 9999) {
             return {
                 id: 9999,
-                name: "Custom Elite Solutions",
+                name: dict.pricing.customPlanName,
                 slug: "custom",
                 price: 0,
                 discountPrice: null,
                 features: [],
-                description: "For complex, high-performance ecosystems requiring specialized logic, custom architecture, and elite engineering precision."
+                description: dict.pricing.customPlanDescription,
             };
         }
         return undefined;
-    }, [packages, form.packageId]);
+    }, [packages, form.packageId, dict.pricing.customPlanDescription, dict.pricing.customPlanName]);
 
     const updateField = useCallback(
         <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -155,28 +159,36 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         const newErrors: FormErrors = {};
 
         if (!form.name || form.name.length < 2) {
-            newErrors.name = "Name must be at least 2 characters";
+            newErrors.name = t.errors.name;
         }
 
         const localNumber = form.whatsapp.replace(/^0+/, "");
         if (!localNumber || !/^\d{6,15}$/.test(localNumber)) {
-            newErrors.whatsapp = "Enter a valid phone number (e.g. 0895324350359)";
+            newErrors.whatsapp = t.errors.whatsapp;
         }
 
         if (!form.briefDescription || form.briefDescription.length < 10) {
-            newErrors.briefDescription = "Please describe your project briefly (min 10 chars)";
+            newErrors.briefDescription = t.errors.brief;
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [form.name, form.whatsapp, form.briefDescription]);
+    }, [form.name, form.whatsapp, form.briefDescription, t.errors]);
 
     // ─── Submit ─────────────────────────────────────────────────────────
+
+    const packageName = useCallback(
+        (pkg: { slug: string; name: string } | undefined) =>
+            pkg
+                ? dict.pricing.packageNames[pkg.slug as keyof typeof dict.pricing.packageNames] || pkg.name
+                : '',
+        [dict.pricing.packageNames]
+    );
 
     const handleSubmit = useCallback(async () => {
         if (isSubmitting) return;
         if (!form.agreedToTerms) {
-            setErrors({ agreedToTerms: "You must agree to the terms and conditions" });
+            setErrors({ agreedToTerms: t.errors.terms });
             return;
         }
         if (!form.packageId) return;
@@ -187,6 +199,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
             const priceMatch = Number(selectedPackage?.discountPrice || selectedPackage?.price);
             const isCustom = priceMatch === 0;
             const waNumber = "62895324350359";
+            const localizedName = packageName(selectedPackage);
 
             // Custom work is a WhatsApp consultation, not a checkout. Capture
             // the lead for the CRM and hand the visitor to a human.
@@ -197,10 +210,10 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                     businessName: form.businessName || null,
                     message: form.briefDescription,
                 });
-                if (!lead?.success) throw new Error("Inquiry could not be saved");
-                const message = `*CUSTOM PROJECT INQUIRY* 🤝\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\nI would like to consult directly regarding a custom quote for my project.`;
+                if (!lead?.success) throw new Error(t.errors.inquiry);
+                const message = `*CUSTOM PROJECT INQUIRY* 🤝\n\n*Package:* ${localizedName}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\nI would like to consult directly regarding a custom quote for my project.`;
                 window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, "_blank");
-                alert("Inquiry received — continue the conversation on WhatsApp.");
+                toast.success(t.customInquirySent);
                 return;
             }
 
@@ -216,26 +229,27 @@ export function OrderFlow({ packages }: OrderFlowProps) {
             });
 
             if (res.success && res.data) {
-                const message = `*NEW PROJECT ORDER* 🚀\n\n*Package:* ${selectedPackage?.name}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Order ID:* ${res.data.id}\n*Portal:* ${window.location.origin}/client/dashboard\n\nI am ready to proceed with payment.`;
+                const portal = `${window.location.origin}${localePath(locale, '/client/dashboard')}`;
+                const message = `*NEW PROJECT ORDER* 🚀\n\n*Package:* ${localizedName}\n*Client:* ${form.name}\n*WA:* ${fullWhatsapp}\n*Company:* ${form.businessName || "-"}\n\n*Brief:* ${form.briefDescription}\n\n*Order ID:* ${res.data.id}\n*Portal:* ${portal}\n\nI am ready to proceed with payment.`;
                 window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, "_blank");
                 window.setTimeout(() => {
                     if (res.data?.id) {
-                        window.location.href = `/order/success/${res.data.id}`;
+                        window.location.href = localePath(locale, `/order/success/${res.data.id}`);
                     }
                 }, 500);
             } else {
-                throw new Error("Order creation failed");
+                throw new Error(t.errors.order);
             }
         } catch (error: unknown) {
             const message =
                 (error as { response?: { data?: { message?: string } } })?.response
                     ?.data?.message ||
-                (error instanceof Error ? error.message : "Something went wrong");
-            alert(message);
+                (error instanceof Error ? error.message : t.errors.general);
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
-    }, [form, selectedPackage]);
+    }, [form, selectedPackage, isSubmitting, t, locale, packageName]);
 
     // ─── Navigation ─────────────────────────────────────────────────────
 
@@ -249,7 +263,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
         }
         if (step === 3) {
             if (!form.agreedToTerms) {
-                setErrors({ agreedToTerms: "You must agree to the terms and conditions" });
+                setErrors({ agreedToTerms: t.errors.terms });
                 return;
             }
             handleSubmit();
@@ -258,7 +272,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
 
         setDirection(1);
         setStep((s) => Math.min(s + 1, 3));
-    }, [step, form.packageId, validateStep2, form.agreedToTerms, handleSubmit]);
+    }, [step, form.packageId, validateStep2, form.agreedToTerms, handleSubmit, t.errors.terms]);
 
     const goBack = useCallback(() => {
         if (isSubmitting) return;
@@ -274,9 +288,9 @@ export function OrderFlow({ packages }: OrderFlowProps) {
             <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-50/80 backdrop-blur-xl border-b border-zinc-200">
                 <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
                     {step === 1 ? (
-                        <a href="/" className="flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase text-zinc-950 hover:text-zinc-600 transition-colors">
+                        <a href={localePath(locale, '/')} className="flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase text-zinc-950 hover:text-zinc-600 transition-colors">
                             <ArrowLeft className="w-4 h-4" />
-                            Home
+                            {dict.common.home}
                         </a>
                     ) : (
                         <button
@@ -284,22 +298,22 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                             className="flex items-center gap-2 text-sm font-bold tracking-[0.15em] uppercase text-zinc-950 hover:text-zinc-600 transition-colors cursor-pointer"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Back
+                            {t.back}
                         </button>
                     )}
 
                     {/* Stepper Indicator */}
                     <div className="flex items-center gap-2">
-                        {STEPS.map((s, i) => (
+                        {STEP_META.map((s, i) => (
                             <div key={s.id} className="flex items-center gap-2">
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider transition-all duration-300 ${step >= s.id
                                     ? "bg-zinc-950 text-white"
                                     : "bg-zinc-200 text-zinc-500"
                                     }`}>
                                     <span>{s.shortLabel}</span>
-                                    <span className="hidden sm:inline">{s.label}</span>
+                                    <span className="hidden sm:inline">{t.steps[s.key]}</span>
                                 </div>
-                                {i < STEPS.length - 1 && (
+                                {i < STEP_META.length - 1 && (
                                     <div className={`w-8 h-0.5 transition-colors duration-300 ${step > s.id ? "bg-zinc-950" : "bg-zinc-200"
                                         }`} />
                                 )}
@@ -316,8 +330,8 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                         {step === 1 && (
                             <StepWrapper key="step1" direction={direction}>
                                 <StepHeader
-                                    title="Choose Your Package"
-                                    subtitle="Select the plan that fits your business needs."
+                                    title={t.choosePackageTitle}
+                                    subtitle={t.choosePackageSubtitle}
                                 />
                                 <CurrencyToggle />
                                 <div className="space-y-4 mt-6">
@@ -337,13 +351,22 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                         const dbCustom = packages.find(p => Number(p.discountPrice || p.price) === 0 || p.slug === 'custom');
                                         const pkg = dbCustom || {
                                             id: 9999,
-                                            name: "Custom Elite Solutions",
+                                            name: dict.pricing.customPlanName,
                                             slug: "custom",
                                             price: 0,
                                             discountPrice: null,
                                             features: [],
-                                            description: "For complex, high-performance ecosystems requiring specialized logic, custom architecture, and elite engineering precision."
+                                            description: dict.pricing.customPlanDescription
                                         };
+                                        const customName =
+                                            dict.pricing.packageNames[pkg.slug as keyof typeof dict.pricing.packageNames] ||
+                                            pkg.name;
+                                        const customDescription =
+                                            dict.pricing.packageDescriptions[
+                                                pkg.slug as keyof typeof dict.pricing.packageDescriptions
+                                            ] ||
+                                            pkg.description ||
+                                            dict.pricing.customPlanDescription;
 
                                         return (
                                             <motion.button
@@ -368,28 +391,28 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                                             </div>
                                                             <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${form.packageId === pkg.id ? "text-zinc-400" : "text-zinc-500"
                                                                 }`}>
-                                                                Elite Custom Solutions
+                                                                {t.customBadge}
                                                             </span>
                                                         </div>
                                                         <h3 className="text-2xl md:text-3xl font-black tracking-tighter mb-3">
-                                                            {pkg.name}
+                                                            {customName}
                                                         </h3>
                                                         <p className={`text-sm md:text-base max-w-xl leading-relaxed ${form.packageId === pkg.id ? "text-zinc-400" : "text-zinc-500"
                                                             }`}>
-                                                            {pkg.description || "For complex, high-performance ecosystems requiring specialized logic, custom architecture, and elite engineering precision."}
+                                                            {customDescription}
                                                         </p>
                                                     </div>
 
                                                     <div className="flex flex-col items-center md:items-end gap-6 h-full justify-between">
                                                         <div className="text-center md:text-right">
-                                                            <span className="text-2xl md:text-3xl font-black tracking-tighter block">Custom Quote</span>
-                                                            <span className={`text-xs font-medium ${form.packageId === pkg.id ? "text-zinc-500" : "text-zinc-400"}`}>Based on scope</span>
+                                                            <span className="text-2xl md:text-3xl font-black tracking-tighter block">{t.customQuote}</span>
+                                                            <span className={`text-xs font-medium ${form.packageId === pkg.id ? "text-zinc-500" : "text-zinc-400"}`}>{t.basedOnScope}</span>
                                                         </div>
                                                         <div className={`px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase transition-all ${form.packageId === pkg.id
                                                                 ? "bg-white text-zinc-950"
                                                                 : "bg-zinc-950 text-white group-hover:scale-105"
                                                             }`}>
-                                                            {form.packageId === pkg.id ? "✓ SELECTED" : "SELECT CUSTOM"}
+                                                            {form.packageId === pkg.id ? dict.pricing.selected : dict.pricing.selectCustom}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -398,15 +421,10 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                                 <div className="relative z-10 mt-6 flex flex-wrap gap-2">
                                                     {pkg.features.map((f, i) => (
                                                         <span key={i} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${form.packageId === pkg.id ? "bg-white/5 border-white/10 text-zinc-300" : "bg-zinc-50 border-zinc-200 text-zinc-600"}`}>
-                                                            {f}
+                                                            {dict.pricing.featureLabels[f as keyof typeof dict.pricing.featureLabels] || f}
                                                         </span>
                                                     ))}
-                                                    {[
-                                                        "Custom Frameworks",
-                                                        "Logic Complexity Handling",
-                                                        "Massive API Scalling",
-                                                        "Pro Performance Audit"
-                                                    ].map((f, i) => (
+                                                    {dict.pricing.customFeatures.map((f, i) => (
                                                         <span key={`extra-${i}`} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${form.packageId === pkg.id
                                                                 ? "bg-white/10 border-white/20 text-white"
                                                                 : "bg-zinc-100 border-zinc-200 text-zinc-950"
@@ -425,21 +443,21 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                         {step === 2 && (
                             <StepWrapper key="step2" direction={direction}>
                                 <StepHeader
-                                    title="Tell Us About You"
-                                    subtitle="We'll use this to create your project and send updates."
+                                    title={t.detailsTitle}
+                                    subtitle={t.detailsSubtitle}
                                 />
                                 <motion.div
                                     animate={shouldShake ? { x: [-10, 10, -10, 10, 0] } : {}}
                                     className="max-w-xl mx-auto mt-10 space-y-6"
                                 >
                                     <FormField
-                                        label="Your Name"
+                                        label={t.yourName}
                                         required
                                         error={errors.name}
                                     >
                                         <input
                                             type="text"
-                                            placeholder="John Doe"
+                                            placeholder={t.namePlaceholder}
                                             value={form.name}
                                             onChange={(e) => updateField("name", e.target.value)}
                                             className={inputClass(errors.name)}
@@ -447,7 +465,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                     </FormField>
 
                                     <FormField
-                                        label="WhatsApp Number"
+                                        label={t.whatsapp}
                                         required
                                         error={errors.whatsapp}
                                     >
@@ -475,10 +493,10 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                         </div>
                                     </FormField>
 
-                                    <FormField label="Business Name" hint="Optional">
+                                    <FormField label={t.businessName} hint={t.businessOptional}>
                                         <input
                                             type="text"
-                                            placeholder="PT Example"
+                                            placeholder={t.businessPlaceholder}
                                             value={form.businessName}
                                             onChange={(e) => updateField("businessName", e.target.value)}
                                             className={inputClass()}
@@ -486,14 +504,14 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                     </FormField>
 
                                     <FormField
-                                        label="Project Brief"
+                                        label={t.brief}
                                         required
                                         error={errors.briefDescription}
-                                        hint="What kind of website do you need? Describe your goals, features, and any references."
+                                        hint={t.briefHint}
                                     >
                                         <textarea
                                             rows={4}
-                                            placeholder="I need a modern website for my restaurant business. It should showcase our menu, location, and allow online reservations..."
+                                            placeholder={t.briefPlaceholder}
                                             value={form.briefDescription}
                                             onChange={(e) => updateField("briefDescription", e.target.value)}
                                             className={inputClass(errors.briefDescription) + " resize-none"}
@@ -506,12 +524,12 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                         {step === 3 && selectedPackage && (
                             <StepWrapper key="step3" direction={direction}>
                                 <StepHeader
-                                    title="Review & Pay"
-                                    subtitle="Double-check everything before proceeding to payment."
+                                    title={t.reviewTitle}
+                                    subtitle={t.reviewSubtitle}
                                 />
                                 <div className="max-w-xl mx-auto mt-10 space-y-6">
                                     <OrderSummary
-                                        packageName={selectedPackage.name}
+                                        packageName={packageName(selectedPackage)}
                                         packagePrice={Number(selectedPackage.discountPrice || selectedPackage.price)}
                                         clientName={form.name}
                                         whatsapp={form.whatsapp}
@@ -546,22 +564,23 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                             </div>
                                         </div>
                                         <span className="text-sm text-zinc-600 leading-relaxed">
-                                            I agree to the{" "}
+                                            {t.agreeBefore}
                                             <a
-                                                href="/terms"
+                                                href={localePath(locale, '/terms')}
                                                 target="_blank"
                                                 className="font-semibold text-zinc-950 underline underline-offset-2 hover:text-zinc-600 transition-colors"
                                             >
-                                                Terms & Conditions
-                                            </a>{" "}
-                                            and{" "}
+                                                {dict.footer.terms}
+                                            </a>{' '}
+                                            {dict.auth.and}{' '}
                                             <a
-                                                href="/privacy"
+                                                href={localePath(locale, '/privacy')}
                                                 target="_blank"
                                                 className="font-semibold text-zinc-950 underline underline-offset-2 hover:text-zinc-600 transition-colors"
                                             >
-                                                Privacy Policy
-                                            </a>.
+                                                {dict.footer.privacy}
+                                            </a>
+                                            {t.agreeAfter}
                                         </span>
                                     </label>
 
@@ -575,7 +594,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                                     <div className="flex items-center gap-2 text-zinc-400">
                                         <ShieldCheck className="w-4 h-4" />
                                         <span className="text-xs">
-                                            Your details are securely submitted and encrypted.
+                                            {t.summary.secure}
                                         </span>
                                     </div>
                                 </div>
@@ -599,7 +618,7 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                             className="flex items-center gap-2 px-8 py-3 rounded-full bg-zinc-950 text-white text-sm font-bold
                                        hover:bg-zinc-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         >
-                            Continue
+                            {t.continue}
                             <ArrowRight className="w-4 h-4" />
                         </button>
                     ) : (
@@ -612,11 +631,11 @@ export function OrderFlow({ packages }: OrderFlowProps) {
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Processing...
+                                    {dict.pricing.processing}
                                 </>
                             ) : (
                                 <>
-                                    Proceed to WhatsApp
+                                    {t.submit}
                                     <ArrowRight className="w-4 h-4" />
                                 </>
                             )}

@@ -3,30 +3,11 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDictionary } from "@/i18n/provider";
 
 export function FaqAccordion() {
-    const faqs = [
-        {
-            question: "Why are your prices lower than traditional agencies?",
-            answer: "We use AI-Agent orchestration. By automating the heavy technical lifting (like boilerplate code and security audits), we cut out hundreds of hours of manual labor. You pay for the elite result, not the slow process."
-        },
-        {
-            question: "Why a custom-coded website instead of WordPress or Shopify?",
-            answer: "Drag-and-drop builders are bloated, slow, and highly vulnerable. Our sites are hand-engineered using Next.js (the tech used by Netflix and TikTok). This guarantees perfect Google Lighthouse speed, impregnable security, and infinite scalability."
-        },
-        {
-            question: "What exactly is included in the 'Managed' subscription?",
-            answer: "We handle 100% of the technical infrastructure. This includes your custom Domain (.com), Enterprise-grade Web Hosting via global edge networks, SSL Certificates, and all database maintenance. You just focus on your business."
-        },
-        {
-            question: "Do I own my website?",
-            answer: "Yes. Under the Managed plan, you have full admin access while we handle the technical hosting. Under the Buyout plan, we hand over the raw source code and all digital assets to you completely."
-        },
-        {
-            question: "I don't know much about code. Is it hard to manage?",
-            answer: "Not at all. Your personalized Client Dashboard makes tracking progress easy, and we provide you with a clean, intuitive interface to easily manage your site's content without writing a single line of code."
-        }
-    ];
+    const dict = useDictionary();
+    const faqs = dict.faq.items;
 
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
@@ -56,10 +37,10 @@ export function FaqAccordion() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl md:text-5xl font-black tracking-tight text-zinc-950 mb-6">
-                        Frequently Asked Questions
+                        {dict.faq.title}
                     </h2>
                     <p className="text-zinc-500 text-lg leading-relaxed">
-                        Everything you need to know about our process, timelines, and how we help your brand grow.
+                        {dict.faq.description}
                     </p>
                 </motion.div>
 
@@ -116,8 +97,8 @@ export function FaqAccordion() {
                     className="bg-white p-8 rounded-2xl border border-zinc-200/50 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left"
                 >
                     <div>
-                        <h4 className="text-sm font-bold text-zinc-950 mb-2">Still have questions?</h4>
-                        <p className="text-xs text-zinc-500">Can&apos;t find the answer you&apos;re looking for? Please chat with our friendly team.</p>
+                        <h4 className="text-sm font-bold text-zinc-950 mb-2">{dict.faq.stillTitle}</h4>
+                        <p className="text-xs text-zinc-500">{dict.faq.stillDescription}</p>
                     </div>
                     <a
                         href="https://wa.me/62895324350359?text=Hi%20DFD%2C%20I%20have%20a%20question"
@@ -125,7 +106,7 @@ export function FaqAccordion() {
                         rel="noreferrer"
                         className="whitespace-nowrap px-6 py-3 bg-zinc-950 text-white text-xs font-bold tracking-widest uppercase rounded-lg hover:bg-zinc-800 transition-colors"
                     >
-                        Contact Us
+                        {dict.common.contactUs}
                     </a>
                 </motion.div>
 

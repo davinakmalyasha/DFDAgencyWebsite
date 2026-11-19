@@ -7,7 +7,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 
 interface AuthGateProps {
     children: React.ReactNode;
-    loginPath: '/client/login' | '/admin/login';
+    loginPath: string;
     adminOnly?: boolean;
 }
 

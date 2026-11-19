@@ -4,6 +4,8 @@ import { motion, Variants } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useDictionary, useLocale } from "@/i18n/provider";
+import { localePath } from "@/i18n/config";
 
 interface ProjectDesc {
     id: number;
@@ -16,6 +18,8 @@ interface ProjectDesc {
 }
 
 export function Testimonials({ projects }: { projects: ProjectDesc[] }) {
+    const dict = useDictionary();
+    const locale = useLocale();
     // Filter projects that have a testimonial and taking the 6 most recent ones
     const testimonials = projects
         .filter(p => p.testimonialQuote && p.testimonialQuote.length > 5)
@@ -59,20 +63,20 @@ export function Testimonials({ projects }: { projects: ProjectDesc[] }) {
                 >
                     <div>
                         <span className="text-[10px] font-black tracking-[0.2em] uppercase text-zinc-400 mb-6 block">
-                            CLIENT TESTIMONIALS
+                            {dict.testimonials.eyebrow}
                         </span>
                         <h2 className="text-5xl md:text-7xl lg:text-[100px] font-black tracking-tighter text-zinc-950 leading-[0.9]">
-                            Voices of<br />Excellence
+                            {dict.testimonials.titleLine1}<br />{dict.testimonials.titleLine2}
                         </h2>
                     </div>
 
                     <div className="flex flex-col items-start lg:items-end gap-6 max-w-sm text-left lg:text-right">
                         <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-zinc-500 leading-relaxed">
-                            ARCHITECTING DIGITAL LEGACIES FOR THE WORLD&apos;S MOST DISCERNING BRANDS.
+                            {dict.testimonials.tagline}
                         </p>
-                        <button className="px-6 py-3 border border-zinc-200 text-xs font-bold tracking-widest uppercase hover:bg-zinc-50 transition-colors">
-                            CASE STUDIES &rarr;
-                        </button>
+                        <a href="#portfolio" className="px-6 py-3 border border-zinc-200 text-xs font-bold tracking-widest uppercase hover:bg-zinc-50 transition-colors">
+                            {dict.testimonials.caseStudies} &rarr;
+                        </a>
                     </div>
                 </motion.div>
 
@@ -89,10 +93,9 @@ export function Testimonials({ projects }: { projects: ProjectDesc[] }) {
                                     <div key={i} className="w-4 h-4 bg-zinc-100 rounded-full animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
                                 ))}
                             </div>
-                            <h3 className="text-xl font-bold tracking-tight text-zinc-950 uppercase">Syncing Public Feedback</h3>
+                            <h3 className="text-xl font-bold tracking-tight text-zinc-950 uppercase">{dict.testimonials.emptyTitle}</h3>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-400 max-w-[280px] mx-auto leading-relaxed">
-                                Our client success stories are currently undergoing validation. 
-                                Verified excellence results will appear here shortly.
+                                {dict.testimonials.emptyDescription}
                             </p>
                         </div>
                     </motion.div>
@@ -105,7 +108,7 @@ export function Testimonials({ projects }: { projects: ProjectDesc[] }) {
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                     >
                         {testimonials.map((t) => (
-                            <TestimonialCard key={t.id} t={t} variants={itemVariants} />
+                            <TestimonialCard key={t.id} t={t} variants={itemVariants} locale={locale} viewLabel={dict.testimonials.viewProject} />
                         ))}
                     </motion.div>
                 )}
@@ -115,7 +118,7 @@ export function Testimonials({ projects }: { projects: ProjectDesc[] }) {
     );
 }
 
-function TestimonialCard({ t, variants }: { t: ProjectDesc; variants: Variants }) {
+function TestimonialCard({ t, variants, locale, viewLabel }: { t: ProjectDesc; variants: Variants; locale: 'en' | 'id'; viewLabel: string }) {
     return (
         <motion.div variants={variants} className="flex flex-col justify-between p-10 border border-zinc-200/60 bg-white hover:border-zinc-300 hover:shadow-xl transition-all duration-500 min-h-[320px] relative group overflow-hidden">
             {/* Hidden Client Logo Background (Subtle Texture) */}
@@ -135,8 +138,8 @@ function TestimonialCard({ t, variants }: { t: ProjectDesc; variants: Variants }
             <div className="flex items-center justify-between gap-4 mt-auto pt-8 border-t border-zinc-100 z-10">
                 <div>
                     <h4 className="text-sm font-black tracking-tight text-zinc-950 uppercase line-clamp-1">{t.testimonialAuthor || t.clientName}</h4>
-                    <Link href={`/portfolio/${t.slug}`} className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 hover:text-zinc-950 transition-colors inline-flex items-center mt-1">
-                        View Project &rarr;
+                    <Link href={localePath(locale, `/p/${t.slug}`)} className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 hover:text-zinc-950 transition-colors inline-flex items-center mt-1">
+                        {viewLabel} &rarr;
                     </Link>
                 </div>
                 

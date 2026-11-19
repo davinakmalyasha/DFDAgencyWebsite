@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { ArrowRight, MessageCircle } from "lucide-react";
+import { useDictionary, useLocale } from "@/i18n/provider";
 
 /**
  * Animation states for the floating CTA button.
@@ -14,6 +15,11 @@ type AnimationPhase = "hidden" | "circle" | "pill";
 const EASE_OUT_EXPO: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export function FloatingCTA() {
+    const dict = useDictionary();
+    const locale = useLocale();
+    const whatsappText = encodeURIComponent(
+        locale === 'id' ? 'Halo, saya tertarik dengan layanan DFD.' : 'Hey im interested'
+    );
     const [isMounted, setIsMounted] = useState(false);
     const [shouldShow, setShouldShow] = useState(false);
     const [isInteractive, setIsInteractive] = useState(false);
@@ -154,7 +160,7 @@ export function FloatingCTA() {
 
     return (
         <motion.a
-            href="https://wa.me/62895324350359?text=Hey%20im%20interested"
+            href={`https://wa.me/62895324350359?text=${whatsappText}`}
             target="_blank"
             rel="noopener noreferrer"
             animate={controls}
@@ -170,7 +176,7 @@ export function FloatingCTA() {
                 className="flex items-center gap-3 ml-3 whitespace-nowrap"
             >
                 <span className="font-bold text-sm tracking-widest uppercase">
-                    Contact Us
+                    {dict.common.contactUs}
                 </span>
                 <ArrowRight className="w-4 h-4 text-zinc-300 flex-shrink-0" />
             </motion.div>

@@ -4,6 +4,7 @@ import { MessageCircle, Link as LinkIcon, Check } from 'lucide-react';
 import { TwitterIcon, FacebookIcon } from './BrandIcons';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useDictionary } from '@/i18n/provider';
 
 interface Props {
     url: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function ShareButtons({ url, text, whatsappPhone }: Props) {
+    const dict = useDictionary();
     const [copied, setCopied] = useState(false);
     const waText = encodeURIComponent(`${text}\n${url}`);
     const waHref = whatsappPhone
@@ -24,9 +26,9 @@ export function ShareButtons({ url, text, whatsappPhone }: Props) {
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);
-            toast.success('Link copied');
+            toast.success(dict.common.copied);
             setTimeout(() => setCopied(false), 2000);
-        } catch { toast.error('Copy failed'); }
+        } catch { toast.error(dict.status.copyFailed); }
     }
 
     return (
@@ -42,7 +44,7 @@ export function ShareButtons({ url, text, whatsappPhone }: Props) {
             </a>
             <button onClick={copy} className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground px-3 py-2 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
                 {copied ? <Check className="w-3 h-3" /> : <LinkIcon className="w-3 h-3" />}
-                {copied ? 'Copied' : 'Copy link'}
+                {copied ? dict.common.copied : dict.common.copyLink}
             </button>
         </div>
     );

@@ -7,6 +7,7 @@ import {
   offlineAnswer,
   type ChatMessageModel,
 } from '@/lib/chat.contract';
+import { useDictionary, useLocale } from '@/i18n/provider';
 
 interface ChatState {
   open: boolean;
@@ -21,47 +22,49 @@ interface ChatState {
 
 const ChatContext = createContext<ChatState | null>(null);
 
-const STORAGE_KEY = 'dfd-chat-v1';
-
-function seed(): ChatMessageModel[] {
+function seed(welcome: string): ChatMessageModel[] {
   return [
     {
       id: 'welcome',
       role: 'bot',
-      text: 'Hi, DFD Concierge here. Ask about packages, pricing, or your project portal — or talk to a human anytime.',
+      text: welcome,
       at: Date.now(),
     },
   ];
 }
 
-function load(): ChatMessageModel[] {
+function load(storageKey: string, welcome: string): ChatMessageModel[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return seed();
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return seed(welcome);
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return seed();
+    if (!Array.isArray(parsed) || parsed.length === 0) return seed(welcome);
     return parsed.slice(-50);
   } catch {
-    return seed();
+    return seed(welcome);
   }
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const locale = useLocale();
+  const dict = useDictionary();
+  const storageKey = `dfd-chat-v2-${locale}`;
+  const welcome = dict.chat.welcome;
   const [open, setOpen] = useState(false);
   // Lazy init reads persisted history without a setState-in-effect.
   const [messages, setMessages] = useState<ChatMessageModel[]>(() => {
-    if (typeof window === 'undefined') return seed();
-    return load();
+    if (typeof window === 'undefined') return seed(welcome);
+    return load(storageKey, welcome);
   });
   const [typing, setTyping] = useState(false);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-50)));
+      localStorage.setItem(storageKey, JSON.stringify(messages.slice(-50)));
     } catch {
       // storage full or unavailable — chat still works in memory
     }
-  }, [messages]);
+  }, [messages, storageKey]);
 
   const push = useCallback((msg: ChatMessageModel) => {
     setMessages((prev) => [...prev.slice(-49), msg]);
@@ -77,23 +80,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // is wired, this is where POST /chat/intent goes — behind the same
       // typing indicator, so the UI does not change.
       window.setTimeout(() => {
+        const answer = offlineAnswer(text, dict.chat.offline);
         if (CHAT_ENABLED) {
           push({
             id: `b-${Date.now()}`,
             role: 'bot',
-            text: 'AI handoff is configured but the backend is not connected yet. Meanwhile: ' + offlineAnswer(text),
+            text: `${dict.chat.welcome} ${answer}`,
             at: Date.now(),
           });
         } else {
-          push({ id: `b-${Date.now()}`, role: 'bot', text: offlineAnswer(text), at: Date.now() });
+          push({ id: `b-${Date.now()}`, role: 'bot', text: answer, at: Date.now() });
         }
         setTyping(false);
       }, 600);
     },
-    [push, typing],
+    [push, typing, dict.chat]
   );
 
-  const reset = useCallback(() => setMessages(seed()), []);
+  const reset = useCallback(() => setMessages(seed(welcome)), [welcome]);
   const toggle = useCallback(() => setOpen((v) => !v), []);
 
   const value = useMemo(

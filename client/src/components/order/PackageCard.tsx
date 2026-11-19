@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useDictionary } from "@/i18n/provider";
 
 interface PackageData {
     id: number;
@@ -21,10 +22,13 @@ interface PackageCardProps {
 }
 
 export function PackageCard({ pkg, isSelected, onSelect }: PackageCardProps) {
+    const dict = useDictionary();
     const price = Number(pkg.discountPrice || pkg.price);
     const originalPrice = pkg.discountPrice ? Number(pkg.price) : null;
     const features = Array.isArray(pkg.features) ? pkg.features : [];
     const { formatPrice } = useCurrency();
+    const localizedName =
+        dict.pricing.packageNames[pkg.slug as keyof typeof dict.pricing.packageNames] || pkg.name;
 
     return (
         <motion.button
@@ -53,13 +57,13 @@ export function PackageCard({ pkg, isSelected, onSelect }: PackageCardProps) {
             {/* Package Name */}
             <p className={`text-[10px] font-bold tracking-[0.2em] uppercase mb-2 ${isSelected ? "text-zinc-400" : "text-zinc-500"
                 }`}>
-                {pkg.name}
+                {localizedName}
             </p>
 
             {/* Price */}
             <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-3xl font-black tracking-tighter">
-                    {price === 0 ? "Custom Quote" : formatPrice(price)}
+                    {price === 0 ? dict.order.packageCard.customQuote : formatPrice(price)}
                 </span>
                 {originalPrice && price !== 0 && (
                     <span className={`text-sm line-through ${isSelected ? "text-zinc-500" : "text-zinc-400"
@@ -77,7 +81,7 @@ export function PackageCard({ pkg, isSelected, onSelect }: PackageCardProps) {
                             }`} />
                         <span className={`text-sm ${isSelected ? "text-zinc-300" : "text-zinc-600"
                             }`}>
-                            {String(feature)}
+                            {dict.pricing.featureLabels[String(feature) as keyof typeof dict.pricing.featureLabels] || String(feature)}
                         </span>
                     </div>
                 ))}
@@ -86,7 +90,7 @@ export function PackageCard({ pkg, isSelected, onSelect }: PackageCardProps) {
             {/* Select hint */}
             <div className={`mt-6 text-center text-[10px] font-bold tracking-widest uppercase ${isSelected ? "text-zinc-400" : "text-zinc-400 group-hover:text-zinc-950"
                 } transition-colors`}>
-                {isSelected ? "✓ Selected" : "Tap to select"}
+                {isSelected ? dict.order.packageCard.selected : dict.order.packageCard.tapToSelect}
             </div>
         </motion.button>
     );

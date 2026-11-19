@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { localeFromPathname } from '@/i18n/config';
 
 // All requests now go through the Next.js API Rewrite Proxy to guarantee First-Party browser-secure cookies
 export const api = axios.create({
@@ -34,10 +35,11 @@ api.interceptors.response.use(
         const isAuthCall = AUTH_PATHS.some((path) => url.startsWith(path));
         if (status === 401 && !isAuthCall && typeof window !== 'undefined' && !redirecting) {
             const path = window.location.pathname;
-            const isLoginPage = path === '/client/login' || path === '/admin/login';
+            const isLoginPage = path.endsWith('/client/login') || path === '/admin/login';
             if (!isLoginPage) {
                 redirecting = true;
-                const login = path.startsWith('/admin') ? '/admin/login' : '/client/login';
+                const locale = localeFromPathname(path);
+                const login = path.startsWith('/admin') ? '/admin/login' : `/${locale}/client/login`;
                 const next = encodeURIComponent(path + window.location.search);
                 window.location.assign(`${login}?next=${next}`);
             }

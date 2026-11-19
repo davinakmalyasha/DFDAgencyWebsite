@@ -1,7 +1,7 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useDictionary, interpolate } from "@/i18n/provider";
 
 interface OrderSummaryProps {
     packageName: string;
@@ -21,47 +21,51 @@ export function OrderSummary({
     briefDescription,
 }: OrderSummaryProps) {
     const { formatPrice, currency, exchangeRate } = useCurrency();
+    const dict = useDictionary();
+    const t = dict.order.summary;
 
     return (
         <div className="rounded-2xl border-2 border-zinc-200 bg-white p-8">
             <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-500 mb-6">
-                Order Summary
+                {t.title}
             </h3>
 
             {/* Package */}
             <div className="flex items-center justify-between pb-6 border-b border-zinc-100">
                 <div>
                     <p className="font-bold text-zinc-950">{packageName}</p>
-                    <p className="text-xs text-zinc-500 mt-1">Website Package</p>
+                    <p className="text-xs text-zinc-500 mt-1">{t.websitePackage}</p>
                 </div>
                 <p className="text-xl font-black tracking-tighter text-zinc-950">
-                    {packagePrice === 0 ? "Custom" : formatPrice(packagePrice)}
+                    {packagePrice === 0 ? t.custom : formatPrice(packagePrice)}
                 </p>
             </div>
 
             {/* Client Info */}
             <div className="py-6 border-b border-zinc-100 space-y-3">
-                <SummaryRow label="Name" value={clientName} />
-                <SummaryRow label="WhatsApp" value={whatsapp} />
+                <SummaryRow label={t.name} value={clientName} />
+                <SummaryRow label={t.whatsapp} value={whatsapp} />
                 {businessName && (
-                    <SummaryRow label="Business" value={businessName} />
+                    <SummaryRow label={t.business} value={businessName} />
                 )}
                 {briefDescription && (
-                    <SummaryRow label="Brief" value={briefDescription} />
+                    <SummaryRow label={t.brief} value={briefDescription} />
                 )}
             </div>
 
             {/* Total */}
             <div className="pt-6 border-t border-zinc-100 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                    <p className="font-bold text-zinc-950">Total</p>
+                    <p className="font-bold text-zinc-950">{t.total}</p>
                     <p className="text-2xl font-black tracking-tighter text-zinc-950">
-                        {packagePrice === 0 ? "Custom" : formatPrice(packagePrice)}
+                        {packagePrice === 0 ? t.custom : formatPrice(packagePrice)}
                     </p>
                 </div>
                 {packagePrice > 0 && currency === "USD" && (
                     <p className="text-[10px] text-zinc-400 text-right uppercase tracking-widest mt-1">
-                        *Payments processed in IDR (~$1 = {new Intl.NumberFormat("id-ID").format(exchangeRate)} Rp)
+                        {interpolate(t.paymentNoteUsd, {
+                            rate: new Intl.NumberFormat("id-ID").format(exchangeRate),
+                        })}
                     </p>
                 )}
             </div>

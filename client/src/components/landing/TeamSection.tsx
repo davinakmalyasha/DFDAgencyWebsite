@@ -3,8 +3,16 @@
 import { Mail, Cpu, Award, Zap } from "lucide-react";
 import { LinkedinIcon, GithubIcon } from "./BrandIcons";
 import { motion } from "framer-motion";
+import { useDictionary } from "@/i18n/provider";
 
 export function TeamSection() {
+    const dict = useDictionary();
+    const traits = dict.team.traits;
+    const traitIcons = [
+        <Cpu key="cpu" className="w-5 h-5 text-zinc-950" />,
+        <Award key="award" className="w-5 h-5 text-zinc-950" />,
+        <Zap key="zap" className="w-5 h-5 text-zinc-950" />,
+    ];
     return (
         <section id="team" className="py-32 bg-white border-b border-zinc-200/50">
             <div className="mx-auto w-[90%] max-w-[1024px]">
@@ -18,14 +26,13 @@ export function TeamSection() {
                     className="flex flex-col items-center text-center mb-24"
                 >
                     <span className="text-[10px] font-black tracking-[0.2em] uppercase text-zinc-500 mb-6 block">
-                        The Core Logic
+                        {dict.team.eyebrow}
                     </span>
                     <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-950 mb-8">
-                        The Lead Orchestrator.
+                        {dict.team.title}
                     </h2>
                     <p className="text-zinc-500 text-lg leading-relaxed max-w-2xl">
-                        At DFD, we&apos;ve replaced agency bloat with architectural precision. One visionary engineer, 
-                        orchestrating a swarm of high-performance AI agents to build what others take months to design.
+                        {dict.team.description}
                     </p>
                 </motion.div>
 
@@ -57,49 +64,24 @@ export function TeamSection() {
                         transition={{ duration: 0.8, delay: 0.2 }}
                     >
                         <div className="mb-10">
-                            <h3 className="text-4xl font-black tracking-tight text-zinc-950 mb-2">Davin Akmal Yasha</h3>
-                            <p className="text-sm font-bold tracking-[0.3em] uppercase text-zinc-400">Founder & Lead Software Architect</p>
+                            <h3 className="text-4xl font-black tracking-tight text-zinc-950 mb-2">{dict.team.name}</h3>
+                            <p className="text-sm font-bold tracking-[0.3em] uppercase text-zinc-400">{dict.team.role}</p>
                         </div>
 
                         <div className="space-y-8 mb-12">
-                            <div className="flex gap-4">
-                                <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 flex-shrink-0 h-fit">
-                                    <Cpu className="w-5 h-5 text-zinc-950" />
+                            {traits.map((trait, index) => (
+                                <div key={trait.title} className="flex gap-4">
+                                    <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 flex-shrink-0 h-fit">
+                                        {traitIcons[index]}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-zinc-950 mb-1">{trait.title}</h4>
+                                        <p className="text-sm text-zinc-500 leading-relaxed">
+                                            {trait.description}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-zinc-950 mb-1">Hybrid Orchestration</h4>
-                                    <p className="text-sm text-zinc-500 leading-relaxed">
-                                        Fusing classical software architecture with cutting-edge AI pipelines to deliver 
-                                        mathematically optimized performance.
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex gap-4">
-                                <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 flex-shrink-0 h-fit">
-                                    <Award className="w-5 h-5 text-zinc-950" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-zinc-950 mb-1">Security-First Mindset</h4>
-                                    <p className="text-sm text-zinc-500 leading-relaxed">
-                                        Specialized in decoupled, hardened ecosystems. Every line of code is audited 
-                                        for zero-vulnerability reliability.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 flex-shrink-0 h-fit">
-                                    <Zap className="w-5 h-5 text-zinc-950" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-zinc-950 mb-1">Velocity Expert</h4>
-                                    <p className="text-sm text-zinc-500 leading-relaxed">
-                                        Leveraging AI agents to automate the boilerplate, focusing 100% of human logic 
-                                        on your business&apos;s core unique value.
-                                    </p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-6">
@@ -143,14 +125,14 @@ export function TeamSection() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
                     <div className="relative z-10">
                         <h3 className="text-2xl font-black tracking-tight mb-2 text-white">
-                            Ready to scale with a rock-solid foundation?
+                            {dict.team.ctaTitle}
                         </h3>
                         <p className="text-sm text-zinc-400">
-                            Stop paying for agency bloat. Start building with elite engineering precision.
+                            {dict.team.ctaDescription}
                         </p>
                     </div>
                     <button className="relative z-10 px-10 py-5 rounded-full font-bold bg-white text-zinc-950 hover:bg-zinc-100 hover:scale-105 transition-all duration-300 whitespace-nowrap text-sm shadow-xl">
-                        BOOK ARCHITECTURE SYNC
+                        {dict.team.ctaButton}
                     </button>
                 </motion.div>
 

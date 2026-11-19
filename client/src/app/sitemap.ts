@@ -1,26 +1,26 @@
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const lastModified = new Date();
+    const pages = [
+        { path: '', priority: 1, changeFrequency: 'weekly' as const },
+        { path: '/terms', priority: 0.3, changeFrequency: 'yearly' as const },
+        { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' as const },
+    ];
 
-  return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-  ];
+    return pages.flatMap((page) =>
+        (['en', 'id'] as const).map((locale) => ({
+            url: `${SITE_URL}/${locale}${page.path}`,
+            lastModified,
+            changeFrequency: page.changeFrequency,
+            priority: page.priority,
+            alternates: {
+                languages: {
+                    en: `${SITE_URL}/en${page.path}`,
+                    id: `${SITE_URL}/id${page.path}`,
+                },
+            },
+        }))
+    );
 }

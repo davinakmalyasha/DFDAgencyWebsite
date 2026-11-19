@@ -2,28 +2,19 @@
 
 import { BrainCircuit, PenTool, Banknote, CheckCircle } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useDictionary } from "@/i18n/provider";
 
 export function FeaturesSection() {
-    const features = [
-        {
-            icon: <BrainCircuit className="w-5 h-5 text-zinc-950" />,
-            title: "Expert + AI Hybrid",
-            description: "Human engineering soul paired with AI-agent precision. We automate the foundational code to focus purely on high-level architecture.",
-            highlights: ["AI ORCHESTRATION", "HUMAN SOUL"],
-        },
-        {
-            icon: <PenTool className="w-5 h-5 text-zinc-950" />,
-            title: "Architectural Excellence",
-            description: "Every asset is hand-engineered for peak stability and design fidelity. We don't just 'make' websites; we craft robust digital foundations.",
-            highlights: ["DESIGN FIDELITY", "ROBUST CODEBASE"],
-        },
-        {
-            icon: <Banknote className="w-5 h-5 text-zinc-950" />,
-            title: "Value Engineering",
-            description: "Premium results at a non-agency price. By reducing manual build hours through AI, we pass the engineering savings directly to you.",
-            highlights: ["ELITE QUALITY", "SMARTER PRICING"],
-        },
+    const dict = useDictionary();
+    const icons = [
+        <BrainCircuit key="brain" className="w-5 h-5 text-zinc-950" />,
+        <PenTool key="pen" className="w-5 h-5 text-zinc-950" />,
+        <Banknote key="bank" className="w-5 h-5 text-zinc-950" />,
     ];
+    const features = dict.features.items.map((item, index) => ({
+        ...item,
+        icon: icons[index] ?? icons[0],
+    }));
 
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
@@ -57,14 +48,14 @@ export function FeaturesSection() {
                 >
                     <div className="max-w-2xl">
                         <motion.h4 variants={itemVariants} className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-6">
-                            The DFD Advantage
+                            {dict.features.eyebrow}
                         </motion.h4>
                         <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-950 leading-[1.1]">
-                            High-Performance Digital Architecture
+                            {dict.features.title}
                         </motion.h2>
                     </div>
                     <motion.p variants={itemVariants} className="text-zinc-500 max-w-sm text-sm leading-relaxed">
-                        Fusing expert logic with AI precision to build robust digital foundations. Our automated engineering pipeline delivers elite-tier quality at a smarter, value-driven price point.
+                        {dict.features.description}
                     </motion.p>
                 </motion.div>
 
