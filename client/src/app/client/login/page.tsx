@@ -1,5 +1,6 @@
 'use client';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,18 +9,56 @@ import { loginSchema, registerSchema, otpSchema } from '@/lib/validations';
 import api from '@/lib/axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import {
+    ArrowLeft,
+    ArrowUpRight,
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    FolderOpen,
+    Loader2,
+    MessageCircle,
+    ShieldCheck,
+    Sparkles,
+    Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
 type OtpValues = z.infer<typeof otpSchema>;
 type OtpStep = { kind: 'login' | 'signup'; id: number; email: string };
 
+type ApiFailure = {
+    response?: {
+        data?: { message?: string; error?: string };
+    };
+};
+
+interface GoogleCredentialResponse {
+    credential?: string;
+}
+
+interface GoogleIdentityServices {
+    accounts: {
+        id: {
+            initialize: (options: {
+                client_id: string;
+                callback: (response: GoogleCredentialResponse) => void;
+                ux_mode?: string;
+            }) => void;
+            renderButton: (
+                parent: HTMLElement,
+                options: { theme?: string; size?: string; width?: number; text?: string }
+            ) => void;
+        };
+    };
+}
+
 declare global {
-    interface Window { google?: any }
+    interface Window { google?: GoogleIdentityServices }
 }
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -39,10 +78,20 @@ function destinationFor(role: string, next: string | null) {
 
 function LoginFallback() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <div className="flex min-h-screen items-center justify-center bg-white">
+            <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
         </div>
     );
+}
+
+const inputClass =
+    'h-11 rounded-xl border-zinc-200 bg-white text-sm shadow-none focus-visible:ring-zinc-950/20';
+
+const primaryButtonClass =
+    'h-11 w-full rounded-full bg-zinc-950 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-zinc-800 disabled:opacity-60';
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+    return <FormLabel className="text-xs font-semibold text-zinc-600">{children}</FormLabel>;
 }
 
 function LoginContent() {
@@ -53,8 +102,10 @@ function LoginContent() {
     const [otp, setOtp] = useState<OtpStep | null>(null);
     const [signupEnabled, setSignupEnabled] = useState(false);
     const [resendIn, setResendIn] = useState(0);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const googleBtn = useRef<HTMLDivElement>(null);
-    const googleHandler = useRef<(resp: any) => void>(() => {});
+    const googleHandler = useRef<(resp: GoogleCredentialResponse) => void>(() => {});
 
     const loginForm = useForm<LoginValues>({
         resolver: zodResolver(loginSchema),
@@ -88,7 +139,7 @@ function LoginContent() {
         return () => window.clearTimeout(timer);
     }, [resendIn]);
 
-    const onGoogle = useCallback(async (resp: any) => {
+    const onGoogle = useCallback(async (resp: GoogleCredentialResponse) => {
         if (!resp?.credential) return;
         setLoading(true);
         try {
@@ -97,16 +148,19 @@ function LoginContent() {
                 toast.success('Welcome');
                 finish(r.data.data.user.role);
             }
-        } catch (e: any) {
+        } catch (error) {
+            const failure = error as ApiFailure;
             toast.error('Google sign-in failed', {
-                description: e.response?.data?.message || 'Try again',
+                description: failure.response?.data?.message || 'Try again',
             });
         } finally {
             setLoading(false);
         }
     }, [finish]);
 
-    googleHandler.current = onGoogle;
+    useEffect(() => {
+        googleHandler.current = onGoogle;
+    }, [onGoogle]);
 
     useEffect(() => {
         if (!GOOGLE_CLIENT_ID || !googleBtn.current) return;
@@ -115,13 +169,13 @@ function LoginContent() {
             try {
                 window.google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
-                    callback: (resp: any) => googleHandler.current(resp),
+                    callback: (resp: GoogleCredentialResponse) => googleHandler.current(resp),
                     ux_mode: 'popup',
                 });
                 window.google.accounts.id.renderButton(googleBtn.current, {
                     theme: 'outline',
                     size: 'large',
-                    width: 320,
+                    width: Math.min(320, Math.max(240, window.innerWidth - 88)),
                     text: 'continue_with',
                 });
             } catch {
@@ -159,8 +213,9 @@ function LoginContent() {
                     finish(r.data.data.user.role);
                 }
             }
-        } catch (e: any) {
-            toast.error('Login failed', { description: e.response?.data?.message || 'Invalid credentials' });
+        } catch (error) {
+            const failure = error as ApiFailure;
+            toast.error('Login failed', { description: failure.response?.data?.message || 'Invalid credentials' });
         } finally {
             setLoading(false);
         }
@@ -179,8 +234,9 @@ function LoginContent() {
                 setResendIn(30);
                 toast.success('Check your email for the 6-digit code');
             }
-        } catch (e: any) {
-            const code = e.response?.data?.error;
+        } catch (error) {
+            const failure = error as ApiFailure;
+            const code = failure.response?.data?.error;
             if (code === 'EMAIL_TAKEN') {
                 loginForm.setValue('identity', data.email);
                 setMode('signin');
@@ -189,7 +245,7 @@ function LoginContent() {
                 });
             } else {
                 toast.error('Could not create account', {
-                    description: e.response?.data?.message || 'Try again',
+                    description: failure.response?.data?.message || 'Try again',
                 });
             }
         } finally {
@@ -210,9 +266,10 @@ function LoginContent() {
                 toast.success(otp.kind === 'login' ? 'Welcome back' : 'Account created');
                 finish(r.data.data.user.role);
             }
-        } catch (e: any) {
+        } catch (error) {
+            const failure = error as ApiFailure;
             toast.error('Verification failed', {
-                description: e.response?.data?.message || 'Invalid or expired code',
+                description: failure.response?.data?.message || 'Invalid or expired code',
             });
         } finally {
             setLoading(false);
@@ -225,185 +282,401 @@ function LoginContent() {
             await api.post('/auth/register/resend', { signupId: otp.id });
             setResendIn(30);
             toast.success('A new code is on its way');
-        } catch (e: any) {
-            toast.error('Could not resend', { description: e.response?.data?.message || 'Try again' });
+        } catch (error) {
+            const failure = error as ApiFailure;
+            toast.error('Could not resend', { description: failure.response?.data?.message || 'Try again' });
         }
     }
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
-            <Card className="w-full max-w-md border-2 border-foreground rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <CardHeader className="space-y-1 pb-6 border-b-2 border-foreground bg-muted/30">
-                    <CardTitle className="text-2xl font-black uppercase tracking-tight">Client Portal</CardTitle>
-                    <CardDescription className="font-medium">
-                        {otp ? 'One more step to verify it is you' : 'Sign in or create your project account'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    {otp ? (
-                        <Form {...otpForm}>
-                            <form onSubmit={otpForm.handleSubmit(onVerify)} className="space-y-4">
-                                <p className="text-sm text-muted-foreground">
-                                    Enter the 6-digit code sent to <span className="font-bold">{otp.email}</span>
-                                </p>
-                                <FormField control={otpForm.control} name="code" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="font-bold">Verification code</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="123456"
-                                                inputMode="numeric"
-                                                maxLength={6}
-                                                autoComplete="one-time-code"
-                                                className="border-foreground rounded-none text-center text-2xl tracking-[0.5em]"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <Button type="submit" disabled={loading} className="w-full rounded-none font-bold uppercase tracking-widest border-2 border-transparent hover:border-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
-                                    {loading ? 'Verifying…' : 'Verify'}
-                                </Button>
-                                {otp.kind === 'signup' && (
-                                    <Button type="button" variant="ghost" className="w-full rounded-none text-xs" disabled={resendIn > 0} onClick={resendSignup}>
-                                        {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
-                                    </Button>
-                                )}
-                                <Button type="button" variant="ghost" className="w-full rounded-none text-xs" onClick={() => { setOtp(null); otpForm.reset(); }}>
-                                    Back
-                                </Button>
-                            </form>
-                        </Form>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-2 gap-2 mb-6 border-2 border-foreground p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setMode('signin')}
-                                    className={`py-2 text-xs font-black uppercase tracking-widest ${mode === 'signin' ? 'bg-foreground text-background' : 'bg-background text-foreground'}`}
-                                >
-                                    Sign in
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={!signupEnabled}
-                                    onClick={() => setMode('register')}
-                                    className={`py-2 text-xs font-black uppercase tracking-widest disabled:opacity-40 ${mode === 'register' ? 'bg-foreground text-background' : 'bg-background text-foreground'}`}
-                                >
-                                    Create account
-                                </button>
-                            </div>
+        <div className="min-h-screen bg-white text-zinc-950 lg:grid lg:grid-cols-[1.04fr_1fr]">
+            {/* Brand side */}
+            <aside className="relative hidden overflow-hidden bg-zinc-950 p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16">
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute -right-28 -top-24 h-[26rem] w-[26rem] rounded-full bg-white/[0.06] blur-3xl"
+                />
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute -bottom-40 -left-24 h-[30rem] w-[30rem] rounded-full bg-white/[0.04] blur-3xl"
+                />
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
+                />
 
-                            {!signupEnabled && (
-                                <p className="text-[11px] text-muted-foreground mb-4 text-center">
-                                    New client? Continue with Google, or{' '}
-                                    <a href={WHATSAPP} target="_blank" rel="noreferrer" className="font-bold underline">
-                                        message us on WhatsApp
-                                    </a>{' '}
-                                    to get set up.
-                                </p>
-                            )}
+                <Link href="/" className="relative flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[12px] font-black tracking-tight text-zinc-950">
+                        DFD
+                    </span>
+                    <span className="flex flex-col leading-none">
+                        <span className="text-sm font-bold tracking-tight">DFD Agency</span>
+                        <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                            Client Portal
+                        </span>
+                    </span>
+                </Link>
 
-                            {mode === 'signin' ? (
-                                <Form {...loginForm}>
-                                    <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                                        <FormField control={loginForm.control} name="identity" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">Email or username</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="you@company.com" autoComplete="username" className="border-foreground rounded-none" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={loginForm.control} name="password" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">Password</FormLabel>
-                                                <FormControl>
-                                                    <Input type="password" placeholder="••••••••" autoComplete="current-password" className="border-foreground rounded-none" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <Button type="submit" disabled={loading} className="w-full rounded-none font-bold uppercase tracking-widest border-2 border-transparent hover:border-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
-                                            {loading ? 'Signing in…' : 'Sign in'}
-                                        </Button>
-                                        <p className="text-center text-[11px] text-muted-foreground">
-                                            <a href={WHATSAPP} target="_blank" rel="noreferrer" className="font-bold underline">
-                                                Forgot password?
-                                            </a>{' '}
-                                            Message us on WhatsApp.
-                                        </p>
-                                    </form>
-                                </Form>
-                            ) : (
-                                <Form {...registerForm}>
-                                    <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                                        <FormField control={registerForm.control} name="name" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">Full name</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Your name" autoComplete="name" className="border-foreground rounded-none" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={registerForm.control} name="email" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">Email</FormLabel>
-                                                <FormControl>
-                                                    <Input type="email" placeholder="you@company.com" autoComplete="email" className="border-foreground rounded-none" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={registerForm.control} name="password" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">Password</FormLabel>
-                                                <FormControl>
-                                                    <Input type="password" placeholder="Min 8, letters + numbers" autoComplete="new-password" className="border-foreground rounded-none" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={registerForm.control} name="confirmPassword" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold">Confirm password</FormLabel>
-                                                <FormControl>
-                                                    <Input type="password" placeholder="Repeat password" autoComplete="new-password" className="border-foreground rounded-none" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <Button type="submit" disabled={loading} className="w-full rounded-none font-bold uppercase tracking-widest border-2 border-transparent hover:border-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
-                                            {loading ? 'Creating account…' : 'Create account'}
-                                        </Button>
-                                        <p className="text-[10px] text-center text-muted-foreground">
-                                            By continuing you agree to our Terms and Privacy Policy.
-                                        </p>
-                                    </form>
-                                </Form>
-                            )}
+                <div className="relative max-w-lg py-12">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-300">
+                            Private client workspace
+                        </span>
+                    </div>
+                    <h1 className="mt-7 text-5xl font-black leading-[1.03] tracking-tighter xl:text-6xl">
+                        Your projects.
+                        <br />
+                        <span className="text-zinc-500">One calm place.</span>
+                    </h1>
+                    <p className="mt-5 max-w-md text-sm leading-relaxed text-zinc-400">
+                        Track progress, review deliverables, sign off work, and grab your invoices and files —
+                        without digging through email threads.
+                    </p>
 
-                            {GOOGLE_CLIENT_ID && (
-                                <>
-                                    <div className="flex items-center gap-3 my-5">
-                                        <div className="h-px flex-1 bg-foreground/20" />
-                                        <span className="text-xs font-bold uppercase text-muted-foreground">or</span>
-                                        <div className="h-px flex-1 bg-foreground/20" />
+                    <div className="mt-9 space-y-4">
+                        {[
+                            { icon: Zap, title: 'Live progress', body: 'See exactly where each project stands, from brief to handover.' },
+                            { icon: CheckCircle2, title: 'One-click approvals', body: 'Review new work and approve it or request a revision instantly.' },
+                            { icon: FolderOpen, title: 'Documents in reach', body: 'Invoices, contracts, and final assets are always available.' },
+                        ].map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <div key={item.title} className="flex items-start gap-3.5">
+                                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-300">
+                                        <Icon className="h-4 w-4" />
+                                    </span>
+                                    <div>
+                                        <p className="text-sm font-semibold text-white">{item.title}</p>
+                                        <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">{item.body}</p>
                                     </div>
-                                    <div ref={googleBtn} className="flex justify-center" />
-                                </>
-                            )}
+                                </div>
+                            );
+                        })}
+                    </div>
 
-                            <p className="text-[10px] text-center text-muted-foreground mt-5">
-                                You stay signed in for 30 days on this device. We renew the session while you are active.
-                            </p>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+                    <div className="mt-9 flex flex-wrap gap-2">
+                        {['30-day secure session', 'First-party cookies', 'Email + Google sign-in'].map((tag) => (
+                            <span
+                                key={tag}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-medium text-zinc-400"
+                            >
+                                <ShieldCheck className="h-3 w-3" />
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="relative flex items-center justify-between text-[11px] text-zinc-600">
+                    <span>© {new Date().getFullYear()} DFD Agency</span>
+                    <Link href="/" className="inline-flex items-center gap-1 transition-colors hover:text-zinc-300">
+                        Back to website
+                        <ArrowUpRight className="h-3 w-3" />
+                    </Link>
+                </div>
+            </aside>
+
+            {/* Form side */}
+            <main className="flex min-h-screen flex-col">
+                <div className="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
+                    <Link href="/" className="flex items-center gap-2.5 lg:hidden">
+                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-zinc-950 text-[11px] font-black text-white">
+                            DFD
+                        </span>
+                        <span className="text-sm font-bold tracking-tight">DFD Agency</span>
+                    </Link>
+                    <div className="ml-auto flex items-center gap-3">
+                        <a
+                            href={WHATSAPP}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hidden items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-950 sm:inline-flex"
+                        >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            Need help?
+                        </a>
+                        <Link
+                            href="/"
+                            className="hidden items-center gap-1 rounded-full border border-zinc-200 px-3.5 py-2 text-xs font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-950 sm:inline-flex"
+                        >
+                            Back to site
+                            <ArrowUpRight className="h-3 w-3" />
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="flex flex-1 items-center justify-center px-5 pb-14 pt-2 sm:px-8">
+                    <div className="w-full max-w-[420px]">
+                        {otp ? (
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => { setOtp(null); otpForm.reset(); }}
+                                    className="mb-8 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 transition-colors hover:text-zinc-950"
+                                >
+                                    <ArrowLeft className="h-3.5 w-3.5" />
+                                    Back to sign in
+                                </button>
+
+                                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-zinc-950 text-white">
+                                    <Sparkles className="h-5 w-5" />
+                                </span>
+                                <h1 className="mt-5 text-3xl font-black tracking-tighter">Check your inbox.</h1>
+                                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                                    We sent a 6-digit code to{' '}
+                                    <span className="font-semibold text-zinc-800">{otp.email}</span>. Enter it below
+                                    to continue.
+                                </p>
+
+                                <Form {...otpForm}>
+                                    <form onSubmit={otpForm.handleSubmit(onVerify)} className="mt-7 space-y-4">
+                                        <FormField control={otpForm.control} name="code" render={({ field }) => (
+                                            <FormItem>
+                                                <FieldLabel>Verification code</FieldLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="000000"
+                                                        inputMode="numeric"
+                                                        maxLength={6}
+                                                        autoComplete="one-time-code"
+                                                        className="h-14 rounded-2xl border-zinc-200 bg-white text-center text-2xl font-bold tracking-[0.45em] shadow-none focus-visible:ring-zinc-950/20"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                        <Button type="submit" disabled={loading} className={primaryButtonClass}>
+                                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                            {loading ? 'Verifying…' : 'Verify and continue'}
+                                        </Button>
+                                        {otp.kind === 'signup' && (
+                                            <button
+                                                type="button"
+                                                disabled={resendIn > 0}
+                                                onClick={resendSignup}
+                                                className="w-full text-center text-xs font-semibold text-zinc-500 transition-colors hover:text-zinc-950 disabled:opacity-50"
+                                            >
+                                                {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
+                                            </button>
+                                        )}
+                                    </form>
+                                </Form>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="mb-8">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
+                                        Client portal
+                                    </p>
+                                    <h1 className="mt-2 text-3xl font-black tracking-tighter sm:text-[34px]">
+                                        {mode === 'signin' ? 'Welcome back.' : 'Create your account.'}
+                                    </h1>
+                                    <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                                        {mode === 'signin'
+                                            ? 'Sign in to pick up right where your projects left off.'
+                                            : 'One account for your projects, approvals, and documents.'}
+                                    </p>
+                                </div>
+
+                                <div className="mb-6 flex rounded-full bg-zinc-100 p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMode('signin')}
+                                        className={cn(
+                                            'flex-1 rounded-full py-2 text-xs font-semibold transition-all duration-200',
+                                            mode === 'signin'
+                                                ? 'bg-white text-zinc-950 shadow-sm'
+                                                : 'text-zinc-500 hover:text-zinc-800'
+                                        )}
+                                    >
+                                        Sign in
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={!signupEnabled}
+                                        onClick={() => setMode('register')}
+                                        className={cn(
+                                            'flex-1 rounded-full py-2 text-xs font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40',
+                                            mode === 'register'
+                                                ? 'bg-white text-zinc-950 shadow-sm'
+                                                : 'text-zinc-500 hover:text-zinc-800'
+                                        )}
+                                    >
+                                        Create account
+                                    </button>
+                                </div>
+
+                                {!signupEnabled && (
+                                    <p className="mb-5 rounded-xl bg-zinc-50 px-3.5 py-2.5 text-[11px] leading-relaxed text-zinc-500">
+                                        New client? Continue with Google, or{' '}
+                                        <a href={WHATSAPP} target="_blank" rel="noreferrer" className="font-semibold text-zinc-800 underline underline-offset-2">
+                                            message us on WhatsApp
+                                        </a>{' '}
+                                        to get set up.
+                                    </p>
+                                )}
+
+                                {mode === 'signin' ? (
+                                    <Form {...loginForm}>
+                                        <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                                            <FormField control={loginForm.control} name="identity" render={({ field }) => (
+                                                <FormItem>
+                                                    <FieldLabel>Email or username</FieldLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="you@company.com" autoComplete="username" className={inputClass} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={loginForm.control} name="password" render={({ field }) => (
+                                                <FormItem>
+                                                    <FieldLabel>Password</FieldLabel>
+                                                    <FormControl>
+                                                        <div className="relative">
+                                                            <Input
+                                                                type={showPassword ? 'text' : 'password'}
+                                                                placeholder="••••••••"
+                                                                autoComplete="current-password"
+                                                                className={cn(inputClass, 'pr-10')}
+                                                                {...field}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowPassword((state) => !state)}
+                                                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-50 hover:text-zinc-700"
+                                                            >
+                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <Button type="submit" disabled={loading} className={primaryButtonClass}>
+                                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                                {loading ? 'Signing in…' : 'Sign in'}
+                                            </Button>
+                                            <p className="text-center text-[11px] text-zinc-400">
+                                                Forgot your password?{' '}
+                                                <a href={WHATSAPP} target="_blank" rel="noreferrer" className="font-semibold text-zinc-700 underline underline-offset-2">
+                                                    Message us on WhatsApp
+                                                </a>
+                                            </p>
+                                        </form>
+                                    </Form>
+                                ) : (
+                                    <Form {...registerForm}>
+                                        <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                                            <FormField control={registerForm.control} name="name" render={({ field }) => (
+                                                <FormItem>
+                                                    <FieldLabel>Full name</FieldLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Your name" autoComplete="name" className={inputClass} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={registerForm.control} name="email" render={({ field }) => (
+                                                <FormItem>
+                                                    <FieldLabel>Email</FieldLabel>
+                                                    <FormControl>
+                                                        <Input type="email" placeholder="you@company.com" autoComplete="email" className={inputClass} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={registerForm.control} name="password" render={({ field }) => (
+                                                <FormItem>
+                                                    <FieldLabel>Password</FieldLabel>
+                                                    <FormControl>
+                                                        <div className="relative">
+                                                            <Input
+                                                                type={showPassword ? 'text' : 'password'}
+                                                                placeholder="Min 8 characters, letters + numbers"
+                                                                autoComplete="new-password"
+                                                                className={cn(inputClass, 'pr-10')}
+                                                                {...field}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowPassword((state) => !state)}
+                                                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-50 hover:text-zinc-700"
+                                                            >
+                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={registerForm.control} name="confirmPassword" render={({ field }) => (
+                                                <FormItem>
+                                                    <FieldLabel>Confirm password</FieldLabel>
+                                                    <FormControl>
+                                                        <div className="relative">
+                                                            <Input
+                                                                type={showConfirm ? 'text' : 'password'}
+                                                                placeholder="Repeat your password"
+                                                                autoComplete="new-password"
+                                                                className={cn(inputClass, 'pr-10')}
+                                                                {...field}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowConfirm((state) => !state)}
+                                                                aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                                                                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-50 hover:text-zinc-700"
+                                                            >
+                                                                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <Button type="submit" disabled={loading} className={primaryButtonClass}>
+                                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                                {loading ? 'Creating account…' : 'Create account'}
+                                            </Button>
+                                            <p className="text-center text-[10px] leading-relaxed text-zinc-400">
+                                                By continuing you agree to our{' '}
+                                                <Link href="/terms" className="underline underline-offset-2 hover:text-zinc-700">Terms</Link>{' '}
+                                                and{' '}
+                                                <Link href="/privacy" className="underline underline-offset-2 hover:text-zinc-700">Privacy Policy</Link>.
+                                            </p>
+                                        </form>
+                                    </Form>
+                                )}
+
+                                {GOOGLE_CLIENT_ID && (
+                                    <>
+                                        <div className="my-6 flex items-center gap-3">
+                                            <div className="h-px flex-1 bg-zinc-200" />
+                                            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+                                                or continue with
+                                            </span>
+                                            <div className="h-px flex-1 bg-zinc-200" />
+                                        </div>
+                                        <div ref={googleBtn} className="flex justify-center" />
+                                    </>
+                                )}
+
+                                <div className="mt-6 flex items-start gap-2 rounded-xl bg-zinc-50 px-3.5 py-2.5">
+                                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                                    <p className="text-[10px] leading-relaxed text-zinc-500">
+                                        You stay signed in for 30 days on this device. We renew the session while you
+                                        are active.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 }
