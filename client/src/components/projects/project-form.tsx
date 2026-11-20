@@ -286,7 +286,7 @@ export function ProjectForm({
 
                 <div className="space-y-2">
                     <label className="font-bold uppercase tracking-wider text-xs">Tech Stack</label>
-                    <p className="text-[10px] text-muted-foreground uppercase">Technologies used (e.g. Next.js, Node.js, Prisma)</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">Technologies used (e.g. Next.js, Go, PostgreSQL)</p>
 
                     <div className="grid grid-cols-2 gap-2">
                         {form.watch('techStack').map((_, index) => (
