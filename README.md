@@ -44,7 +44,9 @@ The client runs at `http://localhost:3000`.
 
 For local API development, point the client's rewrite/API base at the Go
 backend (`http://localhost:8080/api/v1`). Production builds rewrite
-`/api/v1/*` to the deployed AgentsProxy automatically.
+`/api/v1/*` to the deployed AgentsProxy automatically and ignore an explicit
+target that is not the production backend; previews stay fail-closed unless a
+non-production target is configured.
 
 ### Environment
 
