@@ -1,3 +1,57 @@
+/**
+ * The browser calls /api/v1/* same-origin, and Next rewrites that to the Go
+ * backend. The rewrite target must follow the deployment, not NODE_ENV:
+ * Vercel runs preview builds with NODE_ENV=production.
+ *
+ * production  explicit API_PROXY_TARGET, else the production backend.
+ * preview     explicit non-production target, else no rewrite (404). A
+ *             preview must never reach the production backend by accident.
+ * local       localhost.
+ */
+const PRODUCTION_ORIGIN = 'https://agents-proxy-nine.vercel.app';
+
+function clean(value) {
+    return (value ?? '').trim().replace(/\/+$/, '');
+}
+
+function originOf(value) {
+    if (!value) return '';
+    try {
+        return new URL(value).origin;
+    } catch {
+        return '';
+    }
+}
+
+function rewriteDestination() {
+    const vercelEnv = process.env.VERCEL_ENV;
+    const publicApi = clean(process.env.NEXT_PUBLIC_API_URL);
+    const explicitTarget = clean(process.env.API_PROXY_TARGET);
+
+    if (vercelEnv === 'preview') {
+        const candidate = originOf(explicitTarget) || originOf(publicApi);
+        if (!candidate || candidate === PRODUCTION_ORIGIN) {
+            console.warn(
+                '[next.config] preview has no non-production API target; /api/v1 rewrites are disabled'
+            );
+            return '';
+        }
+        return `${candidate}/api/v1/:path*`;
+    }
+
+    if (vercelEnv === 'production') {
+        return `${originOf(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+        // A local `next build && next start`, or a non-Vercel host that did
+        // not set VERCEL_ENV. Keep the historical production target.
+        return `${originOf(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
+    }
+
+    return 'http://localhost:8080/api/v1/:path*';
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     transpilePackages: ['@dfd/shared'],
@@ -6,13 +60,12 @@ const nextConfig = {
         loaderFile: './src/lib/cloudinaryLoader.js',
     },
     async rewrites() {
+        const destination = rewriteDestination();
+        if (!destination) return [];
         return [
             {
                 source: '/api/v1/:path*',
-                // In production, proxy to the deployed AgentsProxy. In development, proxy to the local AgentsProxy.
-                destination: process.env.NODE_ENV === 'production'
-                    ? 'https://agents-proxy-nine.vercel.app/api/v1/:path*'
-                    : 'http://localhost:8080/api/v1/:path*',
+                destination,
             },
         ];
     },
