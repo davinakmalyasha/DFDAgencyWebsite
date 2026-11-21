@@ -53,13 +53,27 @@ function rewriteDestination() {
     }
 
     if (vercelEnv === 'production') {
-        return `${usableOrigin(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
+        const candidate = usableOrigin(explicitTarget);
+        if (candidate && candidate !== PRODUCTION_ORIGIN) {
+            console.warn(
+                '[next.config] production API_PROXY_TARGET is not the production backend; using the default'
+            );
+            return `${PRODUCTION_ORIGIN}/api/v1/:path*`;
+        }
+        return `${PRODUCTION_ORIGIN}/api/v1/:path*`;
     }
 
     if (process.env.NODE_ENV === 'production') {
         // A local `next build && next start`, or a non-Vercel host that did
-        // not set VERCEL_ENV. Keep the historical production target.
-        return `${usableOrigin(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
+        // not set VERCEL_ENV. Keep the historical production target, but do
+        // not let an explicit non-production target win.
+        const candidate = usableOrigin(explicitTarget);
+        if (candidate && candidate !== PRODUCTION_ORIGIN) {
+            console.warn(
+                '[next.config] production API_PROXY_TARGET is not the production backend; using the default'
+            );
+        }
+        return `${candidate && candidate === PRODUCTION_ORIGIN ? candidate : PRODUCTION_ORIGIN}/api/v1/:path*`;
     }
 
     return 'http://localhost:8080/api/v1/:path*';

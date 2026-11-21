@@ -40,8 +40,18 @@ function resolveServerAPIBase(): string {
     const onVercel = Boolean(process.env.VERCEL);
 
     if (vercelEnv === 'production') {
-        // A leftover localhost value must never win on Vercel.
-        return !configured || isLocal(configured) ? PRODUCTION_API : configured;
+        // Production may only talk to the production backend. A leftover
+        // staging/preview value must not silently become the live catalog.
+        // If the backend moves to a custom domain, update PRODUCTION_ORIGIN.
+        if (!configured || isLocal(configured) || !isProductionBackend(configured)) {
+            if (configured && !isLocal(configured)) {
+                console.warn(
+                    '[api-base] production NEXT_PUBLIC_API_URL is not the production backend; using the default'
+                );
+            }
+            return PRODUCTION_API;
+        }
+        return configured;
     }
 
     if (vercelEnv === 'preview') {
