@@ -30,19 +30,24 @@ function isProductionBackend(value: string): boolean {
     }
 }
 
+function isLocal(value: string): boolean {
+    return value.includes('localhost') || value.includes('127.0.0.1') || value.includes('[::1]');
+}
+
 function resolveServerAPIBase(): string {
     const configured = clean(process.env.NEXT_PUBLIC_API_URL);
     const vercelEnv = process.env.VERCEL_ENV;
     const onVercel = Boolean(process.env.VERCEL);
 
     if (vercelEnv === 'production') {
-        return configured || PRODUCTION_API;
+        // A leftover localhost value must never win on Vercel.
+        return !configured || isLocal(configured) ? PRODUCTION_API : configured;
     }
 
     if (vercelEnv === 'preview') {
         // A preview may point at staging, but never at production and never
         // at localhost. Missing configuration is a safe empty site.
-        if (!configured || configured.includes('localhost') || isProductionBackend(configured)) {
+        if (!configured || isLocal(configured) || isProductionBackend(configured)) {
             console.warn(
                 '[api-base] preview has no non-production NEXT_PUBLIC_API_URL; API reads are disabled'
             );
@@ -53,7 +58,7 @@ function resolveServerAPIBase(): string {
 
     if (onVercel) {
         // VERCEL=1 without VERCEL_ENV is not production. Do not guess.
-        if (!configured || configured.includes('localhost') || isProductionBackend(configured)) {
+        if (!configured || isLocal(configured) || isProductionBackend(configured)) {
             return PREVIEW_DISABLED_API;
         }
         return configured;

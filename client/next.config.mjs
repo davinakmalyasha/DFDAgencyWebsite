@@ -23,13 +23,26 @@ function originOf(value) {
     }
 }
 
+/** Reject localhost so a leftover dev value cannot win on Vercel. */
+function usableOrigin(value) {
+    const origin = originOf(value);
+    if (!origin) return '';
+    try {
+        const host = new URL(origin).hostname;
+        if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+    } catch {
+        return '';
+    }
+    return origin;
+}
+
 function rewriteDestination() {
     const vercelEnv = process.env.VERCEL_ENV;
     const publicApi = clean(process.env.NEXT_PUBLIC_API_URL);
     const explicitTarget = clean(process.env.API_PROXY_TARGET);
 
     if (vercelEnv === 'preview') {
-        const candidate = originOf(explicitTarget) || originOf(publicApi);
+        const candidate = usableOrigin(explicitTarget) || usableOrigin(publicApi);
         if (!candidate || candidate === PRODUCTION_ORIGIN) {
             console.warn(
                 '[next.config] preview has no non-production API target; /api/v1 rewrites are disabled'
@@ -40,13 +53,13 @@ function rewriteDestination() {
     }
 
     if (vercelEnv === 'production') {
-        return `${originOf(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
+        return `${usableOrigin(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
     }
 
     if (process.env.NODE_ENV === 'production') {
         // A local `next build && next start`, or a non-Vercel host that did
         // not set VERCEL_ENV. Keep the historical production target.
-        return `${originOf(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
+        return `${usableOrigin(explicitTarget) || PRODUCTION_ORIGIN}/api/v1/:path*`;
     }
 
     return 'http://localhost:8080/api/v1/:path*';
