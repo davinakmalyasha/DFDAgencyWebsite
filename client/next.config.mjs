@@ -8,7 +8,9 @@
  *             preview must never reach the production backend by accident.
  * local       localhost.
  */
-const PRODUCTION_ORIGIN = 'https://agents-proxy-nine.vercel.app';
+import { PRODUCTION_API_ORIGIN } from './api-origin.mjs';
+
+const PRODUCTION_ORIGIN = PRODUCTION_API_ORIGIN;
 
 function clean(value) {
     return (value ?? '').trim().replace(/\/+$/, '');
