@@ -12,8 +12,10 @@
  * VERCEL_ENV is the deployment target; VERCEL alone is true on every Vercel
  * environment, including preview, and is not enough to decide.
  */
-const PRODUCTION_API = 'https://agents-proxy-nine.vercel.app/api/v1';
-const PRODUCTION_ORIGIN = 'https://agents-proxy-nine.vercel.app';
+import { PRODUCTION_API_BASE, PRODUCTION_API_ORIGIN } from '../../api-origin.mjs';
+
+const PRODUCTION_API = PRODUCTION_API_BASE;
+const PRODUCTION_ORIGIN = PRODUCTION_API_ORIGIN;
 const LOCAL_API = 'http://localhost:8080/api/v1';
 /** DNS .invalid cannot resolve: every fetch fails closed, pages render empty. */
 const PREVIEW_DISABLED_API = 'https://preview-api-disabled.invalid/api/v1';
